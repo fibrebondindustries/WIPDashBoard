@@ -1,0 +1,109 @@
+/* Scroll Button Styling */
+.scroll-btn-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.scroll-btn {
+    background-color: #ffffff;
+    color: rgba(0, 0, 0, 0.678);
+    border: 2px solid #ffffff;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px; /* Makes the button a box with slightly rounded corners */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    margin: 0 5px; /* Adds some spacing around the button */
+    font-size: 25px;
+}
+
+.scroll-btn:hover {
+    background-color: #26282b70;
+    color: #ffffff;
+}
+
+/* Department Filter Grid */
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-auto-rows: 50px;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 10px;
+    white-space: nowrap;
+}
+
+.filter-grid button {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    background-color: #f8f9fa; /* Light background */
+    border: 2px solid #ccc;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    white-space: nowrap;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.filter-grid button.active {
+    background-color: #007bff; /* Active color for the selected button */
+    color: white;
+    border-color: #007bff;
+}
+
+/* Table Styling */
+
+table {
+    border-collapse: collapse !important;
+    width: 100%;
+  }
+  table, td, th {  
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  tbody{
+    padding: 15px;
+}  
+.table-responsive {
+    display: block;
+    width: 110% !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-left: -52px ;
+    table-layout: auto;
+}
+th {
+    border-bottom-width: 2px;
+    font-family: math;
+}
+
+
+/* Hide scrollbar */
+.filter-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-btn{
+    height: 73px;
+}
+
+.navbar{
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    position: sticky;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        display: block;
+        width: 100% !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

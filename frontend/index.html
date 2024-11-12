@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIP</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="shortcut icon" href="./assets/Img/favicon-32x32.png" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <nav
+            class="navbar navbar-expand-sm navbar-light bg-light"
+        >
+            <div class="container">
+                <a class="navbar-brand" href="#"><img
+                    src="./assets/Img/Logo-1.png"
+                    class="img-fluid rounded-top"
+                    alt="Logo"
+                    style="height: 49px;"
+                />
+                </a>
+                <button
+                    class="navbar-toggler d-lg-none"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapsibleNavId"
+                    aria-controls="collapsibleNavId"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="collapsibleNavId">
+                    <ul class="navbar-nav me-auto mt-2 mt-lg-0">
+                       
+                    </ul>
+                    
+                </div>
+            </div>
+        </nav>
+        
+    </header>
+
+<div class="container mt-5">
+    <!-- Horizontal Scroll Navigation with Grid Layout -->
+    <div class="d-flex align-items-center mb-4 position-relative" >
+        <!-- Left Scroll Button -->
+        <div class="scroll-btn-container">
+            <button class="scroll-btn" onclick="scrollFilterLeft()">&#8592;</button>
+        </div>
+        
+        <!-- Department Filter Grid -->
+        <div id="filter-container" class="filter-grid d-flex overflow-auto px-2">
+            <!-- Buttons will be dynamically inserted here -->
+        </div>
+
+        <!-- Right Scroll Button -->
+        <div class="scroll-btn-container">
+            <button class="scroll-btn" onclick="scrollFilterRight()">&#8594;</button>
+        </div>
+    </div>
+
+    <!-- Responsive Table Wrapper -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>JOB ORDER NO</th>
+                    <th>JOB ORDER DATE</th>
+                    <th>ITEM NAME (LOT ID)</th>
+                    <th>PROCESS NAME</th>
+                    <th>PROCESS GROUP</th>
+                    <th>QUANTITY</th>
+                    <th>DEPARTMENT</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
