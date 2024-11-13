@@ -22,43 +22,30 @@ const PORT = 5000;
 // Use CORS middleware
 app.use(cors()); // This will enable CORS for all routes
 
+let isDatabaseConnected = true;
+
 // Create a connection pool
 const poolPromise = new sql.ConnectionPool(config)
     .connect()
     .then(pool => {
         console.log("Connected to SQL Server successfully.");
+        isDatabaseConnected = true;
         return pool;
     })
     .catch(err => {
         console.error("Database connection failed:", err);
+        isDatabaseConnected = false;
     });
 
+// Middleware to check database connection status
+app.use((req, res, next) => {
+    if (!isDatabaseConnected) {
+        return res.status(500).json({ error: "Database Connection Lost" });
+    }
+    next();
+});
+    
 // Create an API endpoint to retrieve data
-
-// API to fetch filtered data based on department
-// app.get('/api/data', async (req, res) => {
-//     try {
-//         const department = req.query.department; // Get department filter from query
-//         const pool = await poolPromise;
-//         const request = pool.request();
-
-//         // If a department is specified, filter by department; otherwise, fetch all data
-//         // let query = 'SELECT * FROM [WIPDATA].[dbo].[StagingTable]';
-//         let query ="select T1.* , T2.[Description] from [dbo].[StagingTable] T1"+
-// "             left join [dbo].[Description] T2 on T1.[JOB ORDER NO] = T2.[JOB ORDER NO]";
-//         if (department) {
-//             query += ' WHERE DEPARTMENT = @department';
-//             request.input('department', sql.NVarChar, department);
-//         }
-
-//         const result = await request.query(query);
-//         res.json(result.recordset);
-//     } catch (err) {
-//         console.error("Query failed:", err);
-//         res.status(500).send("Error fetching data");
-//     }
-// });
-
 app.get('/api/data', async (req, res) => {
     try {
         const department = req.query.department; // Get department filter from query
@@ -93,7 +80,27 @@ app.get('/api/data', async (req, res) => {
         res.json(result.recordset);
     } catch (err) {
         console.error("Query failed:", err);
+        isDatabaseConnected = false; // Mark as disconnected if an error occurs
         res.status(500).send("Error fetching data");
+    }
+});
+
+// Listen for SQL connection errors
+sql.on('error', err => {
+    console.error("SQL error:", err);
+    isDatabaseConnected = false;
+});
+
+// Health check API to verify database connection
+app.get('/api/health', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const request = pool.request();
+        await request.query('SELECT 1'); // Simple query to check the connection
+        res.json({ status: 'connected' }); // If successful, database is connected
+    } catch (err) {
+        // console.error("Health check failed:", err);
+        res.status(500).json({ status: 'disconnected' }); // Database is disconnected
     }
 });
 
