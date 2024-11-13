@@ -36,7 +36,18 @@
                     <ul class="navbar-nav me-auto mt-2 mt-lg-0">
                        
                     </ul>
-                    
+                    <div class="container mt-3">
+                        <form class="form-inline my-2 my-lg-0">
+                            <input
+                            id="search-input"
+                            class="form-control mr-sm-2"
+                            type="search"
+                            placeholder="Search Item Name"
+                            aria-label="Search"
+                            oninput="filterTable()"
+                        >
+                        </form>
+                    </div>
                 </div>
             </div>
         </nav>

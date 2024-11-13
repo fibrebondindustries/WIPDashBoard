@@ -3,6 +3,7 @@ let wasDisconnected = false; // Track previous connection status
 // Function to check server health
 async function checkServerHealth() {
     try {
+        //  const response = await fetch('http://localhost:5000/api/health');
          const response = await fetch('http://localhost:5000/api/health');
         const health = await response.json();
 
@@ -32,7 +33,8 @@ setInterval(checkServerHealth, 5000); // Check every 5 seconds
 // Fetch data from the backend
 async function fetchData(department = null) {
   try {
-      let url = 'http://localhost:5000/api/data';
+    //   let url = 'http://localhost:5000/api/data';
+    let url = 'http://192.168.0.191:5000/api/data';
       if (department) {
           url += `?department=${encodeURIComponent(department)}`;
       }
@@ -161,11 +163,32 @@ function scrollFilterRight() {
 async function init() {
   await fetchData(); // Fetch and display all data initially
 
-  // Generate department buttons dynamically based on available data
-  const allData = await (await fetch('http://localhost:5000/api/data')).json();
+  // Generate department buttons dynamically based on available data //http://192.168.0.191:5000/api/data
+  const allData = await (await fetch('http://192.168.0.191:5000/api/data')).json();
   const uniqueDepartments = [...new Set(allData.map(row => row.DEPARTMENT))];
   setupDepartmentFilter(uniqueDepartments);
 }
 
 // Run initialization
 init();
+
+//Search Item name Function
+function filterTable() {
+    // Get the search input value and convert it to lowercase
+    const searchValue = document.getElementById('search-input').value.toLowerCase();
+
+    // Get all table rows
+    const tableBody = document.getElementById('table-body');
+    const rows = tableBody.getElementsByTagName('tr');
+
+    // Loop through all rows and hide those that don't match the search query
+    for (let row of rows) {
+        const itemName = row.cells[2].textContent.toLowerCase(); // Assuming 'ITEM NAME (LOT ID)' is in the third column
+
+        if (itemName.includes(searchValue)) {
+            row.style.display = ''; // Show row
+        } else {
+            row.style.display = 'none'; // Hide row
+        }
+    }
+}

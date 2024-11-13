@@ -204,3 +204,7 @@ th {
         display: none !important;
     }
 }
+
+.navbar .form-inline {
+    margin-left: auto; /* Pushes the search bar to the right */
+}
