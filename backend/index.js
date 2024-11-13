@@ -99,13 +99,18 @@ app.get('/api/health', async (req, res) => {
         await request.query('SELECT 1'); // Simple query to check the connection
         res.json({ status: 'connected' }); // If successful, database is connected
     } catch (err) {
-        // console.error("Health check failed:", err);
+        //console.error("Health check failed:", err);
         res.status(500).json({ status: 'disconnected' }); // Database is disconnected
     }
 });
 
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on ${PORT}`);
+// app.listen(PORT, () => {
+//     console.log(`Server is running on ${PORT}`);
+// });
+
+// To this:
+app.listen(5000, '0.0.0.0', () => {
+    console.log('Server is running on 0.0.0.0:5000');
 });
