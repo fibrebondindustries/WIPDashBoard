@@ -1,5 +1,5 @@
 /* Scroll Button Styling */
-.scroll-btn-container {
+/* .scroll-btn-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -11,23 +11,23 @@
     border: 2px solid #ffffff;
     width: 40px;
     height: 40px;
-    border-radius: 8px; /* Makes the button a box with slightly rounded corners */
+    border-radius: 8px; 
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background-color 0.3s ease;
-    margin: 0 5px; /* Adds some spacing around the button */
+    margin: 0 5px; 
     font-size: 25px;
 }
 
 .scroll-btn:hover {
     background-color: #26282b70;
     color: #ffffff;
-}
+} */
 
 /* Department Filter Grid */
-.filter-grid {
+/* .filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     grid-auto-rows: 50px;
@@ -41,7 +41,7 @@
     font-size: 1rem;
     font-weight: bold;
     color: #333;
-    background-color: #f8f9fa; /* Light background */
+    background-color: #f8f9fa; 
     border: 2px solid #ccc;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -52,10 +52,78 @@
 }
 
 .filter-grid button.active {
-    background-color: #007bff; /* Active color for the selected button */
+    background-color: #007bff; 
+    color: white;
+    border-color: #007bff;
+} */
+ /* Department Filter Grid with Two Columns */
+/* Department Filter Grid */
+/* Filter Grid */
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 2fr)); /* Two-column layout */
+    gap: 5px;
+    padding: 0px;
+    white-space: normal;
+}
+
+.filter-grid button {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #333;
+    background-color: #f8f9fa;
+    border: 2px solid #ccc;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    padding: 1px;
+    border-radius: 5px;
+    height: auto; /* Adjusts height based on content */
+    /* overflow-wrap: break-word; */
+    /* font-size: 14px; */
+    /* width: fit-content; */
+}
+
+.filter-grid button.active {
+    background-color: #007bff;
     color: white;
     border-color: #007bff;
 }
+
+/* Hide scrollbar for filter grid */
+.filter-grid::-webkit-scrollbar {
+    display: none;
+}
+
+/* Scroll Button Styling */
+.scroll-btn-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.scroll-btn {
+    background-color: #ffffff;
+    color: rgba(0, 0, 0, 0.678);
+    border: 2px solid #ffffff;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    margin: 0 5px;
+    font-size: 25px;
+}
+
+.scroll-btn:hover {
+    background-color: #26282b70;
+    color: #ffffff;
+}
+
+
 
 /* Table Styling */
 
@@ -85,9 +153,9 @@ th {
 
 
 /* Hide scrollbar */
-.filter-grid::-webkit-scrollbar {
+/* .filter-grid::-webkit-scrollbar {
     display: none;
-}
+} */
 
 .filter-btn{
     height: 73px;
@@ -105,5 +173,34 @@ th {
         width: 100% !important;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Back to Top Button */
+#backToTopBtn {
+    display: none; /* Hidden by default */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 99; /* Keep on top of other content */
+    font-size: 13px;
+    background-color: #333; /* Dark background */
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 15px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+}
+
+#backToTopBtn:hover {
+    background-color: #555; /* Darker on hover */
+}
+
+/* Hide Back to Top button on small screens */
+@media (max-width: 768px) {
+    #backToTopBtn {
+        display: none !important;
     }
 }

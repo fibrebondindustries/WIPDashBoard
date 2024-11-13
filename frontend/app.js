@@ -1,3 +1,34 @@
+let wasDisconnected = false; // Track previous connection status
+
+// Function to check server health
+async function checkServerHealth() {
+    try {
+         const response = await fetch('http://localhost:5000/api/health');
+        const health = await response.json();
+
+        if (health.status === 'connected') {
+            if (wasDisconnected) {
+                // Refresh the page if it was previously disconnected and now reconnected
+                location.reload();
+            }
+            wasDisconnected = false; // Reset disconnection tracker
+        } else {
+            displayErrorMessage("Database Connection Lost");
+            wasDisconnected = true;
+        }
+    } catch (error) {
+        // console.error("Error checking server health:", error);
+        displayErrorMessage("Database Connection Lost");
+        wasDisconnected = true;
+    }
+}
+
+// Call this function periodically
+setInterval(checkServerHealth, 5000); // Check every 5 seconds
+
+
+
+
 // Fetch data from the backend
 async function fetchData(department = null) {
   try {
@@ -7,6 +38,12 @@ async function fetchData(department = null) {
       }
 
       const response = await fetch(url);
+
+      // Check if the response is not OK
+      if (!response.ok) {
+        throw new Error("Database Connection Lost"); // Manually throw an error
+    }
+
       const data = await response.json();
       displayData(data); // Display fetched data in the table
        // Set active card styling when a department is selected
@@ -22,8 +59,20 @@ async function fetchData(department = null) {
         }
   } catch (error) {
       console.error("Error fetching data:", error);
+      displayErrorMessage("Database Connection Lost"); // Display error on the frontend
   }
 }
+
+// Function to display error message on the frontend
+function displayErrorMessage(message) {
+  const tableBody = document.getElementById("table-body");
+  tableBody.innerHTML = ""; // Clear the existing table content
+
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td colspan="7" class="text-center text-danger font-weight-bold text-uppercase ">${message}</td>`;
+  tableBody.appendChild(tr);
+}
+
 
 // Display data in the table
 function displayData(data) {
@@ -54,7 +103,7 @@ function setupDepartmentFilter(departments) {
 
   departments.forEach(department => {
       const button = document.createElement("button");
-      button.className = "filter-btn btn btn-outline-secondary"; // Custom class for styling
+      button.className = "filter-btn btn btn-outline-secondary "; // Custom class for styling
       button.innerText = department;
       button.onclick = () => {
           fetchData(department);

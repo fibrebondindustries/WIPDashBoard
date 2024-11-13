@@ -52,7 +52,8 @@
         </div>
         
         <!-- Department Filter Grid -->
-        <div id="filter-container" class="filter-grid d-flex overflow-auto px-2">
+        <!-- <div id="filter-container" class="filter-grid d-flex overflow-auto px-2"> -->
+            <div id="filter-container" class="filter-grid overflow-auto px-2 w-100">
             <!-- Buttons will be dynamically inserted here -->
         </div>
 
@@ -80,7 +81,28 @@
         </table>
     </div>
 </div>
+<button onclick="scrollToTop()" id="backToTopBtn" title="Go to top">▲</button>
 
+<script>
+    // Show the button when the user scrolls down 20px from the top
+window.onscroll = function() {
+    const backToTopBtn = document.getElementById("backToTopBtn");
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        backToTopBtn.style.display = "block";
+    } else {
+        backToTopBtn.style.display = "none";
+    }
+};
+
+// Scroll to the top of the page when the button is clicked
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+</script>
 <script src="app.js"></script>
 </body>
 </html>
