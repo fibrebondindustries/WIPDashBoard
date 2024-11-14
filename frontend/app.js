@@ -91,45 +91,7 @@ function displayErrorMessage(message) {
 
 
 // Display data in the table
-// function displayData(data) {
-//   const tableBody = document.getElementById("table-body");
-//   tableBody.innerHTML = ""; // Clear existing data
 
-//   data.forEach(row => {
-//       const tr = document.createElement("tr");
-
-//       tr.innerHTML = `
-//           <td><a href="description.html?jobOrderNo=${encodeURIComponent(row['JOB ORDER NO'])}" >${row['JOB ORDER NO']}</a></td>
-//           <td>${new Date(row['JOB ORDER DATE']).toLocaleDateString()}</td>
-//           <td>${row['ITEM NAME']}</td>
-//           <td>${row['PROCESS NAME']}</td>
-//           <td>${row['PROCESS GROUP']}</td>
-//           <td>${row['QUANTITY']}</td>
-//        <td>${row['DEPARTMENT'] || 'Department Not Available'}</td> <!-- Display "Department Not Available" if null -->
-//       `;
-
-//       tableBody.appendChild(tr);
-//   });
-// }
-
-// Setup department filter buttons
-// function setupDepartmentFilter(departments) {
-//   const filterContainer = document.getElementById("filter-container");
-//   filterContainer.innerHTML = ""; // Clear any existing buttons
-
-//   departments.forEach(department => {
-//       const button = document.createElement("button");
-//       button.className = "filter-btn btn btn-outline-secondary "; // Custom class for styling
-//       button.innerText = department;
-//       button.onclick = () => {
-//           fetchData(department);
-//           setActiveButton(button);
-//       };
-//       filterContainer.appendChild(button);
-//   });
-// }
-
-// Setup department filter buttons// Setup department filter buttons
 // Setup department filter buttons
 function displayData(data) {
     const tableBody = document.getElementById("table-body");
