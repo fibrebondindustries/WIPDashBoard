@@ -45,6 +45,7 @@
                             placeholder="Search Item Name"
                             aria-label="Search"
                             oninput="filterTable()"
+                            onkeydown="handleEnter(event)" 
                         >
                         </form>
                     </div>
@@ -57,20 +58,19 @@
 <div class="container mt-5">
     <!-- Horizontal Scroll Navigation with Grid Layout -->
     <div class="d-flex align-items-center mb-4 position-relative" >
-        <!-- Left Scroll Button -->
+        <!-- Left Scroll Button &#8592;-->
         <div class="scroll-btn-container">
-            <button class="scroll-btn" onclick="scrollFilterLeft()">&#8592;</button>
+            <button class="scroll-btn" onclick="scrollFilterLeft()"></button>
         </div>
         
         <!-- Department Filter Grid -->
-        <!-- <div id="filter-container" class="filter-grid d-flex overflow-auto px-2"> -->
             <div id="filter-container" class="filter-grid overflow-auto px-2 w-100">
             <!-- Buttons will be dynamically inserted here -->
         </div>
 
-        <!-- Right Scroll Button -->
+        <!-- Right Scroll Button &#8592;-->
         <div class="scroll-btn-container">
-            <button class="scroll-btn" onclick="scrollFilterRight()">&#8594;</button>
+            <button class="scroll-btn" onclick="scrollFilterRight()"></button>
         </div>
     </div>
 

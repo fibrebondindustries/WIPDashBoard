@@ -3,18 +3,32 @@ const sql = require('mssql');
 const cors = require('cors');
 
 // Database connection configuration
+// const config = {
+//     user: 'remote_user', // Your SQL Server username
+//     password: 'FIBRE-IT1433', // Your SQL Server password
+//     server: '192.168.0.161', // Your SQL Server instance name
+//     database: 'WIPDATA', // Your database name
+//     Port: 1433,
+//     options: {
+//         encrypt: false, // Disable encryption for local development
+//         trustServerCertificate: true,
+//     }
+// };
 const config = {
-    user: 'remote_user', // Your SQL Server username
-    password: 'FIBRE-IT1433', // Your SQL Server password
-    server: '192.168.0.161', // Your SQL Server instance name
-    database: 'WIPDATA', // Your database name
-    Port: 1433,
+    user: 'fbiazure',
+    password: 'FIBRE@007',
+    server: 'fbicloud.database.windows.net',
+    database: 'WIP-AzureDatabase',
     options: {
-        encrypt: false, // Disable encryption for local development
-        trustServerCertificate: true,
+        encrypt: true,                  // Required for Azure SQL
+        trustServerCertificate: false,  // Must be false for Azure SQL
+    },
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000
     }
 };
-
 // Initialize Express
 const app = express();
 const PORT = 5000;
@@ -61,7 +75,11 @@ app.get('/api/data', async (req, res) => {
         `;
 
         // Adding conditions based on provided filters
-        if (department && jobOrderNo) {
+       // Adding conditions based on provided filters
+       if (department === 'null') {
+        // If department is 'null', filter for rows where DEPARTMENT IS NULL
+        query += ' WHERE T1.DEPARTMENT IS NULL';
+         } else if (department && jobOrderNo) {
             // If both department and jobOrderNo are provided, filter by both
             query += ' WHERE T1.DEPARTMENT = @department AND T1.[JOB ORDER NO] = @jobOrderNo';
             request.input('department', sql.NVarChar, department);
@@ -106,11 +124,11 @@ app.get('/api/health', async (req, res) => {
 
 
 // Start the server
-// app.listen(PORT, () => {
-//     console.log(`Server is running on ${PORT}`);
-// });
-
-// To this:
-app.listen(5000, '0.0.0.0', () => {
-    console.log('Server is running on 0.0.0.0:5000');
+app.listen(PORT, () => {
+    console.log(`Server is running on ${PORT}`);
 });
+
+// // To this:
+// app.listen(5000, '0.0.0.0', () => {
+//     console.log('Server is running on 0.0.0.0:5000');
+// });

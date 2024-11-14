@@ -31,14 +31,19 @@ setInterval(checkServerHealth, 5000); // Check every 5 seconds
 
 
 // Fetch data from the backend
-async function fetchData(department = null) {
+async function fetchData(department = null, isNullDepartment  = false) {
   try {
-    //   let url = 'http://localhost:5000/api/data';
-    let url = 'http://192.168.0.191:5000/api/data';
-      if (department) {
-          url += `?department=${encodeURIComponent(department)}`;
-      }
-
+      let url = 'http://localhost:5000/api/data';
+    // let url = 'http://192.168.0.191:5000/api/data';
+    //   if (department) {
+    //       url += `?department=${encodeURIComponent(department)}`;
+    //   }
+    // Modify URL to fetch null department data when "Department Not Available" is selected
+    if (isNullDepartment) {
+        url += `?department=null`; // Ensure backend understands null department filter
+    } else if (department) {
+        url += `?department=${encodeURIComponent(department)}`;
+    }
       const response = await fetch(url);
 
       // Check if the response is not OK
@@ -49,16 +54,25 @@ async function fetchData(department = null) {
       const data = await response.json();
       displayData(data); // Display fetched data in the table
        // Set active card styling when a department is selected
-        if (department) {
-            const cards = document.querySelectorAll(".card");
-            cards.forEach(card => {
-                if (card.textContent.trim() === department.trim()) {
-                    card.classList.add("active");
-                } else {
-                    card.classList.remove("active");
-                }
-            });
-        }
+        // if (department) {
+        //     const cards = document.querySelectorAll(".card");
+        //     cards.forEach(card => {
+        //         if (card.textContent.trim() === department.trim()) {
+        //             card.classList.add("active");
+        //         } else {
+        //             card.classList.remove("active");
+        //         }
+        //     });
+        // }
+        //   // Set active card styling when a department is selected
+        // const cards = document.querySelectorAll(".filter-btn");
+        // cards.forEach(card => {
+        //     if (card.textContent.trim() === department?.trim() || (department === null && card.textContent.trim() === "Department Not Available")) {
+        //         card.classList.add("active");
+        //     } else {
+        //         card.classList.remove("active");
+        //     }
+        // });
   } catch (error) {
       console.error("Error fetching data:", error);
       displayErrorMessage("Database Connection Lost"); // Display error on the frontend
@@ -77,43 +91,97 @@ function displayErrorMessage(message) {
 
 
 // Display data in the table
-function displayData(data) {
-  const tableBody = document.getElementById("table-body");
-  tableBody.innerHTML = ""; // Clear existing data
+// function displayData(data) {
+//   const tableBody = document.getElementById("table-body");
+//   tableBody.innerHTML = ""; // Clear existing data
 
-  data.forEach(row => {
-      const tr = document.createElement("tr");
+//   data.forEach(row => {
+//       const tr = document.createElement("tr");
 
-      tr.innerHTML = `
-          <td><a href="description.html?jobOrderNo=${encodeURIComponent(row['JOB ORDER NO'])}" >${row['JOB ORDER NO']}</a></td>
-          <td>${new Date(row['JOB ORDER DATE']).toLocaleDateString()}</td>
-          <td>${row['ITEM NAME']}</td>
-          <td>${row['PROCESS NAME']}</td>
-          <td>${row['PROCESS GROUP']}</td>
-          <td>${row['QUANTITY']}</td>
-          <td>${row['DEPARTMENT']}</td>
-      `;
+//       tr.innerHTML = `
+//           <td><a href="description.html?jobOrderNo=${encodeURIComponent(row['JOB ORDER NO'])}" >${row['JOB ORDER NO']}</a></td>
+//           <td>${new Date(row['JOB ORDER DATE']).toLocaleDateString()}</td>
+//           <td>${row['ITEM NAME']}</td>
+//           <td>${row['PROCESS NAME']}</td>
+//           <td>${row['PROCESS GROUP']}</td>
+//           <td>${row['QUANTITY']}</td>
+//        <td>${row['DEPARTMENT'] || 'Department Not Available'}</td> <!-- Display "Department Not Available" if null -->
+//       `;
 
-      tableBody.appendChild(tr);
-  });
-}
+//       tableBody.appendChild(tr);
+//   });
+// }
 
 // Setup department filter buttons
-function setupDepartmentFilter(departments) {
-  const filterContainer = document.getElementById("filter-container");
-  filterContainer.innerHTML = ""; // Clear any existing buttons
+// function setupDepartmentFilter(departments) {
+//   const filterContainer = document.getElementById("filter-container");
+//   filterContainer.innerHTML = ""; // Clear any existing buttons
 
-  departments.forEach(department => {
-      const button = document.createElement("button");
-      button.className = "filter-btn btn btn-outline-secondary "; // Custom class for styling
-      button.innerText = department;
-      button.onclick = () => {
-          fetchData(department);
-          setActiveButton(button);
+//   departments.forEach(department => {
+//       const button = document.createElement("button");
+//       button.className = "filter-btn btn btn-outline-secondary "; // Custom class for styling
+//       button.innerText = department;
+//       button.onclick = () => {
+//           fetchData(department);
+//           setActiveButton(button);
+//       };
+//       filterContainer.appendChild(button);
+//   });
+// }
+
+// Setup department filter buttons// Setup department filter buttons
+// Setup department filter buttons
+function displayData(data) {
+    const tableBody = document.getElementById("table-body");
+    tableBody.innerHTML = ""; // Clear existing data
+  
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+  
+        tr.innerHTML = `
+            <td><a href="description.html?jobOrderNo=${encodeURIComponent(row['JOB ORDER NO'])}" >${row['JOB ORDER NO']}</a></td>
+            <td>${new Date(row['JOB ORDER DATE']).toLocaleDateString()}</td>
+            <td>${row['ITEM NAME']}</td>
+            <td>${row['PROCESS NAME']}</td>
+            <td>${row['PROCESS GROUP']}</td>
+            <td>${row['QUANTITY']}</td>
+            <td>${row['DEPARTMENT'] || '<span class="text-danger">Department Not Available</span>'} <!-- Display "Department Not Available" if null -->
+        `;
+  
+        tableBody.appendChild(tr);
+    });
+  }
+  
+  // Setup department filter buttons
+  function setupDepartmentFilter(departments) {
+      const filterContainer = document.getElementById("filter-container");
+      filterContainer.innerHTML = ""; // Clear any existing buttons
+  
+      // Add button for "Department Not Available"
+      const nullButton = document.createElement("button");
+      nullButton.className = "filter-btn btn btn-outline-secondary";
+      nullButton.innerText = "Department Not Available";
+      nullButton.onclick = () => {
+          fetchData(null, true); // Fetch data with null departments only
+          setActiveButton(nullButton);
       };
-      filterContainer.appendChild(button);
-  });
-}
+      filterContainer.appendChild(nullButton);
+  
+      // Create buttons for all other departments
+      departments.forEach(department => {
+          if (department !== null) {
+              const button = document.createElement("button");
+              button.className = "filter-btn btn btn-outline-secondary";
+              button.innerText = department;
+              button.onclick = () => {
+                  fetchData(department, false); // Explicitly set isNullDepartment to false
+                  setActiveButton(button);
+              };
+              filterContainer.appendChild(button);
+          }
+      });
+  }
+
 
 // Set active button style
 function setActiveButton(activeButton) {
@@ -122,8 +190,9 @@ function setActiveButton(activeButton) {
   activeButton.classList.add("active");
 }
 
-// // Scroll Left function
-// function scrollLeft() {
+
+// Scroll Left function with new name
+// function scrollFilterLeft() {
 //   const filterContainer = document.getElementById("filter-container");
 //   const scrollAmount = 200;
 //   filterContainer.scrollBy({
@@ -131,43 +200,43 @@ function setActiveButton(activeButton) {
 //       behavior: 'smooth'
 //   });
 // }
-// Scroll Left function with new name
-function scrollFilterLeft() {
-  const filterContainer = document.getElementById("filter-container");
-  const scrollAmount = 200;
-  filterContainer.scrollBy({
-      left: -scrollAmount,
-      behavior: 'smooth'
-  });
-}
 
-// // Scroll Right function
-// function scrollRight() {
+// // Scroll Right function with new name
+// function scrollFilterRight() {
 //   const filterContainer = document.getElementById("filter-container");
 //   const scrollAmount = 200;
 //   filterContainer.scrollBy({
-//     left: scrollAmount,
+//       left: scrollAmount,
 //       behavior: 'smooth'
 //   });
 // }
-// Scroll Right function with new name
+
+// Scroll Left function with smooth scroll behavior
+function scrollFilterLeft() {
+    const filterContainer = document.getElementById("filter-container");
+    filterContainer.scrollBy({
+        left: -200,
+        behavior: 'smooth'
+    });
+}
+
+// Scroll Right function with smooth scroll behavior
 function scrollFilterRight() {
-  const filterContainer = document.getElementById("filter-container");
-  const scrollAmount = 200;
-  filterContainer.scrollBy({
-      left: scrollAmount,
-      behavior: 'smooth'
-  });
+    const filterContainer = document.getElementById("filter-container");
+    filterContainer.scrollBy({
+        left: 200,
+        behavior: 'smooth'
+    });
 }
 // Initialize page
 async function init() {
   await fetchData(); // Fetch and display all data initially
 
   // Generate department buttons dynamically based on available data //http://192.168.0.191:5000/api/data
-  const allData = await (await fetch('http://192.168.0.191:5000/api/data')).json();
-  const uniqueDepartments = [...new Set(allData.map(row => row.DEPARTMENT))];
-  setupDepartmentFilter(uniqueDepartments);
-}
+    const allData = await (await fetch('http://localhost:5000/api/data')).json();
+    const uniqueDepartments = [...new Set(allData.map(row => row.DEPARTMENT))];
+    setupDepartmentFilter(uniqueDepartments);
+    }
 
 // Run initialization
 init();
@@ -190,5 +259,13 @@ function filterTable() {
         } else {
             row.style.display = 'none'; // Hide row
         }
+    }
+}
+
+function handleEnter(event) {
+    // Check if the Enter key is pressed
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Prevent form submission
+        filterTable(); // Call the filter function
     }
 }
