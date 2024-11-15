@@ -69,7 +69,7 @@
   // Fetch the specific job order description
   async function fetchDescription() {
     try {
-      const response = await fetch(`http://localhost:5000/api/data?jobOrderNo=${encodeURIComponent(jobOrderNo)}`);
+      const response = await fetch(`http://localhost:5050/api/data?jobOrderNo=${encodeURIComponent(jobOrderNo)}`);
       const data = await response.json();
 
       const description = data[0]?.Description || "No Description Available";

@@ -75,7 +75,17 @@
     </div>
 
     <!-- Responsive Table Wrapper -->
+     
+     
     <div class="table-responsive">
+        <div class="d-flex justify-content-end">
+            <button
+                id="viewAllButton"
+                type="button"
+                class="btn btn-secondary">
+                View All
+            </button>
+        </div>
         <table class="table table-bordered table-striped mt-4">
             <thead>
                 <tr>
@@ -114,6 +124,33 @@ function scrollToTop() {
 }
 
 </script>
+<script>
+    // Check session on page load
+    function checkAuth() {
+        const authData = sessionStorage.getItem('auth');
+        if (!authData) {
+            // Redirect to login if no session data found
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const { loggedIn, expiryTime } = JSON.parse(authData);
+        if (!loggedIn || Date.now() > expiryTime) {
+            // If not logged in or session expired, redirect to login
+            sessionStorage.removeItem('auth');
+            window.location.href = 'login.html';
+        }
+    }
+        // Set an interval to check session status every second
+        function startSessionCheck() {
+            checkAuth(); // Initial check on load
+            setInterval(checkAuth, 1000); // Check every second
+        }
+    // Call checkAuth on load
+    window.onload = startSessionCheck;
+</script>
+
+
 <script src="app.js"></script>
 </body>
 </html>

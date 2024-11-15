@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="./assets/css/login.css">
+</head>
+<body>
+    <!-- <h2>Enter PIN to Access</h2>
+    <input type="password" id="pin-input" placeholder="Enter PIN" />
+    <button onclick="login()">Login</button> -->
+   
+    <div class="container">
+        <!-- <img
+            src="./assets/Img/favicon-32x32.png"
+            class="img-fluid rounded-circle"
+            alt=""
+            style="height: 70px; width: 70px; "
+        /> -->
+        
+        <div class="card">
+            <h2>Enter PIN to Access</h2>
+            <form onsubmit="login(event)"> <!-- Use onsubmit to call login function -->
+                <input type="password" id="pin-input" name="password" placeholder="Enter PIN" required>
+                <button type="submit">Login</button> <!-- Use type="submit" -->
+                <p id="error-message" style="color:red;"></p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function login(event) {
+            // Prevent form submission
+            event.preventDefault();
+
+            const pin = document.getElementById('pin-input').value;
+            const correctPin = '112024'; // Hardcoded PIN
+
+            if (pin === correctPin) {
+                // Set session storage with a timestamp for 12 hours from now
+                const expiryTime = Date.now() + 12 * 60 * 60 * 1000;
+                // const expiryTime = Date.now() + 10 * 1000; // Set expiry for 10 seconds (for testing)
+                sessionStorage.setItem('auth', JSON.stringify({ loggedIn: true, expiryTime }));
+                window.location.href = 'index.html'; // Redirect to main page
+            } else {
+                document.getElementById('error-message').textContent = 'Incorrect PIN. Try again.';
+            }
+        }
+    </script>
+   
+    <!-- <script>
+        function login() {
+            const pin = document.getElementById('pin-input').value;
+            const correctPin = '4040'; // Hardcoded PIN
+
+            if (pin === correctPin) {
+                // Set session storage with a timestamp for 12 hours from now
+                // const expiryTime = Date.now() + 12 * 60 * 60 * 1000; // 12 hours in ms
+                const expiryTime = Date.now() + 10 * 1000;
+                sessionStorage.setItem('auth', JSON.stringify({ loggedIn: true, expiryTime }));
+                window.location.href = 'index.html'; // Redirect to main page
+            } else {
+                document.getElementById('error-message').textContent = 'Incorrect PIN. Try again.';
+            }
+        }
+    </script> -->
+</body>
+</html>

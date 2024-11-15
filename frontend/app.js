@@ -3,8 +3,8 @@ let wasDisconnected = false; // Track previous connection status
 // Function to check server health
 async function checkServerHealth() {
     try {
-        //  const response = await fetch('http://localhost:5000/api/health');
-         const response = await fetch('http://localhost:5000/api/health');
+        //  const response = await fetch('http://localhost:5050/api/health');
+         const response = await fetch('http://localhost:5050/api/health');
         const health = await response.json();
 
         if (health.status === 'connected') {
@@ -25,7 +25,7 @@ async function checkServerHealth() {
 }
 
 // Call this function periodically
-setInterval(checkServerHealth, 5000); // Check every 5 seconds
+setInterval(checkServerHealth, 5050); // Check every 5 seconds
 
 
 
@@ -33,8 +33,8 @@ setInterval(checkServerHealth, 5000); // Check every 5 seconds
 // Fetch data from the backend
 async function fetchData(department = null, isNullDepartment  = false) {
   try {
-      let url = 'http://localhost:5000/api/data';
-    // let url = 'http://192.168.0.191:5000/api/data';
+      let url = 'http://localhost:5050/api/data';
+    // let url = 'http://localhost:5050/api/data';
     //   if (department) {
     //       url += `?department=${encodeURIComponent(department)}`;
     //   }
@@ -119,16 +119,18 @@ function displayData(data) {
       const filterContainer = document.getElementById("filter-container");
       filterContainer.innerHTML = ""; // Clear any existing buttons
   
-      // Add button for "Department Not Available"
-      const nullButton = document.createElement("button");
-      nullButton.className = "filter-btn btn btn-outline-secondary";
-      nullButton.innerText = "Department Not Available";
-      nullButton.onclick = () => {
-          fetchData(null, true); // Fetch data with null departments only
-          setActiveButton(nullButton);
-      };
-      filterContainer.appendChild(nullButton);
-  
+       // Check if there's any null value in the departments array
+    if (departments.includes(null)) {
+        // Add button for "Department Not Available" if there are null values
+        const nullButton = document.createElement("button");
+        nullButton.className = "filter-btn btn btn-outline-secondary";
+        nullButton.innerText = "Department Not Available";
+        nullButton.onclick = () => {
+            fetchData(null, true); // Fetch data with null departments only
+            setActiveButton(nullButton);
+        };
+        filterContainer.appendChild(nullButton);
+    }
       // Create buttons for all other departments
       departments.forEach(department => {
           if (department !== null) {
@@ -153,26 +155,6 @@ function setActiveButton(activeButton) {
 }
 
 
-// Scroll Left function with new name
-// function scrollFilterLeft() {
-//   const filterContainer = document.getElementById("filter-container");
-//   const scrollAmount = 200;
-//   filterContainer.scrollBy({
-//       left: -scrollAmount,
-//       behavior: 'smooth'
-//   });
-// }
-
-// // Scroll Right function with new name
-// function scrollFilterRight() {
-//   const filterContainer = document.getElementById("filter-container");
-//   const scrollAmount = 200;
-//   filterContainer.scrollBy({
-//       left: scrollAmount,
-//       behavior: 'smooth'
-//   });
-// }
-
 // Scroll Left function with smooth scroll behavior
 function scrollFilterLeft() {
     const filterContainer = document.getElementById("filter-container");
@@ -194,8 +176,8 @@ function scrollFilterRight() {
 async function init() {
   await fetchData(); // Fetch and display all data initially
 
-  // Generate department buttons dynamically based on available data //http://192.168.0.191:5000/api/data
-    const allData = await (await fetch('http://localhost:5000/api/data')).json();
+  // Generate department buttons dynamically based on available data //http://192.168.0.191:5050/api/data
+    const allData = await (await fetch('http://localhost:5050/api/data')).json();
     const uniqueDepartments = [...new Set(allData.map(row => row.DEPARTMENT))];
     setupDepartmentFilter(uniqueDepartments);
     }
@@ -231,3 +213,9 @@ function handleEnter(event) {
         filterTable(); // Call the filter function
     }
 }
+
+// Event listener for "View All" button
+document.getElementById("viewAllButton").addEventListener("click", async function() {
+    await fetchData(); // Fetch all data (no department filter)
+});
+

@@ -3,17 +3,6 @@ const sql = require('mssql');
 const cors = require('cors');
 
 // Database connection configuration
-// const config = {
-//     user: 'remote_user', // Your SQL Server username
-//     password: 'FIBRE-IT1433', // Your SQL Server password
-//     server: '192.168.0.161', // Your SQL Server instance name
-//     database: 'WIPDATA', // Your database name
-//     Port: 1433,
-//     options: {
-//         encrypt: false, // Disable encryption for local development
-//         trustServerCertificate: true,
-//     }
-// };
 const config = {
     user: 'fbiazure',
     password: 'FIBRE@007',
@@ -31,7 +20,7 @@ const config = {
 };
 // Initialize Express
 const app = express();
-const PORT = 5000;
+const PORT = 5050;
 
 // Use CORS middleware
 app.use(cors()); // This will enable CORS for all routes
@@ -127,8 +116,3 @@ app.get('/api/health', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
 });
-
-// // To this:
-// app.listen(5000, '0.0.0.0', () => {
-//     console.log('Server is running on 0.0.0.0:5000');
-// });
