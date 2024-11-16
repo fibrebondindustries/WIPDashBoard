@@ -1,0 +1,61 @@
+.navbar{
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    position: sticky;
+}
+
+ /* Make the table font smaller and reduce padding */
+ .table td {
+  
+    white-space: nowrap; /* Prevent text wrapping */
+    text-align: left;
+    text-decoration: none !important;
+    
+}
+.table th{
+   
+    text-align: start;
+    white-space: nowrap; /* Prevent text wrapping */
+    font-family: fangsong;
+    background-color: darkgray !important;
+}
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline; /* Optional: Add underline on hover if needed */
+}
+h1 {
+    font-family: fangsong;
+    font-weight: bold;   
+    text-transform: uppercase; 
+}
+/* Back to Top Button */
+#backToTopBtn {
+    display: none; /* Hidden by default */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 99; /* Keep on top of other content */
+    font-size: 13px;
+    background-color: #333; /* Dark background */
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 15px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+}
+
+#backToTopBtn:hover {
+    background-color: #555; /* Darker on hover */
+}
+
+/* Hide Back to Top button on small screens */
+@media (max-width: 768px) {
+    #backToTopBtn {
+        display: none !important;
+    }
+}

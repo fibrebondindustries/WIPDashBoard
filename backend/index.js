@@ -112,6 +112,63 @@ app.get('/api/health', async (req, res) => {
 });
 
 
+
+// /// New API endpoint to retrieve data from the RawMReq table based on an optional job order number (JO NO)
+// app.get('/api/stockData', async (req, res) => {
+//     try {
+//         const joNo = req.query.joNo; // Retrieve the 'joNo' parameter from the query string
+
+//         const pool = await poolPromise;
+//         const request = pool.request();
+
+//         let query = 'SELECT * FROM [dbo].[RawMReq]';
+//         if (joNo) {
+//             // If a specific `joNo` is provided, add it to the query
+//             query += ' WHERE [JO NO] = @joNo';
+//             request.input('joNo', sql.NVarChar, joNo);
+//         }
+
+//         const result = await request.query(query);
+//         res.json(result.recordset); // Send the data as JSON
+//     } catch (err) {
+//         console.error("Query failed:", err);
+//         res.status(500).json({ error: "Error fetching raw material stock data" });
+//     }
+// });
+
+
+/// New API endpoint to retrieve data from the RawMReq table based on an optional job order number (JO NO)
+app.get('/api/stockData', async (req, res) => {
+    try {
+        const joNo = req.query.joNo; // Retrieve the 'joNo' parameter from the query string
+
+        const pool = await poolPromise;
+        const request = pool.request();
+
+        let query = 'SELECT * FROM [dbo].[RawMReq]';
+        if (joNo) {
+            // If a specific `joNo` is provided, add it to the query
+            query += ' WHERE [JO NO] = @joNo';
+            request.input('joNo', sql.NVarChar, joNo);
+        }
+
+        const result = await request.query(query);
+        const data = result.recordset; // Retrieve data from the query result
+
+        // Process each row to add the `isShortage` flag
+        const processedData = data.map((row) => ({
+            ...row,
+            isShortage: row['Quantity_Shortage'] !== null && row['Quantity_Shortage'] > 0, // Check if `Quantity_Shortage` is not null and greater than 0
+        }));
+
+        res.json(processedData); // Send the processed data as JSON
+    } catch (err) {
+        console.error("Query failed:", err);
+        res.status(500).json({ error: "Error fetching raw material stock data" });
+    }
+});
+
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
