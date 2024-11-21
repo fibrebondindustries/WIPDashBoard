@@ -28,6 +28,17 @@ app.use(cors()); // This will enable CORS for all routes
 let isDatabaseConnected = true;
 
 // Create a connection pool
+// const poolPromise = new sql.ConnectionPool(config)
+//     .connect()
+//     .then(pool => {
+//         console.log("Connected to SQL Server successfully.");
+//         isDatabaseConnected = true;
+//         return pool;
+//     })
+//     .catch(err => {
+//         console.error("Database connection failed:", err);
+//         isDatabaseConnected = false;
+//     });
 const poolPromise = new sql.ConnectionPool(config)
     .connect()
     .then(pool => {
@@ -36,9 +47,13 @@ const poolPromise = new sql.ConnectionPool(config)
         return pool;
     })
     .catch(err => {
-        console.error("Database connection failed:", err);
-        isDatabaseConnected = false;
+        console.error("Database connection failed. Retrying in 5 seconds...");
+        setTimeout(() => {
+            isDatabaseConnected = false;
+            poolPromise; // Retry connection
+        }, 5000);
     });
+
 
 // Middleware to check database connection status
 app.use((req, res, next) => {
@@ -112,31 +127,6 @@ app.get('/api/health', async (req, res) => {
 });
 
 
-
-// /// New API endpoint to retrieve data from the RawMReq table based on an optional job order number (JO NO)
-// app.get('/api/stockData', async (req, res) => {
-//     try {
-//         const joNo = req.query.joNo; // Retrieve the 'joNo' parameter from the query string
-
-//         const pool = await poolPromise;
-//         const request = pool.request();
-
-//         let query = 'SELECT * FROM [dbo].[RawMReq]';
-//         if (joNo) {
-//             // If a specific `joNo` is provided, add it to the query
-//             query += ' WHERE [JO NO] = @joNo';
-//             request.input('joNo', sql.NVarChar, joNo);
-//         }
-
-//         const result = await request.query(query);
-//         res.json(result.recordset); // Send the data as JSON
-//     } catch (err) {
-//         console.error("Query failed:", err);
-//         res.status(500).json({ error: "Error fetching raw material stock data" });
-//     }
-// });
-
-
 /// New API endpoint to retrieve data from the RawMReq table based on an optional job order number (JO NO)
 app.get('/api/stockData', async (req, res) => {
     try {
@@ -145,7 +135,7 @@ app.get('/api/stockData', async (req, res) => {
         const pool = await poolPromise;
         const request = pool.request();
 
-        let query = 'SELECT * FROM [dbo].[RawMReq]';
+        let query = 'SELECT * FROM [dbo].[stk_cls]';
         if (joNo) {
             // If a specific `joNo` is provided, add it to the query
             query += ' WHERE [JO NO] = @joNo';
@@ -168,6 +158,25 @@ app.get('/api/stockData', async (req, res) => {
     }
 });
 
+
+app.get('/api/RMshortage', async (req, res) => {
+    try {
+        
+
+        const pool = await poolPromise;
+        const request = pool.request();
+
+        let query = 'SELECT * FROM [dbo].[Shortage_Stock]';
+       
+        const result = await request.query(query);
+
+       
+        res.json(result.recordset);
+    } catch (err) {
+        console.error("Query failed:", err);
+        res.status(500).json({ error: "Error fetching raw material stock data" });
+    }
+});
 
 // Start the server
 app.listen(PORT, () => {

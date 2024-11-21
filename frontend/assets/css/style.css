@@ -93,7 +93,13 @@ th {
     border-bottom-width: 2px;
     font-family: math;
 }
-
+.table th{
+   
+    text-align: start;
+    white-space: nowrap; /* Prevent text wrapping */
+    font-family: fangsong;
+    background-color: darkgray !important;
+}
 
 /* Hide scrollbar */
 /* .filter-grid::-webkit-scrollbar {
@@ -116,6 +122,7 @@ th {
         width: 100% !important;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        margin-left: 0px !important;
     }
 }
 

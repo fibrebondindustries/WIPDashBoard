@@ -26,44 +26,33 @@
                 <button type="submit">Login</button> <!-- Use type="submit" -->
                 <p id="error-message" style="color:red;"></p>
             </form>
+           
         </div>
     </div>
 
-    <script>
-        function login(event) {
-            // Prevent form submission
-            event.preventDefault();
-
-            const pin = document.getElementById('pin-input').value;
-            const correctPin = '112024'; // Hardcoded PIN
-
-            if (pin === correctPin) {
-                // Set session storage with a timestamp for 12 hours from now
-                const expiryTime = Date.now() + 12 * 60 * 60 * 1000;
-                // const expiryTime = Date.now() + 10 * 1000; // Set expiry for 10 seconds (for testing)
-                sessionStorage.setItem('auth', JSON.stringify({ loggedIn: true, expiryTime }));
-                window.location.href = 'index.html'; // Redirect to main page
-            } else {
-                document.getElementById('error-message').textContent = 'Incorrect PIN. Try again.';
-            }
-        }
-    </script>
    
-    <!-- <script>
-        function login() {
-            const pin = document.getElementById('pin-input').value;
-            const correctPin = '4040'; // Hardcoded PIN
+  <script>function login(event) {
+    // Prevent form submission
+    event.preventDefault();
 
-            if (pin === correctPin) {
-                // Set session storage with a timestamp for 12 hours from now
-                // const expiryTime = Date.now() + 12 * 60 * 60 * 1000; // 12 hours in ms
-                const expiryTime = Date.now() + 10 * 1000;
-                sessionStorage.setItem('auth', JSON.stringify({ loggedIn: true, expiryTime }));
-                window.location.href = 'index.html'; // Redirect to main page
-            } else {
-                document.getElementById('error-message').textContent = 'Incorrect PIN. Try again.';
-            }
-        }
-    </script> -->
+    const pin = document.getElementById('pin-input').value;
+    const correctPin1 = '112024'; // Hardcoded PIN for index.html
+    const correctPin2 = '112244'; // Hardcoded PIN for stock.html
+
+    if (pin === correctPin1) {
+        // Set session storage with a timestamp for 12 hours from now
+        const expiryTime = Date.now() + 12 * 60 * 60 * 1000;
+        sessionStorage.setItem('auth', JSON.stringify({ loggedIn: true, expiryTime }));
+        window.location.href = './index.html'; // Redirect to main page
+    } else if (pin === correctPin2) {
+        // Set session storage with a timestamp for 12 hours from now
+        const expiryTime = Date.now() + 12 * 60 * 60 * 1000;
+        sessionStorage.setItem('auth', JSON.stringify({ loggedIn: true, expiryTime }));
+        window.location.href = './stock.html'; // Redirect to stock page
+    } else {
+        document.getElementById('error-message').textContent = 'Incorrect PIN. Try again.';
+    }
+}
+</script>
 </body>
 </html>

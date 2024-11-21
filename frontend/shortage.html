@@ -16,7 +16,9 @@
             integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
             crossorigin="anonymous"
         />
-        <link rel="stylesheet" href="css/stock.css">
+        <link rel="shortcut icon" href="./assets/Img/favicon-32x32.png" type="image/x-icon">
+        <link rel="stylesheet" href="./assets/css/stock.css">
+
     </head>
 
     <body>
@@ -27,7 +29,7 @@
         >
             <div class="container">
                 <a class="navbar-brand" href="#"><img
-                    src="../frontend/assets/Img/Logo-1.png"
+                    src="./assets/Img/Logo-1.png"
                     class="img-fluid rounded-top"
                     alt="Logo"
                     style="height: 49px; max-width: 279px;"
@@ -72,23 +74,33 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12">
-                        <h1 class="mt-4">Stock  Management</h1>
-                        <div
-                            class="table-responsive"
-                        >
+                        <h1 class="mt-4 mb-0"></h1>
+                        <div class="container-fluid d-flex justify-content-start mt-5">
+                            <a
+                            name=""
+                            id=""
+                            class="btn btn-secondary btn-sm"
+                            href="stock.html"
+                            role="button"
+                            style="text-decoration: none;"
+                            >&#8592; back</a>
+                          
+                        </div>
+                        <div class="table-responsive">
                             <table
-                                class="table border table-striped table-bordered table-hover mt-4"
-                            >
+                                class="table border table-striped table-bordered table-hover mt-4">
                                 <thead>
                                     <tr>
                                         <th scope="col" class="col-1">Sr No</th>
-                                        <th scope="col">JOB ORDER NO</th>
-                                        <th scope="col" >JOB ORDER DATE</th>
-                                        <th scope="col " class="col-3">QUANTITY SHORTAGE</th>
-                                        <th scope="col" style="text-align: center !important;">QUANTITY STATUS</th>
+                                        <th scope="col">ITEM NAME</th>
+                                        <th scope="col" >REQUIRED</th>
+                                        <th scope="col" >AVAILBLE</th>
+                                        <th scope="col " class="col-3">SHORTAGE</th>
+                                   
+                                        <!-- <th scope="col" style="text-align: center !important;">QUANTITY STATUS</th> -->
                                     </tr>
                                 </thead>
-                                <tbody id="stock-table-body">
+                                <tbody id="shortage-table-body">
                                     
                                 </tbody>
                             </table>
@@ -123,8 +135,34 @@
         }
 
         </script>
+
+        <script>
+        // Check session on page load
+        function checkAuth() {
+            const authData = sessionStorage.getItem('auth');
+            if (!authData) {
+                // Redirect to login if no session data found
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const { loggedIn, expiryTime } = JSON.parse(authData);
+            if (!loggedIn || Date.now() > expiryTime) {
+                // If not logged in or session expired, redirect to login
+                sessionStorage.removeItem('auth');
+                window.location.href = 'login.html';
+            }
+        }
+            // Set an interval to check session status every second
+            function startSessionCheck() {
+                checkAuth(); // Initial check on load
+                setInterval(checkAuth, 1000); // Check every second
+            }
+        // Call checkAuth on load
+        window.onload = startSessionCheck;
+    </script>
         <!-- Bootstrap JavaScript Libraries -->
-         <script src="stock.js"></script>
+         <script src="shortage.js"></script>
         <script
             src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
             integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"

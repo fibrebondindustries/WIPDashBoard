@@ -3,8 +3,8 @@ let wasDisconnected = false; // Track previous connection status
 // Function to check server health
 async function checkServerHealth() {
     try {
-        //  const response = await fetch('http://localhost:5050/api/health');
-         const response = await fetch('http://localhost:5050/api/health');
+        //  const response = await fetch('http://wip.fibrebondindustries.com:5050/api/health');
+         const response = await fetch('http://wip.fibrebondindustries.com:5050/api/health');
         const health = await response.json();
 
         if (health.status === 'connected') {
@@ -31,53 +31,59 @@ setInterval(checkServerHealth, 5050); // Check every 5 seconds
 
 
 // Fetch data from the backend
-async function fetchData(department = null, isNullDepartment  = false) {
-  try {
-      let url = 'http://localhost:5050/api/data';
-    // let url = 'http://localhost:5050/api/data';
-    //   if (department) {
-    //       url += `?department=${encodeURIComponent(department)}`;
-    //   }
-    // Modify URL to fetch null department data when "Department Not Available" is selected
-    if (isNullDepartment) {
-        url += `?department=null`; // Ensure backend understands null department filter
-    } else if (department) {
-        url += `?department=${encodeURIComponent(department)}`;
-    }
-      const response = await fetch(url);
+async function fetchData() {
+    try {
+        const url = 'http://wip.fibrebondindustries.com:5050/api/data';
+        const response = await fetch(url);
 
-      // Check if the response is not OK
-      if (!response.ok) {
-        throw new Error("Database Connection Lost"); // Manually throw an error
-    }
+        if (!response.ok) {
+            throw new Error("Database Connection Lost");
+        }
 
-      const data = await response.json();
-      displayData(data); // Display fetched data in the table
-       // Set active card styling when a department is selected
-        // if (department) {
-        //     const cards = document.querySelectorAll(".card");
-        //     cards.forEach(card => {
-        //         if (card.textContent.trim() === department.trim()) {
-        //             card.classList.add("active");
-        //         } else {
-        //             card.classList.remove("active");
-        //         }
-        //     });
-        // }
-        //   // Set active card styling when a department is selected
-        // const cards = document.querySelectorAll(".filter-btn");
-        // cards.forEach(card => {
-        //     if (card.textContent.trim() === department?.trim() || (department === null && card.textContent.trim() === "Department Not Available")) {
-        //         card.classList.add("active");
-        //     } else {
-        //         card.classList.remove("active");
-        //     }
-        // });
-  } catch (error) {
-      console.error("Error fetching data:", error);
-      displayErrorMessage("Database Connection Lost"); // Display error on the frontend
-  }
+        const data = await response.json();
+
+        // Calculate the sum of QUANTITY for each department
+        const departmentSums = data.reduce((acc, row) => {
+            const dept = row['DEPARTMENT'] || 'Department Not Available';
+            acc[dept] = (acc[dept] || 0) + (row['QUANTITY'] || 0);
+            return acc;
+        }, {});
+
+        setupDepartmentFilter(departmentSums); // Update button colors
+        displayData(data); // Display fetched data in the table
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        displayErrorMessage("Database Connection Lost");
+    }
 }
+
+
+
+// async function fetchData(department = null, isNullDepartment  = false) {
+//   try {
+//       let url = 'http://wip.fibrebondindustries.com:5050/api/data';
+    
+//     // Modify URL to fetch null department data when "Department Not Available" is selected
+//     if (isNullDepartment) {
+//         url += `?department=null`; // Ensure backend understands null department filter
+//     } else if (department) {
+//         url += `?department=${encodeURIComponent(department)}`;
+//     }
+//       const response = await fetch(url);
+
+//       // Check if the response is not OK
+//       if (!response.ok) {
+//         throw new Error("Database Connection Lost"); // Manually throw an error
+//     }
+
+//       const data = await response.json();
+//       displayData(data); // Display fetched data in the table
+      
+//   } catch (error) {
+//       console.error("Error fetching data:", error);
+//       displayErrorMessage("Database Connection Lost"); // Display error on the frontend
+//   }
+// }
 
 // Function to display error message on the frontend
 function displayErrorMessage(message) {
@@ -115,36 +121,130 @@ function displayData(data) {
   }
   
   // Setup department filter buttons
-  function setupDepartmentFilter(departments) {
-      const filterContainer = document.getElementById("filter-container");
-      filterContainer.innerHTML = ""; // Clear any existing buttons
-  
-       // Check if there's any null value in the departments array
-    if (departments.includes(null)) {
-        // Add button for "Department Not Available" if there are null values
-        const nullButton = document.createElement("button");
-        nullButton.className = "filter-btn btn btn-outline-secondary";
-        nullButton.innerText = "Department Not Available";
-        nullButton.onclick = () => {
-            fetchData(null, true); // Fetch data with null departments only
-            setActiveButton(nullButton);
+// Setup department filter buttons and update colors
+// function setupDepartmentFilter(departmentSums) {
+//     const filterContainer = document.getElementById("filter-container");
+//     filterContainer.innerHTML = ""; // Clear any existing buttons
+
+//     Object.entries(departmentSums).forEach(([department, sum]) => {
+//         const button = document.createElement("button");
+//         button.className = "filter-btn btn btn-outline-secondary";
+//         button.innerText = department;
+
+//         // Add color based on the sum of QUANTITY
+//         if (sum < 19500) {
+//             button.style.backgroundColor = 'orange';
+//             button.style.color = 'black';
+//         } else if (sum > 21000) {
+//             button.style.backgroundColor = 'red';
+//             button.style.color = 'black';
+//         } else {
+//             button.style.backgroundColor = 'green';
+//             button.style.color = 'black';
+//         }
+
+//         // Add onclick event to filter data by department
+//         button.onclick = () => {
+//             fetchFilteredData(department);
+//             setActiveButton(button);
+//         };
+
+//         filterContainer.appendChild(button);
+//     });
+// }
+
+function setupDepartmentFilter(departmentSums) {
+    const filterContainer = document.getElementById("filter-container");
+    filterContainer.innerHTML = ""; // Clear any existing buttons
+
+    Object.entries(departmentSums).forEach(([department, sum]) => {
+        const button = document.createElement("button");
+        button.className = "filter-btn btn btn-outline-secondary";
+        button.innerText = department;
+
+        // Add tooltip attribute
+        button.setAttribute("data-bs-toggle", "tooltip"); // For Bootstrap tooltip
+        button.setAttribute("data-bs-placement", "top"); // Position the tooltip above
+        button.setAttribute("title", `Total Quantity: ${sum}`); // Tooltip text
+
+        // Add color based on the sum of QUANTITY
+        if (sum < 19500) {
+            button.style.backgroundColor = '#ffc266';
+            button.style.color = 'black';
+        } else if (sum > 21000) {
+            button.style.backgroundColor = '#ff4d4d';
+            button.style.color = 'black';
+        } else {
+            button.style.backgroundColor = 'green';
+            button.style.color = 'black';
+        }
+
+        // Add onclick event to filter data by department
+        button.onclick = () => {
+            fetchFilteredData(department);
+            setActiveButton(button);
         };
-        filterContainer.appendChild(nullButton);
+
+        filterContainer.appendChild(button);
+    });
+
+    // Initialize tooltips for buttons
+    initializeTooltips();
+}
+
+// Function to initialize tooltips (using Bootstrap tooltips)
+function initializeTooltips() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl); // Bootstrap tooltip initialization
+    });
+}
+
+
+// Fetch and display filtered data for a specific department
+async function fetchFilteredData(department) {
+    try {
+        const url = department === 'Department Not Available'
+            ? 'http://wip.fibrebondindustries.com:5050/api/data?department=null'
+            : `http://wip.fibrebondindustries.com:5050/api/data?department=${encodeURIComponent(department)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        displayData(data); // Update the table based on the filtered data
+    } catch (error) {
+        console.error("Error fetching filtered data:", error);
     }
-      // Create buttons for all other departments
-      departments.forEach(department => {
-          if (department !== null) {
-              const button = document.createElement("button");
-              button.className = "filter-btn btn btn-outline-secondary";
-              button.innerText = department;
-              button.onclick = () => {
-                  fetchData(department, false); // Explicitly set isNullDepartment to false
-                  setActiveButton(button);
-              };
-              filterContainer.appendChild(button);
-          }
-      });
-  }
+}
+
+//   function setupDepartmentFilter(departments) {
+//       const filterContainer = document.getElementById("filter-container");
+//       filterContainer.innerHTML = ""; // Clear any existing buttons
+  
+//        // Check if there's any null value in the departments array
+//     if (departments.includes(null)) {
+//         // Add button for "Department Not Available" if there are null values
+//         const nullButton = document.createElement("button");
+//         nullButton.className = "filter-btn btn btn-outline-secondary";
+//         nullButton.innerText = "Department Not Available";
+//         nullButton.onclick = () => {
+//             fetchData(null, true); // Fetch data with null departments only
+//             setActiveButton(nullButton);
+//         };
+//         filterContainer.appendChild(nullButton);
+//     }
+//       // Create buttons for all other departments
+//       departments.forEach(department => {
+//           if (department !== null) {
+//               const button = document.createElement("button");
+//               button.className = "filter-btn btn btn-outline-secondary";
+//               button.innerText = department;
+//               button.onclick = () => {
+//                   fetchData(department, false); // Explicitly set isNullDepartment to false
+//                   setActiveButton(button);
+//               };
+//               filterContainer.appendChild(button);
+//           }
+//       });
+//   }
 
 
 // Set active button style
@@ -172,15 +272,59 @@ function scrollFilterRight() {
         behavior: 'smooth'
     });
 }
+
+
+////20Nov Code
+async function fetchLastUpdatedDate() {
+    try {
+        // Fetch all data from the API
+        const response = await fetch('http://wip.fibrebondindustries.com:5050/api/data');
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+            // Extract the most recent `Updated_Time`
+            const lastUpdated = data.reduce((latest, current) => {
+                // Compare the string representation of Updated_Time
+                return current['Updated_Time'] > latest['Updated_Time'] ? current : latest;
+            });
+
+            // Use the Updated_Time value directly since it’s already formatted
+            const formattedDate = lastUpdated['Updated_Time'];
+
+            // Append the formatted date to the input box
+            document.getElementById('updatedDate').value = formattedDate;
+        } else {
+            console.error("No data available to fetch the last updated time.");
+            document.getElementById('updatedDate').value = "No data available";
+        }
+    } catch (error) {
+        console.error("Error fetching last updated time:", error);
+        document.getElementById('updatedDate').value = "Error fetching date";
+    }
+}
+
+
+
+
+
+
+
+
 // Initialize page
 async function init() {
-  await fetchData(); // Fetch and display all data initially
+    await fetchData(); // Fetch and display all data initially
+    await fetchLastUpdatedDate(); // Fetch and display the last updated time
+}
 
-  // Generate department buttons dynamically based on available data //http://192.168.0.191:5050/api/data
-    const allData = await (await fetch('http://localhost:5050/api/data')).json();
-    const uniqueDepartments = [...new Set(allData.map(row => row.DEPARTMENT))];
-    setupDepartmentFilter(uniqueDepartments);
-    }
+// async function init() {
+//   await fetchData(); // Fetch and display all data initially
+ 
+//     await fetchLastUpdatedDate();   // Fetch and display the last updated time
+//   // Generate department buttons dynamically based on available data //http://192.168.0.191:5050/api/data
+//     const allData = await (await fetch('http://wip.fibrebondindustries.com:5050/api/data')).json();
+//     const uniqueDepartments = [...new Set(allData.map(row => row.DEPARTMENT))];
+//     setupDepartmentFilter(uniqueDepartments);
+//     }
 
 // Run initialization
 init();
