@@ -111,10 +111,10 @@ function setupDepartmentFilter(departmentSums) {
 
         // Add color based on the sum of QUANTITY
         if (sum < 19500) {
-            button.style.backgroundColor = '#ffc266';
+            button.style.backgroundColor = '#ffc266'; // Orange
             button.style.color = 'black';
         } else if (sum > 21000) {
-            button.style.backgroundColor = '#ff4d4d';
+            button.style.backgroundColor = '#ff4d4d'; // Red
             button.style.color = 'black';
         } else {
             button.style.backgroundColor = 'green';

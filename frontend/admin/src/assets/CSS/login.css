@@ -1,0 +1,68 @@
+/* frontend/admin/src/assets/CSS/login.css */
+  
+  .login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Full viewport height */    
+    margin-top: -48px;
+  }
+  
+  .login-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 9px rgb(0 0 0 / 67%);
+    width: 100%;
+    max-width: 400px; /* Limit the maximum width */
+    text-align: center;
+  }
+  
+  .login-card h2 {
+    text-align: center;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .login-form input {
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: border-color 0.3s ease-in-out;
+    outline: none;
+    color: #333;
+  }
+  
+  .login-form input:focus {
+    border-color: #555;
+  }
+  
+  .login-form button {
+    background-color: #555;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+  }
+  
+  .login-form button:hover {
+    background-color: #333;
+  }
+  
+
+  #alertPlaceholder {
+    position: fixed;
+    top: 20px; /* Distance from the top */
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally */
+    z-index: 1050; /* Ensure it appears above other elements */
+    width: auto; /* Adjust width if needed */
+    max-width: 90%; /* Prevent overflow on small screens */
+    text-align: center; /* Center-align text */
+}
