@@ -22,11 +22,41 @@ async function fetchStockData() {
 }
 
 // Function to calculate the sum of Quantity_Shortage for each unique JO NO
+// function processStockData(data) {
+//     const aggregatedData = {}; // Object to store aggregated values by JO NO
+
+//     // Iterate through data to calculate the sum
+//     data.forEach((row) => {
+//         const joNo = row['JO NO'];
+//         const shortage = parseFloat(row['Quantity_Shortage']) || 0;
+
+//         if (!aggregatedData[joNo]) {
+//             aggregatedData[joNo] = {
+//                 joNo: joNo,
+//                 joDate: row['JO DATE'],
+//                 quantityShortage: 0,
+//                 status: row['STATUS'] ,
+//             };
+//         }
+//         aggregatedData[joNo].quantityShortage += shortage;
+//     });
+
+//     // Convert aggregatedData object to an array and display it
+//     displayStockData(Object.values(aggregatedData));
+// }
+
+
 function processStockData(data) {
     const aggregatedData = {}; // Object to store aggregated values by JO NO
 
-    // Iterate through data to calculate the sum
+    // Iterate through data to calculate the sum, skipping rows with "BOX" in PROCESS NAME
     data.forEach((row) => {
+        // Check if PROCESS NAME contains "BOX" and skip those rows
+        if (row['PROCESS NAME'] && row['PROCESS NAME'].toUpperCase().includes('BOX')) {
+            console.log("Skipping row with PROCESS NAME:", row['PROCESS NAME']);
+            return; // Skip this iteration
+        }
+
         const joNo = row['JO NO'];
         const shortage = parseFloat(row['Quantity_Shortage']) || 0;
 
@@ -75,10 +105,15 @@ function displayStockData(data) {
     tableBody.innerHTML = ""; // Clear existing data
 
     data.forEach((row, index) => {
+       if (row['PROCESS NAME'] && row['PROCESS NAME'].toUpperCase().includes('BOX')) {
+            // console.log("Skipping row with PROCESS NAME:", row['PROCESS NAME']);
+            return; // Skip this iteration
+        }
+
         // Define the conditions for color and status
         let statusImage, statusText, statusClass;
 
-        if (row.quantityShortage !== 0) {
+        if (row.quantityShortage !== 0 ) {
             // Condition 1: Quantity_Shortage != 0
             statusImage = "red.png"; // Red image
             statusText = "Shortage";

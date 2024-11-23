@@ -3,7 +3,7 @@
     font-size: 14px; /* Smaller font size */
     padding: 6px 10px; /* Reduce cell padding */
     vertical-align: middle; /* Center align vertically */
-    white-space: nowrap; /* Prevent text wrapping */
+    white-space: normal; /* Prevent text wrapping */
     text-align: left;
 }
 .table th{

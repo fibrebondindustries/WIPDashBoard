@@ -58,10 +58,17 @@ function displayStockDetails(data) {
 
     data.forEach((row, index) => {
         const isShortage = row.isShortage; // Use the isShortage flag from the backend
+        const shortageValue = parseFloat(row.shortage) || 0; // Ensure shortage is treated as a number
 
         const tr = document.createElement("tr");
-        if (isShortage) {
+        // if (isShortage) {
+        //     tr.classList.add("table-danger"); // Add red background for rows with shortages
+        // }
+         // Apply color conditions
+         if (isShortage) {
             tr.classList.add("table-danger"); // Add red background for rows with shortages
+        } else if (shortageValue > 0) {
+            tr.classList.add("table-warning"); // Add orange background for rows with shortage > 0
         }
         // Format the date using formatDate
         const formattedDate = row['JO DATE'] ? formatDate(row['JO DATE']) : "Invalid Date";
@@ -74,6 +81,7 @@ function displayStockDetails(data) {
             <td>${row['PRODUCT']}</td>
             <td>${row['CLR']}</td>
             <td>${row['ITEM NAME']}</td>
+            <td>${row['RM ITEM DESCRIPTION']}</td> 
             <td>${row['SIZE']}</td>
             <td>${row['QUANTITY REQ-1']}</td>
             <td>${row['STOCK IN HAND']}</td>

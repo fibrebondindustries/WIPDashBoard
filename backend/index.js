@@ -178,6 +178,28 @@ app.get('/api/RMshortage', async (req, res) => {
     }
 });
 
+
+app.get('/api/BOXRMshortage', async (req, res) => {
+    try {
+        
+
+        const pool = await poolPromise;
+        const request = pool.request();
+
+        let query = `SELECT [ITEM NAME],[RM ITEM DESCRIPTION], SUM([QUANTITY REQ-1]) as req, 
+        AVG([STOCK IN HAND]) as avail,AVG([Shortage]) as shortage FROM [dbo].[stk_cls] where [shortage] != 0 
+        and [PROCESS NAME] LIKE '%BOX%' group by [ITEM NAME],[RM ITEM DESCRIPTION]`;
+       
+        const result = await request.query(query);
+
+       
+        res.json(result.recordset);
+    } catch (err) {
+        console.error("Query failed:", err);
+        res.status(500).json({ error: "Error fetching raw material stock data" });
+    }
+});
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);

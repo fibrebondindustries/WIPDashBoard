@@ -3,8 +3,8 @@ let wasDisconnected = false; // Track previous connection status
 // Function to check server health
 async function checkServerHealth() {
     try {
-        //  const response = await fetch('http://wip.fibrebondindustries.com:5050/api/health');
-         const response = await fetch('http://wip.fibrebondindustries.com:5050/api/health');
+        //  const response = await fetch('http://localhost:5050/api/health');
+         const response = await fetch('http://localhost:5050/api/health');
         const health = await response.json();
 
         if (health.status === 'connected') {
@@ -33,7 +33,7 @@ setInterval(checkServerHealth, 5050); // Check every 5 seconds
 // Fetch data from the backend
 async function fetchData() {
     try {
-        const url = 'http://wip.fibrebondindustries.com:5050/api/data';
+        const url = 'http://localhost:5050/api/data';
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -57,33 +57,6 @@ async function fetchData() {
     }
 }
 
-
-
-// async function fetchData(department = null, isNullDepartment  = false) {
-//   try {
-//       let url = 'http://wip.fibrebondindustries.com:5050/api/data';
-    
-//     // Modify URL to fetch null department data when "Department Not Available" is selected
-//     if (isNullDepartment) {
-//         url += `?department=null`; // Ensure backend understands null department filter
-//     } else if (department) {
-//         url += `?department=${encodeURIComponent(department)}`;
-//     }
-//       const response = await fetch(url);
-
-//       // Check if the response is not OK
-//       if (!response.ok) {
-//         throw new Error("Database Connection Lost"); // Manually throw an error
-//     }
-
-//       const data = await response.json();
-//       displayData(data); // Display fetched data in the table
-      
-//   } catch (error) {
-//       console.error("Error fetching data:", error);
-//       displayErrorMessage("Database Connection Lost"); // Display error on the frontend
-//   }
-// }
 
 // Function to display error message on the frontend
 function displayErrorMessage(message) {
@@ -121,37 +94,6 @@ function displayData(data) {
   }
   
   // Setup department filter buttons
-// Setup department filter buttons and update colors
-// function setupDepartmentFilter(departmentSums) {
-//     const filterContainer = document.getElementById("filter-container");
-//     filterContainer.innerHTML = ""; // Clear any existing buttons
-
-//     Object.entries(departmentSums).forEach(([department, sum]) => {
-//         const button = document.createElement("button");
-//         button.className = "filter-btn btn btn-outline-secondary";
-//         button.innerText = department;
-
-//         // Add color based on the sum of QUANTITY
-//         if (sum < 19500) {
-//             button.style.backgroundColor = 'orange';
-//             button.style.color = 'black';
-//         } else if (sum > 21000) {
-//             button.style.backgroundColor = 'red';
-//             button.style.color = 'black';
-//         } else {
-//             button.style.backgroundColor = 'green';
-//             button.style.color = 'black';
-//         }
-
-//         // Add onclick event to filter data by department
-//         button.onclick = () => {
-//             fetchFilteredData(department);
-//             setActiveButton(button);
-//         };
-
-//         filterContainer.appendChild(button);
-//     });
-// }
 
 function setupDepartmentFilter(departmentSums) {
     const filterContainer = document.getElementById("filter-container");
@@ -205,8 +147,8 @@ function initializeTooltips() {
 async function fetchFilteredData(department) {
     try {
         const url = department === 'Department Not Available'
-            ? 'http://wip.fibrebondindustries.com:5050/api/data?department=null'
-            : `http://wip.fibrebondindustries.com:5050/api/data?department=${encodeURIComponent(department)}`;
+            ? 'http://localhost:5050/api/data?department=null'
+            : `http://localhost:5050/api/data?department=${encodeURIComponent(department)}`;
         const response = await fetch(url);
         const data = await response.json();
         displayData(data); // Update the table based on the filtered data
@@ -214,38 +156,6 @@ async function fetchFilteredData(department) {
         console.error("Error fetching filtered data:", error);
     }
 }
-
-//   function setupDepartmentFilter(departments) {
-//       const filterContainer = document.getElementById("filter-container");
-//       filterContainer.innerHTML = ""; // Clear any existing buttons
-  
-//        // Check if there's any null value in the departments array
-//     if (departments.includes(null)) {
-//         // Add button for "Department Not Available" if there are null values
-//         const nullButton = document.createElement("button");
-//         nullButton.className = "filter-btn btn btn-outline-secondary";
-//         nullButton.innerText = "Department Not Available";
-//         nullButton.onclick = () => {
-//             fetchData(null, true); // Fetch data with null departments only
-//             setActiveButton(nullButton);
-//         };
-//         filterContainer.appendChild(nullButton);
-//     }
-//       // Create buttons for all other departments
-//       departments.forEach(department => {
-//           if (department !== null) {
-//               const button = document.createElement("button");
-//               button.className = "filter-btn btn btn-outline-secondary";
-//               button.innerText = department;
-//               button.onclick = () => {
-//                   fetchData(department, false); // Explicitly set isNullDepartment to false
-//                   setActiveButton(button);
-//               };
-//               filterContainer.appendChild(button);
-//           }
-//       });
-//   }
-
 
 // Set active button style
 function setActiveButton(activeButton) {
@@ -278,7 +188,7 @@ function scrollFilterRight() {
 async function fetchLastUpdatedDate() {
     try {
         // Fetch all data from the API
-        const response = await fetch('http://wip.fibrebondindustries.com:5050/api/data');
+        const response = await fetch('http://localhost:5050/api/data');
         const data = await response.json();
 
         if (data && data.length > 0) {
@@ -316,15 +226,7 @@ async function init() {
     await fetchLastUpdatedDate(); // Fetch and display the last updated time
 }
 
-// async function init() {
-//   await fetchData(); // Fetch and display all data initially
- 
-//     await fetchLastUpdatedDate();   // Fetch and display the last updated time
-//   // Generate department buttons dynamically based on available data //http://192.168.0.191:5050/api/data
-//     const allData = await (await fetch('http://wip.fibrebondindustries.com:5050/api/data')).json();
-//     const uniqueDepartments = [...new Set(allData.map(row => row.DEPARTMENT))];
-//     setupDepartmentFilter(uniqueDepartments);
-//     }
+
 
 // Run initialization
 init();
