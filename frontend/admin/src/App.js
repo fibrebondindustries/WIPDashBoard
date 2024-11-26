@@ -5,11 +5,12 @@ import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './ProtectedRoute';
 import UserDashboard from './components/UserDashboard';
+import UserManagement from "./pages/UserManagement";
 
 function App() {
     return (
         <BrowserRouter>
-            <div className="container mt-5">
+            <div className="">
                 <Routes>
                     {/* Define all your routes */}
                     <Route path="/" element={<Login />} />
@@ -27,6 +28,14 @@ function App() {
                         element={
                             <ProtectedRoute>
                                 <UserDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/users"
+                        element={
+                            <ProtectedRoute>
+                                <UserManagement  />
                             </ProtectedRoute>
                         }
                     />

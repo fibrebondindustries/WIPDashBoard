@@ -63,6 +63,7 @@ function Login() {
             // alert(response.data.message);
 
             const userData = response.data.user;
+            
 
             // Save user data and login time in local storage
             // const loginTime = new Date().toISOString();
@@ -76,7 +77,7 @@ function Login() {
 
            setTimeout(() => {
             // Redirect based on the user's role
-            console.log('Redirecting now...'); // Debugging
+            // console.log('Redirecting now...'); // Debugging
             if (userData.Auth === 'User') {
                 navigate('/User-dashboard');
             } else {

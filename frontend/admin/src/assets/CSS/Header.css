@@ -1,0 +1,48 @@
+.header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 10px 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        margin-top: -49px !important;
+        margin-left: -63px !important;
+        margin-right: -63px;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-image {
+    width: 50px; /* Adjust logo size */
+    height: 50px;
+    margin-right: 10px; /* Space between logo and text */
+  }
+  
+  .company-name h1 {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+    color: #000; /* Black text for the main title */
+  }
+  
+  .company-name p {
+    font-size: 14px;
+    margin: 0;
+    color: #666; /* Gray text for the subtitle */
+  }
+  
+  .navbar{
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2) ;
+    z-index: 100;
+    position: sticky;
+    height: auto;
+}
+
+@media  (max-width: 768px) {
+  .btn.btn-link.toggleBtn {
+    display: none;
+  }
+}

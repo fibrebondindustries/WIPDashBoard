@@ -5,7 +5,7 @@
     align-items: center;
     justify-content: center;
     height: 100vh; /* Full viewport height */    
-    margin-top: -48px;
+    /* margin-top: -48px; */
   }
   
   .login-card {
@@ -61,7 +61,7 @@
     top: 20px; /* Distance from the top */
     left: 50%;
     transform: translateX(-50%); /* Center horizontally */
-    z-index: 1050; /* Ensure it appears above other elements */
+    z-index: 2000 !important; /* Ensure it appears above other elements */
     width: auto; /* Adjust width if needed */
     max-width: 90%; /* Prevent overflow on small screens */
     text-align: center; /* Center-align text */

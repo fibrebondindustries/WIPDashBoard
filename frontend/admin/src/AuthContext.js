@@ -1,58 +1,3 @@
-// import { createContext, useState } from 'react';
-
-// export const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//     const [user, setUser] = useState(null);
-
-//     const login = (userData) => {
-//         setUser(userData);
-//         localStorage.setItem('user', JSON.stringify(userData));
-//     };
-
-//     const logout = () => {
-//         setUser(null);
-//         localStorage.removeItem('user');
-//     };
-
-//     return (
-//         <AuthContext.Provider value={{ user, login, logout }}>
-//             {children}
-//         </AuthContext.Provider>
-//     );
-// };
-
-
-// import React, { createContext, useState } from 'react';
-
-// export const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//     const [user, setUser] = useState(() => {
-//         // Retrieve the user from local storage if it exists
-//         const savedUser = localStorage.getItem('user');
-//         return savedUser ? JSON.parse(savedUser) : null;
-//     });
-
-//     const login = (userData) => {
-//         // Save only required fields in local storage
-//         const { Name, Email, EmployeeID } = userData;
-//         const minimalUser = { Name, Email, EmployeeID };
-//         setUser(minimalUser);
-//         localStorage.setItem('user', JSON.stringify(minimalUser)); // Save only minimal data in local storage
-//     };
-
-//     const logout = () => {
-//         setUser(null);
-//         localStorage.removeItem('user'); // Remove user from local storage
-//     };
-
-//     return (
-//         <AuthContext.Provider value={{ user, login, logout }}>
-//             {children}
-//         </AuthContext.Provider>
-//     );
-// };
 
 
 import React, { createContext, useState, useEffect } from 'react';
@@ -64,30 +9,48 @@ export const AuthProvider = ({ children }) => {
         const savedUser = localStorage.getItem('user');
         return savedUser ? JSON.parse(savedUser) : null;
     });
-
+    // const getISTTime = () => {
+    //     const now = new Date();
+    //     const offset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5:30
+    //     const istTime = new Date(now.getTime() + offset);
+    //     return istTime.toISOString().replace('T', ' ').slice(0, 19); // Format as 'YYYY-MM-DD HH:MM:SS'
+    // };
     const login = (userData) => {
         const { Name, Email, EmployeeID } = userData;
         const minimalUser = { Name, Email, EmployeeID, Auth: userData.Auth }; // Include Auth for routing
         setUser(minimalUser);
         localStorage.setItem('user', JSON.stringify(minimalUser));
+
+        // Set session expiration (24 hours from now)
+        const sessionExpiration = new Date(new Date().getTime() + 12 * 60 * 60 * 1000); // + 24 * 60 * 60 * 1000); // 24 hours
+        localStorage.setItem('sessionExpiration', sessionExpiration.toISOString());
+        // localStorage.setItem('loginTime', new Date().toISOString()); // Optional: store login time
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
-        localStorage.removeItem('loginTime'); // Remove login time
+        localStorage.removeItem('loginTime');
+        localStorage.removeItem('sessionExpiration');
     };
 
     useEffect(() => {
-        // Check if the user session is valid (optional for advanced session expiration handling)
-        const loginTime = localStorage.getItem('loginTime');
-        if (loginTime) {
-            const timeElapsed = new Date() - new Date(loginTime);
-            const sessionDuration = 24 * 60 * 60 * 1000; // Example: 24 hours
-            if (timeElapsed > sessionDuration) {
-                logout(); // Clear session if expired
+        const checkSessionExpiration = () => {
+            const sessionExpiration = localStorage.getItem('sessionExpiration');
+            if (!sessionExpiration) return;
+
+            const currentTime = new Date();
+            if (currentTime > new Date(sessionExpiration)) {
+                logout(); // Log out if the session has expired
             }
-        }
+        };
+
+        // Check session expiration immediately
+        checkSessionExpiration();
+
+        // Optionally, set an interval to check periodically
+        const interval = setInterval(checkSessionExpiration, 60 * 1000); // Every 1 minute
+        return () => clearInterval(interval); // Cleanup on unmount
     }, []); // Run only once on mount
 
     return (
