@@ -16,8 +16,8 @@ export const AuthProvider = ({ children }) => {
     //     return istTime.toISOString().replace('T', ' ').slice(0, 19); // Format as 'YYYY-MM-DD HH:MM:SS'
     // };
     const login = (userData) => {
-        const { Name, Email, EmployeeID } = userData;
-        const minimalUser = { Name, Email, EmployeeID, Auth: userData.Auth }; // Include Auth for routing
+        const { Name, Email, EmployeeID, Department  } = userData;
+        const minimalUser = { Name, Email, EmployeeID, Auth: userData.Auth, Department  }; // Include Auth for routing
         setUser(minimalUser);
         localStorage.setItem('user', JSON.stringify(minimalUser));
 

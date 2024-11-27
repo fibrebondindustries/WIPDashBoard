@@ -1,11 +1,12 @@
 import React from 'react';
 import {  Routes, Route, BrowserRouter } from 'react-router-dom';
 import Login from './components/Login';
-import Signup from './components/Signup';
+// import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './ProtectedRoute';
 import UserDashboard from './components/UserDashboard';
 import UserManagement from "./pages/UserManagement";
+import Department from './pages/Department'
 
 function App() {
     return (
@@ -14,7 +15,7 @@ function App() {
                 <Routes>
                     {/* Define all your routes */}
                     <Route path="/" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
+                    {/* <Route path="/signup" element={<Signup />} /> */}
                     <Route
                         path="/Admin-dashboard"
                         element={
@@ -36,6 +37,14 @@ function App() {
                         element={
                             <ProtectedRoute>
                                 <UserManagement  />
+                            </ProtectedRoute>
+                        }
+                    />
+                     <Route
+                        path="/department"
+                        element={
+                            <ProtectedRoute>
+                                <Department  />
                             </ProtectedRoute>
                         }
                     />

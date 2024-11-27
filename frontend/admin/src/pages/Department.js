@@ -4,7 +4,7 @@ import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
 import DataTable from "react-data-table-component";
 
-function UserManagement() {
+function Department() {
   const [users, setUsers] = useState([]); // User data
   const [formData, setFormData] = useState({
     name: "",
@@ -102,55 +102,55 @@ function UserManagement() {
     }
   };
 
-  const handleDeleteUser = async () => {
-    if (selectedRows.length === 0) {
-      showAlert("Please select a user to delete!", "danger");
-      return;
-    }
+//   const handleDeleteUser = async () => {
+//     if (selectedRows.length === 0) {
+//       showAlert("Please select a user to delete!", "danger");
+//       return;
+//     }
 
-    try {
-      // Assuming your backend can handle batch deletes; if not, loop through selectedRows
-      await axiosInstance.delete(`/api/users/${selectedRows[0].id}`);
-      showAlert("User deleted successfully!", "success");
-      fetchUsers();
-      setSelectedRows([]);
-      setToggleClearSelectedRows(!toggleClearSelectedRows);
-    } catch (error) {
-      console.error("Error deleting user:", error.response?.data || error.message);
-      showAlert("An error occurred while deleting the user.", "danger");
-    }
-  };
+//     try {
+//       // Assuming your backend can handle batch deletes; if not, loop through selectedRows
+//       await axiosInstance.delete(`/api/users/${selectedRows[0].id}`);
+//       showAlert("User deleted successfully!", "success");
+//       fetchUsers();
+//       setSelectedRows([]);
+//       setToggleClearSelectedRows(!toggleClearSelectedRows);
+//     } catch (error) {
+//       console.error("Error deleting user:", error.response?.data || error.message);
+//       showAlert("An error occurred while deleting the user.", "danger");
+//     }
+//   };
 
-  const handleUpdateUser = () => {
-    if (selectedRows.length === 0) {
-      showAlert("Please select a user to update!", "danger");
-      return;
-    }
+//   const handleUpdateUser = () => {
+//     if (selectedRows.length === 0) {
+//       showAlert("Please select a user to update!", "danger");
+//       return;
+//     }
 
 
-  if (selectedRows.length > 1) {
-    showAlert("Select only one user to update!", "danger");
-    return;
-  }
+//   if (selectedRows.length > 1) {
+//     showAlert("Select only one user to update!", "danger");
+//     return;
+//   }
 
-    const userToEdit = selectedRows[0];
-    setSelectedUserId(userToEdit.id);
-    setFormData({
-      name: userToEdit.Name,
-      email: userToEdit.Email,
-      mobile: userToEdit.Mobile,
-      password: "",
-      auth: userToEdit.Auth,
-      employeeID: userToEdit.EmployeeID,
-      department: userToEdit.Department,
-    });
-    setShowModal(true);
-  };
+//     const userToEdit = selectedRows[0];
+//     setSelectedUserId(userToEdit.id);
+//     setFormData({
+//       name: userToEdit.Name,
+//       email: userToEdit.Email,
+//       mobile: userToEdit.Mobile,
+//       password: "",
+//       auth: userToEdit.Auth,
+//       employeeID: userToEdit.EmployeeID,
+//       department: userToEdit.Department,
+//     });
+//     setShowModal(true);
+//   };
 
-  const handleAddUserClick = () => {
-    resetForm(); // Clear the form data
-    setShowModal(true); // Open the modal
-  };
+//   const handleAddUserClick = () => {
+//     resetForm(); // Clear the form data
+//     setShowModal(true); // Open the modal
+//   };
   const resetForm = () => {
     setFormData({
       name: "",
@@ -194,30 +194,19 @@ function UserManagement() {
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
         <main className="p-4">
         <div id="alertPlaceholder"></div>
-          {/* <h1>User Management</h1>
-          <div id="alertPlaceholder"></div>
-
-          <button className="btn btn-outline-primary mb-3 me-2" onClick={() => setShowModal(true)}>
+      
+          <div className="d-flex justify-content-between align-items-center">
+            <h1 className="mb-5">Department Management</h1>
+            <div className="d-flex gap-2">
+            {/* <button className="btn btn-outline-primary mb-5 " onClick={handleAddUserClick} style={{display:"none"}}>
             Add New User
-          </button>
-          <button className="btn btn-outline-primary mb-3 me-2" onClick={handleUpdateUser}>
+          </button> */}
+          <button className="btn btn-outline-primary mb-5 " >
             Update User
           </button>
-          <button className="btn btn-outline-danger mb-3" onClick={handleDeleteUser}>
+          {/* <button className="btn btn-outline-danger mb-5" onClick={handleDeleteUser} style={{display:"none"}}>
             Delete User
           </button> */}
-          <div className="d-flex justify-content-between align-items-center">
-            <h1 className="mb-5">User Management</h1>
-            <div className="d-flex gap-2">
-            <button className="btn btn-outline-primary mb-5 " onClick={handleAddUserClick}>
-            Add New User
-          </button>
-          <button className="btn btn-outline-primary mb-5 " onClick={handleUpdateUser}>
-            Update User
-          </button>
-          <button className="btn btn-outline-danger mb-5" onClick={handleDeleteUser}>
-            Delete User
-          </button>
             </div>
         </div>
 
@@ -351,5 +340,5 @@ function UserManagement() {
   );
 }
 
-export default UserManagement;
+export default Department;
 
