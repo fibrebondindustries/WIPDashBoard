@@ -173,12 +173,12 @@ function UserManagement() {
   // Define columns for DataTable
   const columns = [
     // { name: "Sr", selector: (row, index) => index + 1, sortable: true },
-    { name: "Name", selector: (row) => row.Name, sortable: true },
-    { name: "Email", selector: (row) => row.Email, sortable: true },
-    { name: "Mobile", selector: (row) => row.Mobile, sortable: true },
-    { name: "Auth", selector: (row) => row.Auth, sortable: true },
-    { name: "Employee ID", selector: (row) => row.EmployeeID, sortable: true },
-    { name: "Department", selector: (row) => row.Department, sortable: true },
+    { name: "NAME", selector: (row) => row.Name, sortable: true },
+    { name: "EMAIL", selector: (row) => row.Email, sortable: true },
+    { name: "MOBILE", selector: (row) => row.Mobile, sortable: true },
+    { name: "AUTH", selector: (row) => row.Auth, sortable: true },
+    { name: "EMPLOYEE ID", selector: (row) => row.EmployeeID, sortable: true },
+    { name: "DEPARTMENT", selector: (row) => row.Department, sortable: true },
   ];
 
   const handleSelectedRowsChange = (state) => {

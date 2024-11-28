@@ -275,17 +275,19 @@ router.post("/login", async (req, res) => {
         .json({ error: "Invalid Email/Employee ID or Password" });
     }
 
-    // Insert login time into UserActivity table
-    const loginTime = new Date().toISOString(); // Use UTC time for database
-    await pool
-      .request()
-      .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-      .input("LoginTime", sql.DateTime, loginTime)
-      .input("Department", sql.NVarChar, user.recordset[0].Department || null) // Optional department
-      .query(`
-        INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
-        VALUES (@EmployeeID, @LoginTime, @Department)
-      `);
+    // Insert login time into UserActivity table only if Auth = 'User'
+    if (user.recordset[0].Auth === "User") {
+      const loginTime = new Date().toISOString(); // Use UTC time for database
+      await pool
+        .request()
+        .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+        .input("LoginTime", sql.DateTime, loginTime)
+        .input("Department", sql.NVarChar, user.recordset[0].Department || null) // Optional department
+        .query(`
+          INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
+          VALUES (@EmployeeID, @LoginTime, @Department)
+        `);
+    }
 
     // Return the user details with appropriate redirection
     res.status(200).json({
@@ -306,6 +308,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
+
 // router.post("/login", async (req, res) => {
 //   const { identifier, Password } = req.body;
 
@@ -319,7 +322,8 @@ router.post("/login", async (req, res) => {
 //     // Query the database to find a user by Email or EmployeeID
 //     const user = await pool
 //       .request()
-//       .input("identifier", sql.NVarChar, identifier).query(`
+//       .input("identifier", sql.NVarChar, identifier)
+//       .query(`
 //                 SELECT id, Name, Email, Mobile, Password, Auth, EmployeeID, Department
 //                 FROM [dbo].[Users]
 //                 WHERE Email = @identifier OR EmployeeID = @identifier
@@ -341,13 +345,21 @@ router.post("/login", async (req, res) => {
 //         .json({ error: "Invalid Email/Employee ID or Password" });
 //     }
 
-//     // Return the user details with appropriate redirection
-//     const redirectUrl =
-//       user.recordset[0].Auth === "User" ? "/userPage" : "/dashboard";
+//     // Insert login time into UserActivity table
+//     const loginTime = new Date().toISOString(); // Use UTC time for database
+//     await pool
+//       .request()
+//       .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+//       .input("LoginTime", sql.DateTime, loginTime)
+//       .input("Department", sql.NVarChar, user.recordset[0].Department || null) // Optional department
+//       .query(`
+//         INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
+//         VALUES (@EmployeeID, @LoginTime, @Department)
+//       `);
 
+//     // Return the user details with appropriate redirection
 //     res.status(200).json({
 //       message: "Login successful",
-//       redirectTo: redirectUrl,
 //       user: {
 //         id: user.recordset[0].id,
 //         Name: user.recordset[0].Name,
@@ -355,7 +367,7 @@ router.post("/login", async (req, res) => {
 //         Mobile: user.recordset[0].Mobile,
 //         Auth: user.recordset[0].Auth,
 //         EmployeeID: user.recordset[0].EmployeeID,
-//         Department: user.recordset[0].Department, // Include Department
+//         Department: user.recordset[0].Department,
 //       },
 //     });
 //   } catch (err) {
@@ -366,37 +378,6 @@ router.post("/login", async (req, res) => {
 
 
 
-// router.post("/userActivity", async (req, res) => {
-//   const { EmployeeID, loginTime, logoutTime, Department } = req.body;
-
-//   if (!EmployeeID || !loginTime || !logoutTime) {
-//       return res.status(400).json({ error: "Missing required fields" });
-//   }
-
-//   try {
-//       const pool = await poolPromise;
-
-//       // Convert IST to UTC before storing
-//       const loginTimeUTC = convertISTToUTC(loginTime);
-//       const logoutTimeUTC = convertISTToUTC(logoutTime);
-
-//       await pool
-//           .request()
-//           .input("EmployeeID", sql.NVarChar, EmployeeID)
-//           .input("LoginTime", sql.DateTime, loginTimeUTC)
-//           .input("LogoutTime", sql.DateTime, logoutTimeUTC)
-//           .input("Department", sql.NVarChar, Department || null) // Accept null if Department is not provided
-//           .query(`
-//               INSERT INTO UserActivity (EmployeeID, LoginTime, LogoutTime, Department)
-//               VALUES (@EmployeeID, @LoginTime, @LogoutTime, @Department)
-//           `);
-
-//       res.status(200).json({ message: "Activity recorded successfully" });
-//   } catch (err) {
-//       console.error("Error recording activity:", err);
-//       res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 router.post("/logout", async (req, res) => {
   const { EmployeeID, logoutTime } = req.body;
 
@@ -556,14 +537,72 @@ router.delete("/users/:id", async (req, res) => {
 
 
 ///27 Nov
+// router.get("/presentEmployees", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(`
+//       SELECT Department, COUNT(*) AS PresentEmployees
+//       FROM [dbo].[UserActivity]
+//       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
+//       GROUP BY Department
+//     `);
+//     res.status(200).json(result.recordset);
+//   } catch (err) {
+//     console.error("Error fetching present employees:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+
+// router.post("/assignTemporaryDepartment", async (req, res) => {
+//   const { EmployeeID, TemporaryDepartment, AssignedBy } = req.body;
+
+//   if (!EmployeeID || !TemporaryDepartment || !AssignedBy) {
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   try {
+//     const pool = await poolPromise;
+//     const fromTime = new Date().toISOString(); // Current time
+//     const result = await pool
+//       .request()
+//       .input("EmployeeID", sql.NVarChar, EmployeeID)
+//       .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment)
+//       .input("FromTime", sql.DateTime, fromTime)
+//       .input("AssignedBy", sql.NVarChar, AssignedBy)
+//       .query(`
+//         INSERT INTO DepartmentHistory (EmployeeID, OriginalDepartment, TemporaryDepartment, FromTime, AssignedBy)
+//         SELECT EmployeeID, Department, @TemporaryDepartment, @FromTime, @AssignedBy
+//         FROM UserActivity
+//         WHERE EmployeeID = @EmployeeID AND LogoutTime IS NULL
+//       `);
+
+//     // Update the employee's current department in UserActivity
+//     await pool
+//       .request()
+//       .input("EmployeeID", sql.NVarChar, EmployeeID)
+//       .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment)
+//       .query(`
+//         UPDATE UserActivity
+//         SET Department = @TemporaryDepartment
+//         WHERE EmployeeID = @EmployeeID AND LogoutTime IS NULL
+//       `);
+
+//     res.status(200).json({ message: "Employee assigned to temporary department" });
+//   } catch (err) {
+//     console.error("Error assigning temporary department:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 router.get("/presentEmployees", async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
-      SELECT Department, COUNT(*) AS PresentEmployees
+      SELECT EmployeeID, Department, COUNT(*) AS PresentEmployees
       FROM [dbo].[UserActivity]
       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
-      GROUP BY Department
+      GROUP BY EmployeeID, Department
     `);
     res.status(200).json(result.recordset);
   } catch (err) {
@@ -571,7 +610,6 @@ router.get("/presentEmployees", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 router.post("/assignTemporaryDepartment", async (req, res) => {
   const { EmployeeID, TemporaryDepartment, AssignedBy } = req.body;
@@ -582,8 +620,30 @@ router.post("/assignTemporaryDepartment", async (req, res) => {
 
   try {
     const pool = await poolPromise;
+
+    // Check if the employee is present today and not logged out
+    const employeeCheckResult = await pool
+      .request()
+      .input("EmployeeID", sql.NVarChar, EmployeeID)
+      .query(`
+        SELECT * 
+        FROM UserActivity
+        WHERE EmployeeID = @EmployeeID 
+          AND CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE)
+          AND LogoutTime IS NULL
+      `);
+
+    // If the employee is not found or logged out, return an error
+    if (employeeCheckResult.recordset.length === 0) {
+      return res.status(400).json({
+        error: "This employee is not present today or already logged out!",
+      });
+    }
+
     const fromTime = new Date().toISOString(); // Current time
-    const result = await pool
+
+    // Insert into DepartmentHistory table
+    await pool
       .request()
       .input("EmployeeID", sql.NVarChar, EmployeeID)
       .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment)
@@ -613,6 +673,7 @@ router.post("/assignTemporaryDepartment", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 router.post("/restoreDepartment", async (req, res) => {
   const { EmployeeID } = req.body;
