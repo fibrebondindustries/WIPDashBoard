@@ -36,6 +36,11 @@ const Sidebar = () => {
             <i className="bi bi-calendar-check"></i> Department
           </NavLink>
         </li>
+        <li className="nav-item">
+          <NavLink to="/workers" className="nav-link" activeClassName="active">
+            <i className="bi bi-calendar-check"></i> Workers
+          </NavLink>
+        </li>
              {/*   <li className="nav-item">
           <NavLink to="/projects" className="nav-link" activeClassName="active">
             <i className="bi bi-house-door"></i> Projects

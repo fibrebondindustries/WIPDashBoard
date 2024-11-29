@@ -7,6 +7,7 @@ import ProtectedRoute from './ProtectedRoute';
 import UserDashboard from './components/UserDashboard';
 import UserManagement from "./pages/UserManagement";
 import Department from './pages/Department'
+import Workers from './pages/Workers';
 
 function App() {
     return (
@@ -48,6 +49,14 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                     <Route
+                        path="/workers"
+                        element={
+                            <ProtectedRoute>
+                                <Workers  />
+                            </ProtectedRoute>
+                        }
+                    />Workers
                 </Routes>
             </div>
         </BrowserRouter>

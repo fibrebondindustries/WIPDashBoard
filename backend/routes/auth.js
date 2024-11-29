@@ -537,63 +537,7 @@ router.delete("/users/:id", async (req, res) => {
 
 
 ///27 Nov
-// router.get("/presentEmployees", async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
-//     const result = await pool.request().query(`
-//       SELECT Department, COUNT(*) AS PresentEmployees
-//       FROM [dbo].[UserActivity]
-//       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
-//       GROUP BY Department
-//     `);
-//     res.status(200).json(result.recordset);
-//   } catch (err) {
-//     console.error("Error fetching present employees:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
-
-// router.post("/assignTemporaryDepartment", async (req, res) => {
-//   const { EmployeeID, TemporaryDepartment, AssignedBy } = req.body;
-
-//   if (!EmployeeID || !TemporaryDepartment || !AssignedBy) {
-//     return res.status(400).json({ error: "Missing required fields" });
-//   }
-
-//   try {
-//     const pool = await poolPromise;
-//     const fromTime = new Date().toISOString(); // Current time
-//     const result = await pool
-//       .request()
-//       .input("EmployeeID", sql.NVarChar, EmployeeID)
-//       .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment)
-//       .input("FromTime", sql.DateTime, fromTime)
-//       .input("AssignedBy", sql.NVarChar, AssignedBy)
-//       .query(`
-//         INSERT INTO DepartmentHistory (EmployeeID, OriginalDepartment, TemporaryDepartment, FromTime, AssignedBy)
-//         SELECT EmployeeID, Department, @TemporaryDepartment, @FromTime, @AssignedBy
-//         FROM UserActivity
-//         WHERE EmployeeID = @EmployeeID AND LogoutTime IS NULL
-//       `);
-
-//     // Update the employee's current department in UserActivity
-//     await pool
-//       .request()
-//       .input("EmployeeID", sql.NVarChar, EmployeeID)
-//       .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment)
-//       .query(`
-//         UPDATE UserActivity
-//         SET Department = @TemporaryDepartment
-//         WHERE EmployeeID = @EmployeeID AND LogoutTime IS NULL
-//       `);
-
-//     res.status(200).json({ message: "Employee assigned to temporary department" });
-//   } catch (err) {
-//     console.error("Error assigning temporary department:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 router.get("/presentEmployees", async (req, res) => {
   try {
@@ -725,6 +669,195 @@ router.post("/restoreDepartment", async (req, res) => {
   }
 });
 
+//// get Assigned department from DepartmentHistory
+router.get("/temporaryDepartments", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Query to fetch employees with a temporary department where ToTime is NULL
+    const result = await pool.request().query(`
+      SELECT 
+        EmployeeID,
+        TemporaryDepartment,
+        FromTime,
+        AssignedBy
+      FROM DepartmentHistory
+      WHERE ToTime IS NULL
+    `);
+
+    // Return the result
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching temporary departments:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+/////////////
+router.get("/departments/worker-requirements", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT 
+        DepartmentName,
+        LotQuantity,
+        RequiredResource,
+        AvailableResource,
+        (RequiredResource - AvailableResource) AS ToFill
+      FROM Departments
+    `);
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching department worker requirements:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// router.post("/departments/update-resources", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+
+//     // Query to calculate present workers per department
+//     const presentWorkersQuery = `
+//       SELECT 
+//         Department,
+//         COUNT(EmployeeID) AS PresentWorkers
+//       FROM UserActivity
+//       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
+//       GROUP BY Department
+//     `;
+
+//     const presentWorkers = await pool.request().query(presentWorkersQuery);
+
+//     // Loop through departments and update AvailableResource
+//     for (const worker of presentWorkers.recordset) {
+//       await pool.request()
+//         .input("PresentWorkers", sql.Int, worker.PresentWorkers)
+//         .input("Department", sql.NVarChar, worker.Department)
+//         .query(`
+//           UPDATE Departments
+//           SET AvailableResource = @PresentWorkers
+//           WHERE DepartmentName = @Department
+//         `);
+//     }
+
+//     res.status(200).json({ message: "Available resources updated successfully." });
+//   } catch (error) {
+//     console.error("Error updating available resources:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+
+router.post("/departments/update-resources", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Query to calculate present workers per department
+    const presentWorkersQuery = `
+      SELECT 
+        Department,
+        COUNT(EmployeeID) AS PresentWorkers
+      FROM UserActivity
+      WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
+      GROUP BY Department;
+    `;
+
+    const presentWorkers = await pool.request().query(presentWorkersQuery);
+
+    // Update all departments' AvailableResource to 0 as a default
+    await pool.request().query(`
+      UPDATE Departments
+      SET AvailableResource = 0;
+    `);
+
+    // Loop through departments with present workers and update AvailableResource
+    for (const worker of presentWorkers.recordset) {
+      await pool
+        .request()
+        .input("PresentWorkers", sql.Int, worker.PresentWorkers)
+        .input("Department", sql.NVarChar, worker.Department)
+        .query(`
+          UPDATE Departments
+          SET AvailableResource = @PresentWorkers
+          WHERE DepartmentName = @Department;
+        `);
+    }
+
+    res.status(200).json({ message: "Available resources updated successfully." });
+  } catch (error) {
+    console.error("Error updating available resources:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+router.put("/departments/update-lot", async (req, res) => {
+  const { DepartmentName, LotQuantity } = req.body;
+
+  if (!DepartmentName || !LotQuantity) {
+    return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Define a rule for workers per lot
+    const workersPerLot = 4000; // Example: 1 worker required for every 4000 units
+
+    const requiredWorkers = Math.ceil(LotQuantity / workersPerLot);
+
+    // Update LotQuantity and RequiredResource
+    await pool.request()
+      .input("LotQuantity", sql.Int, LotQuantity)
+      .input("RequiredResource", sql.Int, requiredWorkers)
+      .input("DepartmentName", sql.NVarChar, DepartmentName)
+      .query(`
+        UPDATE Departments
+        SET LotQuantity = @LotQuantity,
+            RequiredResource = @RequiredResource
+        WHERE DepartmentName = @DepartmentName
+      `);
+
+    res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
+  } catch (error) {
+    console.error("Error updating lot quantity:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+router.get("/departments/:name", async (req, res) => {
+  const { name } = req.params;
+
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input("DepartmentName", sql.NVarChar, name)
+      .query(`
+        SELECT 
+          DepartmentName,
+          LotQuantity,
+          RequiredResource,
+          AvailableResource,
+          (RequiredResource - AvailableResource) AS ToFill
+        FROM Departments
+        WHERE DepartmentName = @DepartmentName
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: "Department not found." });
+    }
+
+    res.status(200).json(result.recordset[0]);
+  } catch (error) {
+    console.error("Error fetching department details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 
