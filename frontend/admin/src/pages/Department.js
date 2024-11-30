@@ -15,11 +15,11 @@ function Department() {
   const [clearSelectedRows, setClearSelectedRows] = useState(false);
   const [searchText, setSearchText] = useState(""); // Search text
   const [filteredUsers, setFilteredUsers] = useState([]); // Filtered data for the table
-  // useEffect(() => {
-  //   fetchUsers();
-  //   fetchPresentEmployees();
-  //   fetchTemporaryDepartments(); // Fetch temporary department data
-  // }, []);
+  useEffect(() => {
+    fetchUsers();
+    fetchPresentEmployees();
+    fetchTemporaryDepartments(); // Fetch temporary department data
+  }, []);
 
   useEffect(() => {
     // Filter the users based on search text
@@ -35,6 +35,8 @@ function Department() {
     setFilteredUsers(filtered);
   }, [searchText, users]);
 
+
+  
   useEffect(() => {
     // Fetch users and temporary departments sequentially
     const fetchData = async () => {
@@ -62,14 +64,6 @@ function Department() {
     }
   };
   
-  // const fetchUsers = async () => {
-  //   try {
-  //     const response = await axiosInstance.get("/api/AllUsers");
-  //     setUsers(response.data);
-  //   } catch (error) {
-  //     console.error("Error fetching users:", error);
-  //   }
-  // };
 
   // Fetch Present Employees
   const fetchPresentEmployees = async () => {
@@ -173,22 +167,22 @@ function Department() {
   };
 
   // Define Columns for DataTable
-  // const columns = [
-  //   { name: "NAME", selector: (row) => row.Name, sortable: true },
-  //   { name: "EMAIL", selector: (row) => row.Email, sortable: true },
-  //   { name: "MOBILE", selector: (row) => row.Mobile, sortable: true },
-  //   { name: "AUTH", selector: (row) => row.Auth, sortable: true },
-  //   { name: "EMPLOYEE ID", selector: (row) => row.EmployeeID, sortable: true },
-  //   { name: "DEPARTMENT", selector: (row) => row.Department, sortable: true },
-  // ];
-
   const columns = [
     { name: "NAME", selector: (row) => row.Name, sortable: true },
-    { name: "EMAIL", selector: (row) => row.Email, sortable: true },
+    // { name: "EMAIL", selector: (row) => row.Email, sortable: true },
     { name: "MOBILE", selector: (row) => row.Mobile, sortable: true },
     { name: "AUTH", selector: (row) => row.Auth, sortable: true },
     { name: "EMPLOYEE ID", selector: (row) => row.EmployeeID, sortable: true },
     { name: "DEPARTMENT", selector: (row) => row.Department, sortable: true },
+    {
+      name: "WORKER STATUS",
+      cell: (row) => (
+        <span style={{ color: isEmployeePresent(row.EmployeeID) ? "green" : "red" }}>
+          {isEmployeePresent(row.EmployeeID) ? "Present" : "Absent"}
+        </span>
+      ),
+      sortable: true,
+    },
     {
       name: "ASSIGNED",
       selector: (row) => row.TemporaryDepartment,
@@ -314,7 +308,7 @@ function Department() {
             <input
               type="text"
               className="form-control"
-              placeholder="Search Users..."
+              placeholder="Search..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               style={{width:"auto"}}

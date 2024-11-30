@@ -30,7 +30,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           </button>
 
           {/* Brand Logo */}
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand">
             <img
               src={logo}
               alt="Fibre Bond Logo"
@@ -59,7 +59,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
             <div className="dropdown">
               <a
                 className="d-flex align-items-center text-decoration-none dropdown-toggle ml-5"
-                href="#"
+                // href="#"
                 role="button"
                 id="dropdownMenuLink"
                 data-bs-toggle="dropdown"
@@ -81,15 +81,15 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                 className="dropdown-menu dropdown-menu-end"
                 aria-labelledby="dropdownMenuLink"
               >
-                <li>
+                {/* <li>
                   <a className="dropdown-item" href="#">
                     My Profile
                   </a>
-                </li>
+                </li> */}
                 <li>
                   <a
                     className="dropdown-item text-danger"
-                    href="#"
+                    // href="#"
                     onClick={logout}
                   >
                     Logout

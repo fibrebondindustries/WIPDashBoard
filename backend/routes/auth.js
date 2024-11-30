@@ -239,76 +239,6 @@ router.post("/signup", async (req, res) => {
 
 
 // Login API
-router.post("/login", async (req, res) => {
-  const { identifier, Password } = req.body;
-
-  if (!identifier || !Password) {
-    return res.status(400).json({ error: "Please check your credentials" });
-  }
-
-  try {
-    const pool = await poolPromise;
-
-    // Query the database to find a user by Email or EmployeeID
-    const user = await pool
-      .request()
-      .input("identifier", sql.NVarChar, identifier)
-      .query(`
-                SELECT id, Name, Email, Mobile, Password, Auth, EmployeeID, Department
-                FROM [dbo].[Users]
-                WHERE Email = @identifier OR EmployeeID = @identifier
-            `);
-
-    // Check if the user exists
-    if (user.recordset.length === 0) {
-      return res
-        .status(401)
-        .json({ error: "Invalid Email/Employee ID or Password" });
-    }
-
-    // Compare the password using bcrypt
-    const isMatch = await bcrypt.compare(Password, user.recordset[0].Password);
-
-    if (!isMatch) {
-      return res
-        .status(401)
-        .json({ error: "Invalid Email/Employee ID or Password" });
-    }
-
-    // Insert login time into UserActivity table only if Auth = 'User'
-    if (user.recordset[0].Auth === "User") {
-      const loginTime = new Date().toISOString(); // Use UTC time for database
-      await pool
-        .request()
-        .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-        .input("LoginTime", sql.DateTime, loginTime)
-        .input("Department", sql.NVarChar, user.recordset[0].Department || null) // Optional department
-        .query(`
-          INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
-          VALUES (@EmployeeID, @LoginTime, @Department)
-        `);
-    }
-
-    // Return the user details with appropriate redirection
-    res.status(200).json({
-      message: "Login successful",
-      user: {
-        id: user.recordset[0].id,
-        Name: user.recordset[0].Name,
-        Email: user.recordset[0].Email,
-        Mobile: user.recordset[0].Mobile,
-        Auth: user.recordset[0].Auth,
-        EmployeeID: user.recordset[0].EmployeeID,
-        Department: user.recordset[0].Department,
-      },
-    });
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
 // router.post("/login", async (req, res) => {
 //   const { identifier, Password } = req.body;
 
@@ -345,17 +275,19 @@ router.post("/login", async (req, res) => {
 //         .json({ error: "Invalid Email/Employee ID or Password" });
 //     }
 
-//     // Insert login time into UserActivity table
-//     const loginTime = new Date().toISOString(); // Use UTC time for database
-//     await pool
-//       .request()
-//       .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-//       .input("LoginTime", sql.DateTime, loginTime)
-//       .input("Department", sql.NVarChar, user.recordset[0].Department || null) // Optional department
-//       .query(`
-//         INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
-//         VALUES (@EmployeeID, @LoginTime, @Department)
-//       `);
+//     // Insert login time into UserActivity table only if Auth = 'User'
+//     if (user.recordset[0].Auth === "User") {
+//       const loginTime = new Date().toISOString(); // Use UTC time for database
+//       await pool
+//         .request()
+//         .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+//         .input("LoginTime", sql.DateTime, loginTime)
+//         .input("Department", sql.NVarChar, user.recordset[0].Department || null) // Optional department
+//         .query(`
+//           INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
+//           VALUES (@EmployeeID, @LoginTime, @Department)
+//         `);
+//     }
 
 //     // Return the user details with appropriate redirection
 //     res.status(200).json({
@@ -376,6 +308,183 @@ router.post("/login", async (req, res) => {
 //   }
 // });
 
+
+
+// router.post("/login", async (req, res) => {
+//   const { identifier, Password } = req.body;
+
+//   if (!identifier || !Password) {
+//     return res.status(400).json({ error: "Please check your credentials" });
+//   }
+
+//   try {
+//     const pool = await poolPromise;
+
+//     // Query the database to find a user by Email or EmployeeID
+//     const user = await pool
+//       .request()
+//       .input("identifier", sql.NVarChar, identifier)
+//       .query(`
+//         SELECT 
+//           id, Name, Email, Mobile, Password, Auth, EmployeeID, Department
+//         FROM [dbo].[Users]
+//         WHERE Email = @identifier OR EmployeeID = @identifier
+//       `);
+
+//     // Check if the user exists
+//     if (user.recordset.length === 0) {
+//       return res
+//         .status(401)
+//         .json({ error: "Invalid Email/Employee ID or Password" });
+//     }
+
+//     // Compare the password using bcrypt
+//     const isMatch = await bcrypt.compare(Password, user.recordset[0].Password);
+
+//     if (!isMatch) {
+//       return res
+//         .status(401)
+//         .json({ error: "Invalid Email/Employee ID or Password" });
+//     }
+
+//     // Check for active temporary department in the DepartmentHistory table
+//     const currentTime = new Date().toISOString();
+//     const departmentHistory = await pool
+//       .request()
+//       .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+//       .input("CurrentTime", sql.DateTime, currentTime)
+//       .query(`
+//         SELECT 
+//           TemporaryDepartment 
+//         FROM [dbo].[DepartmentHistory]
+//         WHERE EmployeeID = @EmployeeID 
+//           AND FromTime <= @CurrentTime
+//           AND (ToTime IS NULL OR ToTime >= @CurrentTime)
+//         ORDER BY FromTime DESC
+//       `);
+
+//     let activeDepartment = user.recordset[0].Department; // Default to permanent department
+
+//     if (departmentHistory.recordset.length > 0) {
+//       activeDepartment = departmentHistory.recordset[0].TemporaryDepartment; // Use temporary department if active
+//     }
+
+//     // Insert login time into UserActivity table only if Auth = 'User'
+//     if (user.recordset[0].Auth === "User") {
+//       const loginTime = new Date().toISOString(); // Use UTC time for database
+//       await pool
+//         .request()
+//         .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+//         .input("LoginTime", sql.DateTime, loginTime)
+//         .input("Department", sql.NVarChar, activeDepartment) // Use active department
+//         .query(`
+//           INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
+//           VALUES (@EmployeeID, @LoginTime, @Department)
+//         `);
+//     }
+
+//     // Return the user details with the department set appropriately
+//     res.status(200).json({
+//       message: "Login successful",
+//       user: {
+//         id: user.recordset[0].id,
+//         Name: user.recordset[0].Name,
+//         Email: user.recordset[0].Email,
+//         Mobile: user.recordset[0].Mobile,
+//         Auth: user.recordset[0].Auth,
+//         EmployeeID: user.recordset[0].EmployeeID,
+//         Department: activeDepartment, // Return the active department
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Login error:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+router.post("/login", async (req, res) => {
+  const { identifier, Password } = req.body;
+
+  if (!identifier || !Password) {
+    return res.status(400).json({ error: "Please check your credentials" });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Query the database to find a user by Email or EmployeeID
+    const user = await pool
+      .request()
+      .input("identifier", sql.NVarChar, identifier)
+      .query(`
+        SELECT 
+          id, Name, Email, Mobile, Password, Auth, EmployeeID, Department
+        FROM [dbo].[Users]
+        WHERE Email = @identifier OR EmployeeID = @identifier
+      `);
+
+    if (user.recordset.length === 0) {
+      return res.status(401).json({ error: "Invalid Email/Employee ID or Password" });
+    }
+
+    const isMatch = await bcrypt.compare(Password, user.recordset[0].Password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid Email/Employee ID or Password" });
+    }
+
+    const currentTime = new Date().toISOString();
+
+    const departmentHistory = await pool
+      .request()
+      .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+      .input("CurrentTime", sql.DateTime, currentTime)
+      .query(`
+        SELECT 
+          TemporaryDepartment 
+        FROM [dbo].[DepartmentHistory]
+        WHERE EmployeeID = @EmployeeID 
+          AND FromTime <= @CurrentTime
+          AND (ToTime IS NULL OR ToTime >= @CurrentTime)
+        ORDER BY FromTime DESC
+      `);
+
+    let activeDepartment = user.recordset[0].Department;
+
+    if (departmentHistory.recordset.length > 0) {
+      activeDepartment = departmentHistory.recordset[0].TemporaryDepartment;
+    }
+
+    if (user.recordset[0].Auth === "User") {
+      const loginTime = new Date().toISOString();
+      await pool
+        .request()
+        .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+        .input("LoginTime", sql.DateTime, loginTime)
+        .input("Department", sql.NVarChar, activeDepartment)
+        .query(`
+          INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
+          VALUES (@EmployeeID, @LoginTime, @Department)
+        `);
+    }
+
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user.recordset[0].id,
+        Name: user.recordset[0].Name,
+        Email: user.recordset[0].Email,
+        Mobile: user.recordset[0].Mobile,
+        Auth: user.recordset[0].Auth,
+        EmployeeID: user.recordset[0].EmployeeID,
+        Department: activeDepartment,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 router.post("/logout", async (req, res) => {
@@ -694,7 +803,7 @@ router.get("/temporaryDepartments", async (req, res) => {
 });
 
 
-/////////////
+///////////// worker module 
 router.get("/departments/worker-requirements", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -715,6 +824,7 @@ router.get("/departments/worker-requirements", async (req, res) => {
   }
 });
 
+
 // router.post("/departments/update-resources", async (req, res) => {
 //   try {
 //     const pool = await poolPromise;
@@ -726,20 +836,27 @@ router.get("/departments/worker-requirements", async (req, res) => {
 //         COUNT(EmployeeID) AS PresentWorkers
 //       FROM UserActivity
 //       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
-//       GROUP BY Department
+//       GROUP BY Department;
 //     `;
 
 //     const presentWorkers = await pool.request().query(presentWorkersQuery);
 
-//     // Loop through departments and update AvailableResource
+//     // Update all departments' AvailableResource to 0 as a default
+//     await pool.request().query(`
+//       UPDATE Departments
+//       SET AvailableResource = 0;
+//     `);
+
+//     // Loop through departments with present workers and update AvailableResource
 //     for (const worker of presentWorkers.recordset) {
-//       await pool.request()
+//       await pool
+//         .request()
 //         .input("PresentWorkers", sql.Int, worker.PresentWorkers)
 //         .input("Department", sql.NVarChar, worker.Department)
 //         .query(`
 //           UPDATE Departments
 //           SET AvailableResource = @PresentWorkers
-//           WHERE DepartmentName = @Department
+//           WHERE DepartmentName = @Department;
 //         `);
 //     }
 
@@ -751,6 +868,68 @@ router.get("/departments/worker-requirements", async (req, res) => {
 // });
 
 
+// router.put("/departments/update-lot", async (req, res) => {
+//   const { DepartmentName, LotQuantity } = req.body;
+
+//   if (!DepartmentName || !LotQuantity) {
+//     return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
+//   }
+
+//   try {
+//     const pool = await poolPromise;
+
+//     // Define a rule for workers per lot
+//     const workersPerLot = 4000; // Example: 1 worker required for every 4000 units
+
+//     const requiredWorkers = Math.ceil(LotQuantity / workersPerLot);
+
+//     // Update LotQuantity and RequiredResource
+//     await pool.request()
+//       .input("LotQuantity", sql.Int, LotQuantity)
+//       .input("RequiredResource", sql.Int, requiredWorkers)
+//       .input("DepartmentName", sql.NVarChar, DepartmentName)
+//       .query(`
+//         UPDATE Departments
+//         SET LotQuantity = @LotQuantity,
+//             RequiredResource = @RequiredResource
+//         WHERE DepartmentName = @DepartmentName
+//       `);
+
+//     res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
+//   } catch (error) {
+//     console.error("Error updating lot quantity:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+
+
+// Define Department Ratios (Fixed Lots per Worker for Each Department)
+const departmentRatios = {
+  "FOAM CUTTING": 10000,
+  "GLUING": 6666,
+  "PRESSING": 10000,
+  "BELT CUTTING DEPT": 5000,
+  "SKRWING DEPARTMENT": 5000,
+  "PESTING": 2500,
+  "NOKE": 3333,
+  "COLOUR DEPARTMENT": 1666,
+  "DESIGN DEPARTMENT": 2222,
+  "LOOPI DEPARTMENT": 2857,
+  "PUCTURE DEPARTMENT": 2857,
+  "BUCKLE STITCHING": 5000,
+  "BUCKLE BURNING": 10000,
+  "BELT CHECKING & CLEANING": 5000,
+  "SCREW FITTING": 1666,
+  "PANNI PACKING": 2857,
+  "BOX FOLDING": 10000,
+  "BOX PACKING": 6666,
+  "CARTON MAKING": 10000,
+  "BELT STITCHING": 2857,
+  "PVC": 1666,
+};
+
+// Update /departments/update-resources Endpoint
 router.post("/departments/update-resources", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -764,36 +943,43 @@ router.post("/departments/update-resources", async (req, res) => {
       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
       GROUP BY Department;
     `;
-
     const presentWorkers = await pool.request().query(presentWorkersQuery);
 
-    // Update all departments' AvailableResource to 0 as a default
-    await pool.request().query(`
-      UPDATE Departments
-      SET AvailableResource = 0;
-    `);
+    // Update all departments' AvailableResource and RequiredResource dynamically
+    const departments = Object.keys(departmentRatios);
 
-    // Loop through departments with present workers and update AvailableResource
-    for (const worker of presentWorkers.recordset) {
+    for (const department of departments) {
+      const lotSize = 20000; // Default Lot Quantity
+      const ratio = departmentRatios[department];
+      const requiredWorkers = Math.ceil(lotSize / ratio);
+
+      // Find available workers for the department
+      const availableWorkers =
+        presentWorkers.recordset.find((w) => w.Department === department)?.PresentWorkers || 0;
+
       await pool
         .request()
-        .input("PresentWorkers", sql.Int, worker.PresentWorkers)
-        .input("Department", sql.NVarChar, worker.Department)
+        .input("DepartmentName", sql.NVarChar, department)
+        .input("LotQuantity", sql.Int, lotSize)
+        .input("RequiredResource", sql.Int, requiredWorkers)
+        .input("AvailableResource", sql.Int, availableWorkers)
         .query(`
           UPDATE Departments
-          SET AvailableResource = @PresentWorkers
-          WHERE DepartmentName = @Department;
+          SET LotQuantity = @LotQuantity,
+              RequiredResource = @RequiredResource,
+              AvailableResource = @AvailableResource
+          WHERE DepartmentName = @DepartmentName;
         `);
     }
 
-    res.status(200).json({ message: "Available resources updated successfully." });
+    res.status(200).json({ message: "Resources updated successfully!" });
   } catch (error) {
     console.error("Error updating available resources:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-
+// Update /departments/update-lot Endpoint
 router.put("/departments/update-lot", async (req, res) => {
   const { DepartmentName, LotQuantity } = req.body;
 
@@ -804,13 +990,17 @@ router.put("/departments/update-lot", async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // Define a rule for workers per lot
-    const workersPerLot = 4000; // Example: 1 worker required for every 4000 units
+    // Get the ratio for the specified department
+    const ratio = departmentRatios[DepartmentName];
+    if (!ratio) {
+      return res.status(400).json({ error: `No ratio defined for department: ${DepartmentName}` });
+    }
 
-    const requiredWorkers = Math.ceil(LotQuantity / workersPerLot);
+    const requiredWorkers = Math.ceil(LotQuantity / ratio);
 
     // Update LotQuantity and RequiredResource
-    await pool.request()
+    await pool
+      .request()
       .input("LotQuantity", sql.Int, LotQuantity)
       .input("RequiredResource", sql.Int, requiredWorkers)
       .input("DepartmentName", sql.NVarChar, DepartmentName)
@@ -818,7 +1008,7 @@ router.put("/departments/update-lot", async (req, res) => {
         UPDATE Departments
         SET LotQuantity = @LotQuantity,
             RequiredResource = @RequiredResource
-        WHERE DepartmentName = @DepartmentName
+        WHERE DepartmentName = @DepartmentName;
       `);
 
     res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
@@ -827,7 +1017,6 @@ router.put("/departments/update-lot", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 router.get("/departments/:name", async (req, res) => {
   const { name } = req.params;
