@@ -71,42 +71,92 @@ function UserManagement() {
     }, 2000);
   };
 
+  // const handleFormSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const transformedData = {
+  //     Name: formData.name,
+  //     Email: formData.email,
+  //     Mobile: formData.mobile,
+  //     Password: formData.password,
+  //     Auth: formData.auth,
+  //     EmployeeID: formData.employeeID,
+  //     Department: formData.department,
+  //   };
+
+  //   try {
+  //     if (selectedUserId) {
+  //       // Update user
+  //       await axiosInstance.put(`/api/users/${selectedUserId}`, transformedData);
+  //       showAlert("User updated successfully!", "success");
+  //     } else {
+  //       // Add new user
+  //       await axiosInstance.post("/api/signup", transformedData);
+  //       showAlert("User added successfully!", "success");
+  //     }
+  //     fetchUsers();
+  //     setShowModal(false);
+  //     resetForm();
+  //   } catch (error) {
+  //     console.error("Error saving user:", error.response?.data || error.message);
+  //     showAlert("An error occurred while saving the user.", "danger");
+  //   }
+  // };
+
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+  
     const transformedData = {
       Name: formData.name,
       Email: formData.email,
       Mobile: formData.mobile,
-      Password: formData.password,
+      Password: formData.password, // Include password (may be empty)
       Auth: formData.auth,
       EmployeeID: formData.employeeID,
       Department: formData.department,
     };
-
+  
     try {
       if (selectedUserId) {
         // Update user
-        await axiosInstance.put(`/api/users/${selectedUserId}`, transformedData);
-        showAlert("User updated successfully!", "success");
+        const response = await axiosInstance.put(`/api/users/${selectedUserId}`, transformedData);
+  
+        // Check for error response from backend
+        if (response.data.error) {
+          showAlert(response.data.error, "danger");
+        } else {
+          showAlert("User updated successfully!", "success");
+        }
       } else {
         // Add new user
         await axiosInstance.post("/api/signup", transformedData);
         showAlert("User added successfully!", "success");
       }
+  
       fetchUsers();
       setShowModal(false);
       resetForm();
     } catch (error) {
       console.error("Error saving user:", error.response?.data || error.message);
-      showAlert("An error occurred while saving the user.", "danger");
+      showAlert(error.response?.data?.error || "An error occurred while saving the user.", "danger");
     }
   };
-
+  
   const handleDeleteUser = async () => {
     if (selectedRows.length === 0) {
       showAlert("Please select a user to delete!", "danger");
       return;
     }
+
+      // Get the name of the user being deleted
+      const userToDelete = selectedRows[0].Name;
+
+      // Show a confirmation dialog
+      const confirmDelete = window.confirm(`Are you sure you want to delete this user: ${userToDelete}?`);
+
+      if (!confirmDelete) {
+        return; // Exit if the user cancels the action
+      }
 
     try {
       // Assuming your backend can handle batch deletes; if not, loop through selectedRows
@@ -241,6 +291,7 @@ function UserManagement() {
                           value={formData.name}
                           onChange={handleInputChange}
                           required
+                          placeholder="Enter Name"
                         />
                       </div>
                       <div className="mb-3">
@@ -251,7 +302,8 @@ function UserManagement() {
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          required
+                          
+                          placeholder="Enter Email"
                         />
                       </div>
                       <div className="mb-3">
@@ -262,7 +314,8 @@ function UserManagement() {
                           name="mobile"
                           value={formData.mobile}
                           onChange={handleInputChange}
-                          required
+                          
+                           placeholder="Enter Mobile Number"
                         />
                       </div>
                       <div className="mb-3">
@@ -273,6 +326,7 @@ function UserManagement() {
                           name="password"
                           value={formData.password}
                           onChange={handleInputChange}
+                          placeholder={selectedUserId ? "Leave blank to keep the same password" : "Enter a new password"}
                         />
                       </div>
                       <div className="mb-3">

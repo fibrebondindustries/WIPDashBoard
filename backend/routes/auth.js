@@ -184,11 +184,16 @@ HAVING
 router.post("/signup", async (req, res) => {
   const { Name, Email, Mobile, Password, Auth, EmployeeID, Department } = req.body;
 
-  // Validate all required fields
-  if (!Name || !Email || !Mobile || !Password || !Auth || !EmployeeID || !Department) {
-    return res.status(400).json({ error: "All fields are required" });
+  // Validate all required fields !Name || !Email || !Mobile || 
+  if (!Password ) {
+    return res.status(400).json({ error: "Password is required" });
   }
-
+  if (!EmployeeID ) {
+    return res.status(400).json({ error: "EmployeeID is required" });
+  }
+  if (!Department ) {
+    return res.status(400).json({ error: "Department is required" });
+  }
   try {
     const pool = await poolPromise;
 
@@ -239,168 +244,6 @@ router.post("/signup", async (req, res) => {
 
 
 // Login API
-// router.post("/login", async (req, res) => {
-//   const { identifier, Password } = req.body;
-
-//   if (!identifier || !Password) {
-//     return res.status(400).json({ error: "Please check your credentials" });
-//   }
-
-//   try {
-//     const pool = await poolPromise;
-
-//     // Query the database to find a user by Email or EmployeeID
-//     const user = await pool
-//       .request()
-//       .input("identifier", sql.NVarChar, identifier)
-//       .query(`
-//                 SELECT id, Name, Email, Mobile, Password, Auth, EmployeeID, Department
-//                 FROM [dbo].[Users]
-//                 WHERE Email = @identifier OR EmployeeID = @identifier
-//             `);
-
-//     // Check if the user exists
-//     if (user.recordset.length === 0) {
-//       return res
-//         .status(401)
-//         .json({ error: "Invalid Email/Employee ID or Password" });
-//     }
-
-//     // Compare the password using bcrypt
-//     const isMatch = await bcrypt.compare(Password, user.recordset[0].Password);
-
-//     if (!isMatch) {
-//       return res
-//         .status(401)
-//         .json({ error: "Invalid Email/Employee ID or Password" });
-//     }
-
-//     // Insert login time into UserActivity table only if Auth = 'User'
-//     if (user.recordset[0].Auth === "User") {
-//       const loginTime = new Date().toISOString(); // Use UTC time for database
-//       await pool
-//         .request()
-//         .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-//         .input("LoginTime", sql.DateTime, loginTime)
-//         .input("Department", sql.NVarChar, user.recordset[0].Department || null) // Optional department
-//         .query(`
-//           INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
-//           VALUES (@EmployeeID, @LoginTime, @Department)
-//         `);
-//     }
-
-//     // Return the user details with appropriate redirection
-//     res.status(200).json({
-//       message: "Login successful",
-//       user: {
-//         id: user.recordset[0].id,
-//         Name: user.recordset[0].Name,
-//         Email: user.recordset[0].Email,
-//         Mobile: user.recordset[0].Mobile,
-//         Auth: user.recordset[0].Auth,
-//         EmployeeID: user.recordset[0].EmployeeID,
-//         Department: user.recordset[0].Department,
-//       },
-//     });
-//   } catch (err) {
-//     console.error("Login error:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
-
-
-// router.post("/login", async (req, res) => {
-//   const { identifier, Password } = req.body;
-
-//   if (!identifier || !Password) {
-//     return res.status(400).json({ error: "Please check your credentials" });
-//   }
-
-//   try {
-//     const pool = await poolPromise;
-
-//     // Query the database to find a user by Email or EmployeeID
-//     const user = await pool
-//       .request()
-//       .input("identifier", sql.NVarChar, identifier)
-//       .query(`
-//         SELECT 
-//           id, Name, Email, Mobile, Password, Auth, EmployeeID, Department
-//         FROM [dbo].[Users]
-//         WHERE Email = @identifier OR EmployeeID = @identifier
-//       `);
-
-//     // Check if the user exists
-//     if (user.recordset.length === 0) {
-//       return res
-//         .status(401)
-//         .json({ error: "Invalid Email/Employee ID or Password" });
-//     }
-
-//     // Compare the password using bcrypt
-//     const isMatch = await bcrypt.compare(Password, user.recordset[0].Password);
-
-//     if (!isMatch) {
-//       return res
-//         .status(401)
-//         .json({ error: "Invalid Email/Employee ID or Password" });
-//     }
-
-//     // Check for active temporary department in the DepartmentHistory table
-//     const currentTime = new Date().toISOString();
-//     const departmentHistory = await pool
-//       .request()
-//       .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-//       .input("CurrentTime", sql.DateTime, currentTime)
-//       .query(`
-//         SELECT 
-//           TemporaryDepartment 
-//         FROM [dbo].[DepartmentHistory]
-//         WHERE EmployeeID = @EmployeeID 
-//           AND FromTime <= @CurrentTime
-//           AND (ToTime IS NULL OR ToTime >= @CurrentTime)
-//         ORDER BY FromTime DESC
-//       `);
-
-//     let activeDepartment = user.recordset[0].Department; // Default to permanent department
-
-//     if (departmentHistory.recordset.length > 0) {
-//       activeDepartment = departmentHistory.recordset[0].TemporaryDepartment; // Use temporary department if active
-//     }
-
-//     // Insert login time into UserActivity table only if Auth = 'User'
-//     if (user.recordset[0].Auth === "User") {
-//       const loginTime = new Date().toISOString(); // Use UTC time for database
-//       await pool
-//         .request()
-//         .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-//         .input("LoginTime", sql.DateTime, loginTime)
-//         .input("Department", sql.NVarChar, activeDepartment) // Use active department
-//         .query(`
-//           INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
-//           VALUES (@EmployeeID, @LoginTime, @Department)
-//         `);
-//     }
-
-//     // Return the user details with the department set appropriately
-//     res.status(200).json({
-//       message: "Login successful",
-//       user: {
-//         id: user.recordset[0].id,
-//         Name: user.recordset[0].Name,
-//         Email: user.recordset[0].Email,
-//         Mobile: user.recordset[0].Mobile,
-//         Auth: user.recordset[0].Auth,
-//         EmployeeID: user.recordset[0].EmployeeID,
-//         Department: activeDepartment, // Return the active department
-//       },
-//     });
-//   } catch (err) {
-//     console.error("Login error:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 router.post("/login", async (req, res) => {
   const { identifier, Password } = req.body;
@@ -570,11 +413,17 @@ router.get("/users/:id", async (req, res) => {
 ///update user
 router.put("/users/:id", async (req, res) => {
   const { id } = req.params;
-  const { Name, Email, Mobile, Auth, EmployeeID, Department } = req.body;
+  const { Name, Email, Mobile, Auth, EmployeeID, Department, Password } = req.body;
 
   // Validate required fields
-  if (!Name || !Email || !Mobile || !Auth || !EmployeeID || !Department) {
-    return res.status(400).json({ error: "All fields are required" });
+  // if (!Name || !Email || !Mobile || !Auth || !EmployeeID || !Department) {
+  //   return res.status(400).json({ error: "All fields are required" });
+  // }
+  if (!EmployeeID ) {
+    return res.status(400).json({ error: "EmployeeID is required" });
+  }
+  if (!Department ) {
+    return res.status(400).json({ error: "Department is required" });
   }
 
   try {
@@ -590,6 +439,22 @@ router.put("/users/:id", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    const existingUser = userCheck.recordset[0];
+
+    // Password update logic
+    let hashedPassword = existingUser.Password; // Default to existing password
+
+    if (Password && Password.trim() !== "") {
+      // Check if the new password matches the existing one
+      const isSamePassword = await bcrypt.compare(Password, existingUser.Password);
+      if (isSamePassword) {
+        return res.status(400).json({ error: "New password cannot be the same as the old password." });
+      }
+
+      // Hash the new password
+      hashedPassword = await bcrypt.hash(Password, 10);
+    }
+
     // Update the user
     await pool
       .request()
@@ -600,10 +465,12 @@ router.put("/users/:id", async (req, res) => {
       .input("Auth", sql.VarChar, Auth)
       .input("EmployeeID", sql.VarChar, EmployeeID)
       .input("Department", sql.VarChar, Department)
+      .input("Password", sql.NVarChar, hashedPassword) // Include updated password
       .query(`
         UPDATE [dbo].[Users]
         SET Name = @Name, Email = @Email, Mobile = @Mobile,
-            Auth = @Auth, EmployeeID = @EmployeeID, Department = @Department
+            Auth = @Auth, EmployeeID = @EmployeeID, Department = @Department,
+            Password = @Password
         WHERE ID = @UserID
       `);
 
@@ -614,7 +481,8 @@ router.put("/users/:id", async (req, res) => {
   }
 });
 
-// DELETE /users/:id
+
+
 router.delete("/users/:id", async (req, res) => {
   const { id } = req.params;
 

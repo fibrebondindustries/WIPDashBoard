@@ -5,9 +5,9 @@
     gap: 5px;
     padding: 0px;
     white-space: normal;
-    max-height: calc(2 * 70px + 10px); 
+    max-height: calc(3 * 70px + 10px); 
     overflow-x: auto;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 2fr)); 
+    grid-template-columns: repeat(7, minmax(100px, 2fr)); 
     grid-auto-rows: min-content; 
     grid-template-rows: repeat(2, 1fr); 
     
@@ -22,7 +22,7 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
     text-align: center;
-    padding: 1px;
+    padding: 5px;
     border-radius: 5px;
     height: auto; 
 }

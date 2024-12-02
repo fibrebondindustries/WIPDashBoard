@@ -113,7 +113,7 @@ function setupDepartmentFilter(departmentSums) {
         if (sum < 19500) {
             button.style.backgroundColor = '#ffc266'; // Orange
             button.style.color = 'black';
-        } else if (sum > 21000) {
+        } else if (sum > 22500) {
             button.style.backgroundColor = '#ff4d4d'; // Red
             button.style.color = 'black';
         } else {

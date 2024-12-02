@@ -1,50 +1,195 @@
-/* body {
-    margin-top: 70px;
-    font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
+/* Scoped to Dashboard Component */
+.dashboard .filter-grid {
+  display: grid;
+  gap: 5px;
+  padding: 18px;
+  white-space: normal;
+  max-height: calc(4 * 70px + 10px);
+  overflow-x: auto;
+  grid-template-columns: repeat(7, minmax(100px, 2fr));
+  grid-auto-rows: min-content;
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.dashboard .filter-btn {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+  background-color: #f8f9fa;
+  border: 2px solid #ccc;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-align: left;
+  padding: 5px;
+  border-radius: 5px;
+  height: auto;
+  padding-bottom: 0px;
+}
+
+.dashboard .filter-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.dashboard table {
+  border-collapse: collapse !important;
+  width: 100%;
+}
+
+.dashboard th,
+.dashboard td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.dashboard th {
+  border-bottom-width: 2px;
+  font-family: "FangSong", serif;
+  background-color: darkgray !important;
+}
+
+.dashboard tbody {
+  padding: 15px;
+}
+
+.dashboard .table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard .navbar {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  position: sticky;
+  top: 0;
+}
+
+.dashboard #backToTopBtn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99;
+  font-size: 13px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 15px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s;
+}
+
+.dashboard #backToTopBtn:hover {
+  background-color: #555;
+}
+
+.dashboard .navbar .form-inline {
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .dashboard .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  #sidebar {
-    width: 200px;
-    position: fixed;
-    height: 100%;
-    transition: all 0.3s;
+
+  .dashboard #backToTopBtn {
+    display: none !important;
   }
-  
-  #main-content {
-    margin-left: 200px;
-    width: calc(100% - 200px);
-    transition: all 0.3s;
-  }
-  
-  #sidebar ul {
-    padding: 0;
-    list-style: none;
-  }
-  
-  #sidebar ul li {
-    padding: 10px;
-  }
-  
-  #sidebar ul li a {
-    text-decoration: none;
-    color: #39464e;
-    display: flex;
-    align-items: center;
-  }
-  
-  #sidebar ul li a i {
-    margin-right: 10px;
-  }
-  
-  #sidebar ul .collapse li a {
-    padding-left: 30px;
-  }
-  
-  .navbar {
-    z-index: 1000;
-  }
-   */
+}
 
 
-   
+/* .button-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.button-light img.light-gif {
+  width: 20px; 
+  height: 20px; 
+} */
+
+
+
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.button-lights {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 10px;
+}
+
+.radio-wrapper {
+  display: flex;
+  align-items: center;
+  margin: 2px 0;
+}
+
+.radio {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 4px;
+  background-color: rgb(214, 214, 214); /* Default uncolored state */
+}
+
+input[type="radio"] {
+  display: none;
+}
+
+/* Color when active based on condition */
+.radio.red-light.active {
+  background-color: red;
+  border: 1px solid red;
+}
+
+.radio.orange-light.active {
+  background-color: orange;
+  border: 1px solid orange;
+}
+
+.radio.green-light.active {
+  background-color: green;
+  border: 1px solid green;
+}
+
+@keyframes blink {
+  0% {
+    background-color: red;
+  }
+  50% {
+    background-color: transparent;
+  }
+  100% {
+    background-color: red;
+  }
+}
+
+
+.radio.orange-light.active {
+  background-color: orange;
+}
+
+.radio.green-light.active {
+  background-color: green;
+}
+
+.radio.red-light.active {
+  background-color: red;
+  animation: blink 1s infinite; /* Blink animation for red radio button */
+}

@@ -49,5 +49,35 @@ function displayShortageData(data) {
     });
 }
 
+
+//Search Item name Function
+function filterTable() {
+    // Get the search input value and convert it to lowercase
+    const searchValue = document.getElementById('search-input').value.toLowerCase();
+
+    // Get all table rows
+    const tableBody = document.getElementById('shortage-table-body');
+    const rows = tableBody.getElementsByTagName('tr');
+
+    // Loop through all rows and hide those that don't match the search query
+    for (let row of rows) {
+        const itemName = row.textContent.toLowerCase(); // Assuming 'ITEM NAME (LOT ID)' is in the third column
+
+        if (itemName.includes(searchValue)) {
+            row.style.display = ''; // Show row
+        } else {
+            row.style.display = 'none'; // Hide row
+        }
+    }
+}
+
+function handleEnter(event) {
+    // Check if the Enter key is pressed
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Prevent form submission
+        filterTable(); // Call the filter function
+    }
+}
+
 // Call the fetch function when the page loads
 document.addEventListener("DOMContentLoaded", fetchShortageData);
