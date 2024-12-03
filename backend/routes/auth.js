@@ -359,18 +359,7 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-// Utility function to convert IST to UTC
-// function convertISTToUTC(istTime) {
-//   const istDate = new Date(istTime);
-//   const offsetIST = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-//   return new Date(istDate.getTime() - offsetIST).toISOString().slice(0, 19).replace("T", " ");
-// }
 
-// function convertISTToUTC(istTime) {
-//     const istDate = new Date(istTime);
-//     const offsetIST = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-//     return new Date(istDate.getTime() - offsetIST).toISOString().slice(0, 19).replace('T', ' ');
-// }
 
 
 ///26 nov
