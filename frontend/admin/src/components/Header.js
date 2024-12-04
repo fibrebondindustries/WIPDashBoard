@@ -64,7 +64,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                 id="dropdownMenuLink"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
-                style={{ marginRight: "20px" }}
+                style={{ marginRight: "20px" ,justifyContent: "end"}}
               >
                 <img
                   src={User}

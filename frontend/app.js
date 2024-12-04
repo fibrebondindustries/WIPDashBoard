@@ -110,10 +110,10 @@ function setupDepartmentFilter(departmentSums) {
         button.setAttribute("title", `Total Quantity: ${sum}`); // Tooltip text
 
         // Add color based on the sum of QUANTITY
-        if (sum < 19500) {
+        if (sum < 29000) {
             button.style.backgroundColor = '#ffc266'; // Orange
             button.style.color = 'black';
-        } else if (sum > 22500) {
+        } else if (sum > 34500) {
             button.style.backgroundColor = '#ff4d4d'; // Red
             button.style.color = 'black';
         } else {

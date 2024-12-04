@@ -16,8 +16,8 @@ export const AuthProvider = ({ children }) => {
     //     return istTime.toISOString().replace('T', ' ').slice(0, 19); // Format as 'YYYY-MM-DD HH:MM:SS'
     // };
     const login = (userData) => {
-        const { Name, Email, EmployeeID, Department  } = userData;
-        const minimalUser = { Name, Email, EmployeeID, Auth: userData.Auth, Department  }; // Include Auth for routing
+        const { Name, EmployeeID, Department  } = userData;
+        const minimalUser = { Name, EmployeeID,Department  }; // Include Auth for routing
         setUser(minimalUser);
         localStorage.setItem('user', JSON.stringify(minimalUser));
 
@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
         localStorage.removeItem('loginTime');
         localStorage.removeItem('sessionExpiration');
+        localStorage.removeItem('userData');
     };
 
     useEffect(() => {

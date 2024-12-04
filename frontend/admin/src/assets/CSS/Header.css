@@ -47,3 +47,7 @@
   }
 }
 
+.dropdown-menu-end[data-bs-popper] {
+  right: 16px;
+  left: auto;
+}
