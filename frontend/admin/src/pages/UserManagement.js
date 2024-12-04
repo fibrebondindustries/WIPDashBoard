@@ -242,22 +242,10 @@ function UserManagement() {
       </div>
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
-        <main className="p-4">
+        <main className="main-container p-4">
         <div id="alertPlaceholder"></div>
-          {/* <h1>User Management</h1>
-          <div id="alertPlaceholder"></div>
-
-          <button className="btn btn-outline-primary mb-3 me-2" onClick={() => setShowModal(true)}>
-            Add New User
-          </button>
-          <button className="btn btn-outline-primary mb-3 me-2" onClick={handleUpdateUser}>
-            Update User
-          </button>
-          <button className="btn btn-outline-danger mb-3" onClick={handleDeleteUser}>
-            Delete User
-          </button> */}
           <div className="d-flex justify-content-between align-items-center">
-            <h1 className="mb-5">User Management</h1>
+            <h2 className="mb-5">Manage Users</h2>
             <div className="d-flex gap-2">
             <button className="btn btn-outline-primary mb-5 " onClick={handleAddUserClick}>
             Add New User

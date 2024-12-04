@@ -126,11 +126,11 @@ function Workers() {
       </div>
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
-        <main className="p-4">
+        <main className="main-container p-4">
           <div id="alertPlaceholder"></div>
 
           <div className="d-flex justify-content-between align-items-center">
-            <h1 className="mb-5">Manage Workers</h1>
+            <h2 className="mb-5">Manage Workers</h2>
             <div>
               <button
                 className="btn btn-success me-2"

@@ -22,7 +22,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
               background: "black",
               cursor: "pointer",
               marginRight: "15px",
-              marginleft: "10px;",
+              marginleft: "10px",
             }}
           >
             <i className={`bi ${isSidebarVisible ? "bi-list" : "bi-x-lg"}`}></i>

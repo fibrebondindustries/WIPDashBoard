@@ -16,27 +16,27 @@
   }
   
   .logo-image {
-    width: 50px; /* Adjust logo size */
+    width: 50px; 
     height: 50px;
-    margin-right: 10px; /* Space between logo and text */
+    margin-right: 10px; 
   }
   
   .company-name h1 {
     font-size: 20px;
     font-weight: bold;
     margin: 0;
-    color: #000; /* Black text for the main title */
+    color: #000; 
   }
   
   .company-name p {
     font-size: 14px;
     margin: 0;
-    color: #666; /* Gray text for the subtitle */
+    color: #666; 
   }
   
   .navbar{
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2) ;
-    z-index: 100;
+    /* box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2) ; */
+    /* z-index: 100; */
     position: sticky;
     height: auto;
 }
@@ -50,4 +50,11 @@
 .dropdown-menu-end[data-bs-popper] {
   right: 16px;
   left: auto;
+}
+.main-container{
+  z-index: 99 !important;
+  position: absolute !important;
+  background: #ffffff !important;
+  width: -webkit-fill-available;
+
 }

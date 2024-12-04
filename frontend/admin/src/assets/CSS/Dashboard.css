@@ -62,7 +62,7 @@
 }
 
 .dashboard .navbar {
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2); */
   z-index: 100;
   position: sticky;
   top: 0;
@@ -193,3 +193,4 @@ input[type="radio"] {
   background-color: red;
   animation: blink 1s infinite; /* Blink animation for red radio button */
 }
+

@@ -260,17 +260,17 @@ function Department() {
   };
 
   return (
-    <div className="d-flex">
+    <div className="d-flex ">
       <div className={isSidebarVisible ? "sidebar-container" : "sidebar-hidden"}>
         <Sidebar />
       </div>
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
-        <main className="p-4">
+        <main className="main-container p-4">
           <div id="alertPlaceholder"></div>
 
           <div className="d-flex justify-content-between align-items-center">
-            <h1 className="mb-5">Department Management</h1>
+            <h2 className="mb-5">Manage Departments</h2>
             <div>
               <p>
                 <strong>Present Employees:</strong>{" "}
