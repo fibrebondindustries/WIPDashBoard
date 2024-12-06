@@ -15,10 +15,14 @@ function Department() {
   const [clearSelectedRows, setClearSelectedRows] = useState(false);
   const [searchText, setSearchText] = useState(""); // Search text
   const [filteredUsers, setFilteredUsers] = useState([]); // Filtered data for the table
+  const [departments, setDepartments] = useState([]);// load departments 
+
+
   useEffect(() => {
     fetchUsers();
     fetchPresentEmployees();
     fetchTemporaryDepartments(); // Fetch temporary department data
+    fetchDepartments(); // Fetch departments when the component mounts
   }, []);
 
   useEffect(() => {
@@ -26,8 +30,8 @@ function Department() {
     const filtered = users.filter(
       (user) =>
         (user.Name && user.Name.toLowerCase().includes(searchText.toLowerCase())) ||
-        (user.Email && user.Email.toLowerCase().includes(searchText.toLowerCase())) ||
-        (user.Mobile && user.Mobile.toString().includes(searchText.toLowerCase())) ||
+        // (user.Email && user.Email.toLowerCase().includes(searchText.toLowerCase())) ||
+        // (user.Mobile && user.Mobile.toString().includes(searchText.toLowerCase())) ||
         (user.Auth && user.Auth.toLowerCase().includes(searchText.toLowerCase())) ||
         (user.EmployeeID && user.EmployeeID.toLowerCase().includes(searchText.toLowerCase())) ||
         (user.Department && user.Department.toLowerCase().includes(searchText.toLowerCase()))
@@ -115,7 +119,15 @@ function Department() {
     setShowRestoreModal(false); // Close the modal
   };
   
-
+  const fetchDepartments = async () => {
+    try {
+      const response = await axiosInstance.get("/api/departments"); // Adjust the endpoint as needed
+      setDepartments(response.data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
+  };
+  
  const handleAssignDepartment = async () => {
       // Get the logged-in user's name from localStorage
     const loggedInUser = JSON.parse(localStorage.getItem("user"));
@@ -170,7 +182,7 @@ function Department() {
   const columns = [
     { name: "NAME", selector: (row) => row.Name, sortable: true },
     // { name: "EMAIL", selector: (row) => row.Email, sortable: true },
-    { name: "MOBILE", selector: (row) => row.Mobile, sortable: true },
+    // { name: "MOBILE", selector: (row) => row.Mobile, sortable: true },
     { name: "AUTH", selector: (row) => row.Auth, sortable: true },
     { name: "EMPLOYEE ID", selector: (row) => row.EmployeeID, sortable: true },
     { name: "DEPARTMENT", selector: (row) => row.Department, sortable: true },
@@ -204,29 +216,7 @@ function Department() {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
-  // const fetchTemporaryDepartments = async () => {
-  //   try {
-  //     const response = await axiosInstance.get("/api/temporaryDepartments");
-  //     const temporaryData = response.data;
-  
-  //     // Merge temporary department data into users
-  //     setUsers((prevUsers) =>
-  //       prevUsers.map((user) => {
-  //         const tempDept = temporaryData.find(
-  //           (temp) => temp.EmployeeID === user.EmployeeID
-  //         );
-  //         return {
-  //           ...user,
-  //           TemporaryDepartment: tempDept
-  //             ? tempDept.TemporaryDepartment || "N/A"
-  //             : "N/A",
-  //         };
-  //       })
-  //     );
-  //   } catch (error) {
-  //     console.error("Error fetching temporary departments:", error);
-  //   }
-  // };
+ 
   
   const fetchTemporaryDepartments = async () => {
     try {
@@ -270,13 +260,7 @@ function Department() {
           <div id="alertPlaceholder"></div>
 
           <div className="d-flex justify-content-between align-items-center">
-            <h2 className="mb-5">Manage Departments</h2>
-            <div>
-              <p>
-                <strong>Present Employees:</strong>{" "}
-                {presentEmployees.reduce((acc, curr) => acc + curr.PresentEmployees, 0)}
-              </p>
-            </div>
+            <h2 className="mb-3">Manage Departments</h2>           
             <div className="d-flex gap-2">
               <button
                 className="btn btn-outline-primary mb-5"
@@ -304,6 +288,12 @@ function Department() {
               </button>
             </div>
           </div>
+          <div className="d-flex">
+              <p>
+                <strong>Present Employees:</strong>{" "}
+                {presentEmployees.reduce((acc, curr) => acc + curr.PresentEmployees, 0)}
+              </p>
+            </div>
           <div className="mb-3">
             <input
               type="text"
@@ -345,7 +335,7 @@ function Department() {
                       Assign a temporary department to <strong>{selectedUser?.Name}</strong> (
                       {selectedUser?.EmployeeID}):
                     </p>
-                    <select
+                    {/* <select
                       className="form-control"
                       value={temporaryDepartment}
                       onChange={(e) => setTemporaryDepartment(e.target.value)}
@@ -357,7 +347,25 @@ function Department() {
                       <option value="PRESSING">PRESSING</option>
                       <option value="SEWING DEPARTMENT">SEWING DEPARTMENT</option>
               
-                    </select>
+                    </select> */}
+                    <select
+                    className="form-control"
+                    value={temporaryDepartment}
+                    onChange={(e) => setTemporaryDepartment(e.target.value)}
+                  >
+                    {/* <option value="">Select Department</option>
+                    {departments.map((dept, index) => (
+                      <option key={index} value={dept.DepartmentName}>
+                        {dept.DepartmentName}
+                      </option> */}
+                      <option value="">Select Department</option>
+                          {departments.map((dept, index) => (
+                        <option key={index} value={dept}>
+                              {dept}
+                        </option>
+                    ))}
+                  </select>
+
                   </div>
                   <div className="modal-footer">
                   <button className="btn btn-secondary" onClick={handleCloseAssignModal}>

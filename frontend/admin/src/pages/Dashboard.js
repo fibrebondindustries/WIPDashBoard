@@ -356,6 +356,11 @@
 // }
 // export default Dashboard;
 
+// ---------------------------------------
+
+
+
+
 
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -456,6 +461,11 @@ function Dashboard() {
           if (blueCondition) {
             button.querySelector('.blue-light').style.backgroundColor = 'blue';
           }
+
+            // Add tooltip attribute
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "top");
+            button.setAttribute("title", `Total Quantity: ${sum}`);
           // Add click event
           button.onclick = () => {
             const filtered = fetchedData.filter(
@@ -506,12 +516,12 @@ function Dashboard() {
   }, [fetchData]);
 
   useEffect(() => {
-    console.log(workerRequirements); // Add this to make ESLint recognize its usage.
+    // console.log(workerRequirements); // Add this to make ESLint recognize its usage.
   }, [workerRequirements]);
   // Prevent unused variable warning
 useEffect(() => {
   if (workerRequirements.length > 0) {
-    console.log("Worker requirements fetched:", workerRequirements);
+    // console.log("Worker requirements fetched:", workerRequirements);
   }
 }, [workerRequirements]);
   useEffect(() => {
@@ -575,7 +585,13 @@ useEffect(() => {
           isSidebarVisible={isSidebarVisible}
         />
         <main className="main-container p-4">
-          <div className="mb-0">
+          <div className="d-flex justify-content-start mb-3">
+          <span><strong style={{color:"red"}}>Red: </strong>Over Capacity </span>&nbsp;&nbsp;
+          <span><strong style={{color:"green"}}>Green: </strong>All Okay </span>&nbsp;&nbsp;
+          <span><strong style={{color:"orange"}}>Oragne: </strong>Under Capacity </span>&nbsp;&nbsp;
+          <span><strong style={{color:"blue"}}>Blue: </strong>Less Workers </span>&nbsp;&nbsp;
+          </div>
+          <div className="mb-0" style={{zIndex:"2",position:"relative"}}>
             <input
               type="text"
               className="form-control"
@@ -587,7 +603,7 @@ useEffect(() => {
           </div>
           <div
             className="container-fluid  d-flex justify-content-end align-items-center mb-2"
-            style={{ marginTop: "-36px", zIndex: "-1", position: "relative" }}
+            style={{ marginTop: "-36px", position: "relative" }}
           >
             <p className="font-weight-bold text-uppercase mb-0 mr-2">
               LAST UPDATED TIME&nbsp;

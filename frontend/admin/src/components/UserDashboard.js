@@ -185,7 +185,7 @@ function UserDashboard() {
 
   return (
     <div className=" ">
-      <nav className="navbar navbar-expand-lg bg-body-tertiary">
+      <nav className="navbar navbar-expand-lg bg-body-tertiary" style={{boxShadow:"0 1px 5px rgba(0, 0, 0, 0.2) "}}>
         <div className="container-fluid">
           <a className="navbar-brand">
             {" "}

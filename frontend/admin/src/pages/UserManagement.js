@@ -5,11 +5,13 @@ import axiosInstance from "../axiosConfig";
 import DataTable from "react-data-table-component";
 
 function UserManagement() {
+  const [departments, setDepartments] = useState([]);
+
   const [users, setUsers] = useState([]); // User data
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    mobile: "",
+    // email: "",
+    // mobile: "",
     password: "",
     auth: "",
     employeeID: "",
@@ -33,8 +35,6 @@ function UserManagement() {
     const filtered = users.filter(
       (user) =>
         (user.Name && user.Name.toLowerCase().includes(searchText.toLowerCase())) ||
-        (user.Email && user.Email.toLowerCase().includes(searchText.toLowerCase())) ||
-        (user.Mobile && user.Mobile.toString().includes(searchText.toLowerCase())) ||
         (user.Auth && user.Auth.toLowerCase().includes(searchText.toLowerCase())) ||
         (user.EmployeeID && user.EmployeeID.toLowerCase().includes(searchText.toLowerCase())) ||
         (user.Department && user.Department.toLowerCase().includes(searchText.toLowerCase()))
@@ -43,7 +43,19 @@ function UserManagement() {
   }, [searchText, users]);
   
 
-
+  const fetchDepartments = async () => {
+    try {
+      const response = await axiosInstance.get("/api/departments");
+      setDepartments(response.data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+  
   const fetchUsers = async () => {
     try {
       const response = await axiosInstance.get("/api/AllUsers");
@@ -71,36 +83,7 @@ function UserManagement() {
     }, 2000);
   };
 
-  // const handleFormSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const transformedData = {
-  //     Name: formData.name,
-  //     Email: formData.email,
-  //     Mobile: formData.mobile,
-  //     Password: formData.password,
-  //     Auth: formData.auth,
-  //     EmployeeID: formData.employeeID,
-  //     Department: formData.department,
-  //   };
 
-  //   try {
-  //     if (selectedUserId) {
-  //       // Update user
-  //       await axiosInstance.put(`/api/users/${selectedUserId}`, transformedData);
-  //       showAlert("User updated successfully!", "success");
-  //     } else {
-  //       // Add new user
-  //       await axiosInstance.post("/api/signup", transformedData);
-  //       showAlert("User added successfully!", "success");
-  //     }
-  //     fetchUsers();
-  //     setShowModal(false);
-  //     resetForm();
-  //   } catch (error) {
-  //     console.error("Error saving user:", error.response?.data || error.message);
-  //     showAlert("An error occurred while saving the user.", "danger");
-  //   }
-  // };
 
 
   const handleFormSubmit = async (e) => {
@@ -108,8 +91,8 @@ function UserManagement() {
   
     const transformedData = {
       Name: formData.name,
-      Email: formData.email,
-      Mobile: formData.mobile,
+      // Email: formData.email,
+      // Mobile: formData.mobile,
       Password: formData.password, // Include password (may be empty)
       Auth: formData.auth,
       EmployeeID: formData.employeeID,
@@ -160,7 +143,7 @@ function UserManagement() {
 
     try {
       // Assuming your backend can handle batch deletes; if not, loop through selectedRows
-      await axiosInstance.delete(`/api/users/${selectedRows[0].id}`);
+      await axiosInstance.delete(`/api/users/${selectedRows[0].EmployeeID}`);
       showAlert("User deleted successfully!", "success");
       fetchUsers();
       setSelectedRows([]);
@@ -184,11 +167,11 @@ function UserManagement() {
   }
 
     const userToEdit = selectedRows[0];
-    setSelectedUserId(userToEdit.id);
+    setSelectedUserId(userToEdit.EmployeeID);
     setFormData({
       name: userToEdit.Name,
-      email: userToEdit.Email,
-      mobile: userToEdit.Mobile,
+      // email: userToEdit.Email,
+      // mobile: userToEdit.Mobile,
       password: "",
       auth: userToEdit.Auth,
       employeeID: userToEdit.EmployeeID,
@@ -204,8 +187,6 @@ function UserManagement() {
   const resetForm = () => {
     setFormData({
       name: "",
-      email: "",
-      mobile: "",
       password: "",
       auth: "",
       employeeID: "",
@@ -222,10 +203,7 @@ function UserManagement() {
 
   // Define columns for DataTable
   const columns = [
-    // { name: "Sr", selector: (row, index) => index + 1, sortable: true },
     { name: "NAME", selector: (row) => row.Name, sortable: true },
-    { name: "EMAIL", selector: (row) => row.Email, sortable: true },
-    { name: "MOBILE", selector: (row) => row.Mobile, sortable: true },
     { name: "AUTH", selector: (row) => row.Auth, sortable: true },
     { name: "EMPLOYEE ID", selector: (row) => row.EmployeeID, sortable: true },
     { name: "DEPARTMENT", selector: (row) => row.Department, sortable: true },
@@ -283,30 +261,6 @@ function UserManagement() {
                         />
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">Email</label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          
-                          placeholder="Enter Email"
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Mobile</label>
-                        <input
-                          type="tel"
-                          className="form-control"
-                          name="mobile"
-                          value={formData.mobile}
-                          onChange={handleInputChange}
-                          
-                           placeholder="Enter Mobile Number"
-                        />
-                      </div>
-                      <div className="mb-3">
                         <label className="form-label">Password</label>
                         <input
                           type="password"
@@ -341,7 +295,7 @@ function UserManagement() {
                           onChange={handleInputChange}
                         />
                       </div>
-                      <div className="mb-3">
+                      {/* <div className="mb-3">
                         <label className="form-label">Department</label>
                         <input
                           type="text"
@@ -350,6 +304,23 @@ function UserManagement() {
                           value={formData.department}
                           onChange={handleInputChange}
                         />
+                      </div> */}
+                      <div className="mb-3">
+                        <label className="form-label">Department</label>
+                        <select
+                          className="form-control"
+                          name="department"
+                          value={formData.department}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="">Select Department</option>
+                          {departments.map((dept, index) => (
+                            <option key={index} value={dept}>
+                              {dept}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <div className="modal-footer">

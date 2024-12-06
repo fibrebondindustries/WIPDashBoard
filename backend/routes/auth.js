@@ -2,7 +2,7 @@ const express = require("express");
 const { poolPromise, sql } = require("../config/db");
 const bcrypt = require("bcrypt");
 const router = express.Router();
-// const { sql, poolPromise } = require("../db");
+
 // Create an API endpoint to retrieve data
 router.get("/data", async (req, res) => {
   try {
@@ -18,7 +18,7 @@ router.get("/data", async (req, res) => {
             LEFT JOIN [dbo].[Description] T2 ON T1.[JOB ORDER NO] = T2.[JOB ORDER NO]
         `;
 
-    // Adding conditions based on provided filters
+ 
     // Adding conditions based on provided filters
     if (department === "null") {
       // If department is 'null', filter for rows where DEPARTMENT IS NULL
@@ -135,54 +135,10 @@ HAVING
   }
 });
 
+
 ////Admin Dashboard 23 nov
-// Signup API
-// router.post("/signup", async (req, res) => {
-//   const { Name, Email, Mobile, Password, Auth, EmployeeID } = req.body;
-
-//   if (!Name || !Email || !Mobile || !Password || !Auth || !EmployeeID) {
-//     return res.status(400).json({ error: "All fields are required" });
-//   }
-
-//   try {
-//     const pool = await poolPromise;
-
-//     // Check if the email already exists
-//     const emailCheck = await pool
-//       .request()
-//       .input("Email", sql.NVarChar, Email)
-//       .query("SELECT * FROM [dbo].[Users] WHERE Email = @Email");
-
-//     if (emailCheck.recordset.length > 0) {
-//       return res.status(400).json({ error: "Email already registered" });
-//     }
-
-//     // Hash the password
-//     const hashedPassword = await bcrypt.hash(Password, 10);
-
-//     // Insert the user
-//     await pool
-//       .request()
-//       .input("Name", sql.VarChar, Name)
-//       .input("Email", sql.VarChar, Email)
-//       .input("Mobile", sql.NVarChar, Mobile)
-//       .input("Password", sql.NVarChar, hashedPassword)
-//       .input("Auth", sql.VarChar, Auth)
-//       .input("EmployeeID", sql.VarChar, EmployeeID).query(`
-//                 INSERT INTO [dbo].[Users] (Name, Email, Mobile, Password, Auth, EmployeeID)
-//                 VALUES (@Name, @Email, @Mobile, @Password, @Auth, @EmployeeID)
-//             `);
-
-//     res.status(201).json({ message: "User registered successfully" });
-//   } catch (err) {
-//     console.error("Signup error:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
-
 router.post("/signup", async (req, res) => {
-  const { Name, Email, Mobile, Password, Auth, EmployeeID, Department } = req.body;
+  const { Name, Password, Auth, EmployeeID, Department } = req.body;
 
   // Validate all required fields !Name || !Email || !Mobile || 
   if (!Password ) {
@@ -197,21 +153,11 @@ router.post("/signup", async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // Check if the email already exists
-    const emailCheck = await pool
-      .request()
-      .input("Email", sql.NVarChar, Email)
-      .query("SELECT * FROM [dbo].[Users] WHERE Email = @Email");
-
-    if (emailCheck.recordset.length > 0) {
-      return res.status(400).json({ error: "Email already registered" });
-    }
-
     // Check if the EmployeeID already exists
     const employeeIDCheck = await pool
       .request()
       .input("EmployeeID", sql.VarChar, EmployeeID)
-      .query("SELECT * FROM [dbo].[Users] WHERE EmployeeID = @EmployeeID");
+      .query("SELECT * FROM [dbo].[Emp_Master] WHERE EmployeeID = @EmployeeID");
 
     if (employeeIDCheck.recordset.length > 0) {
       return res.status(400).json({ error: "EmployeeID already registered" });
@@ -224,15 +170,15 @@ router.post("/signup", async (req, res) => {
     await pool
       .request()
       .input("Name", sql.VarChar, Name)
-      .input("Email", sql.VarChar, Email)
-      .input("Mobile", sql.NVarChar, Mobile)
+      // .input("Email", sql.VarChar, Email)
+      // .input("Mobile", sql.NVarChar, Mobile)
       .input("Password", sql.NVarChar, hashedPassword)
       .input("Auth", sql.VarChar, Auth)
       .input("EmployeeID", sql.VarChar, EmployeeID)
       .input("Department", sql.VarChar, Department) // Add Department input
       .query(`
-        INSERT INTO [dbo].[Users] (Name, Email, Mobile, Password, Auth, EmployeeID, Department)
-        VALUES (@Name, @Email, @Mobile, @Password, @Auth, @EmployeeID, @Department)
+        INSERT INTO [dbo].[Emp_Master] (Name, Password, Auth, EmployeeID, Department)
+        VALUES (@Name, @Password, @Auth, @EmployeeID, @Department)
       `);
 
     res.status(201).json({ message: "User registered successfully" });
@@ -261,19 +207,19 @@ router.post("/login", async (req, res) => {
       .input("identifier", sql.NVarChar, identifier)
       .query(`
         SELECT 
-          id, Name, Email, Mobile, Password, Auth, EmployeeID, Department
-        FROM [dbo].[Users]
-        WHERE Email = @identifier OR EmployeeID = @identifier
+        Name, Password, Auth, EmployeeID, Department
+        FROM [dbo].[Emp_Master]
+        WHERE EmployeeID = @identifier
       `);
 
     if (user.recordset.length === 0) {
-      return res.status(401).json({ error: "Invalid Email/Employee ID or Password" });
+      return res.status(401).json({ error: "Invalid Employee ID or Password" });
     }
 
     const isMatch = await bcrypt.compare(Password, user.recordset[0].Password);
 
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid Email/Employee ID or Password" });
+      return res.status(401).json({ error: "Invalid Employee ID or Password" });
     }
 
     const currentTime = new Date().toISOString();
@@ -314,10 +260,7 @@ router.post("/login", async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user: {
-        id: user.recordset[0].id,
         Name: user.recordset[0].Name,
-        Email: user.recordset[0].Email,
-        Mobile: user.recordset[0].Mobile,
         Auth: user.recordset[0].Auth,
         EmployeeID: user.recordset[0].EmployeeID,
         Department: activeDepartment,
@@ -368,7 +311,7 @@ router.get("/AllUsers", async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    const result = await pool.query("SELECT * FROM [dbo].[Users]");
+    const result = await pool.query("SELECT * FROM [dbo].[Emp_Master]");
     res.status(200).json(result.recordset);
   } catch (err) {
     console.error("Error fetching users:", err);
@@ -377,16 +320,16 @@ router.get("/AllUsers", async (req, res) => {
 });
 
 //get user by id
-router.get("/users/:id", async (req, res) => {
-  const { id } = req.params;
+router.get("/users/:employeeID", async (req, res) => {
+  const { employeeID  } = req.params;
 
   try {
     const pool = await poolPromise;
 
     const result = await pool
       .request()
-      .input("UserID", sql.Int, id)
-      .query("SELECT * FROM [dbo].[Users] WHERE ID = @UserID");
+      .input("EmployeeID", sql.NVarChar, employeeID)
+      .query("SELECT * FROM [dbo].[Emp_Master] WHERE EmployeeID = @EmployeeID");
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: "User not found" });
@@ -394,25 +337,26 @@ router.get("/users/:id", async (req, res) => {
 
     res.status(200).json(result.recordset[0]);
   } catch (err) {
-    console.error("Error fetching user by ID:", err);
+    console.error("Error fetching user by EmployeeID:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 ///update user
-router.put("/users/:id", async (req, res) => {
-  const { id } = req.params;
-  const { Name, Email, Mobile, Auth, EmployeeID, Department, Password } = req.body;
+router.put("/users/:employeeID", async (req, res) => {
+  const { employeeID } = req.params;
+  const { Name, Auth, Department, Password } = req.body;
 
-  // Validate required fields
-  // if (!Name || !Email || !Mobile || !Auth || !EmployeeID || !Department) {
-  //   return res.status(400).json({ error: "All fields are required" });
-  // }
-  if (!EmployeeID ) {
-    return res.status(400).json({ error: "EmployeeID is required" });
+ 
+  if (!Name) {
+    return res.status(400).json({ error: "Name is required" });
   }
+  
   if (!Department ) {
     return res.status(400).json({ error: "Department is required" });
+  }
+  if (!Auth) {
+    return res.status(400).json({ error: "Auth is required" });
   }
 
   try {
@@ -421,8 +365,8 @@ router.put("/users/:id", async (req, res) => {
     // Check if the user exists
     const userCheck = await pool
       .request()
-      .input("UserID", sql.Int, id)
-      .query("SELECT * FROM [dbo].[Users] WHERE ID = @UserID");
+      .input("EmployeeID", sql.NVarChar, employeeID)
+      .query("SELECT * FROM [dbo].[Emp_Master] WHERE EmployeeID = @EmployeeID");
 
     if (userCheck.recordset.length === 0) {
       return res.status(404).json({ error: "User not found" });
@@ -447,20 +391,18 @@ router.put("/users/:id", async (req, res) => {
     // Update the user
     await pool
       .request()
-      .input("UserID", sql.Int, id)
-      .input("Name", sql.VarChar, Name)
-      .input("Email", sql.VarChar, Email)
-      .input("Mobile", sql.NVarChar, Mobile)
-      .input("Auth", sql.VarChar, Auth)
-      .input("EmployeeID", sql.VarChar, EmployeeID)
-      .input("Department", sql.VarChar, Department)
-      .input("Password", sql.NVarChar, hashedPassword) // Include updated password
+      .input("Name", sql.NVarChar, Name)
+      .input("Auth", sql.NVarChar, Auth)
+      .input("Department", sql.NVarChar, Department)
+      .input("Password", sql.NVarChar, hashedPassword)
+      .input("EmployeeID", sql.NVarChar, employeeID) // Match EmployeeID in WHERE clause
       .query(`
-        UPDATE [dbo].[Users]
-        SET Name = @Name, Email = @Email, Mobile = @Mobile,
-            Auth = @Auth, EmployeeID = @EmployeeID, Department = @Department,
+        UPDATE [dbo].[Emp_Master]
+        SET Name = @Name, 
+            Auth = @Auth, 
+            Department = @Department,
             Password = @Password
-        WHERE ID = @UserID
+        WHERE EmployeeID = @EmployeeID
       `);
 
     res.status(200).json({ message: "User updated successfully" });
@@ -472,8 +414,8 @@ router.put("/users/:id", async (req, res) => {
 
 
 
-router.delete("/users/:id", async (req, res) => {
-  const { id } = req.params;
+router.delete("/users/:employeeID", async (req, res) => {
+  const { employeeID } = req.params;
 
   try {
     const pool = await poolPromise;
@@ -481,8 +423,8 @@ router.delete("/users/:id", async (req, res) => {
     // Check if the user exists
     const userCheck = await pool
       .request()
-      .input("UserID", sql.Int, id)
-      .query("SELECT * FROM [dbo].[Users] WHERE ID = @UserID");
+      .input("EmployeeID", sql.NVarChar, employeeID)
+      .query("SELECT * FROM [dbo].[Emp_Master] WHERE EmployeeID = @EmployeeID");
 
     if (userCheck.recordset.length === 0) {
       return res.status(404).json({ error: "User not found" });
@@ -491,8 +433,8 @@ router.delete("/users/:id", async (req, res) => {
     // Delete the user
     await pool
       .request()
-      .input("UserID", sql.Int, id)
-      .query("DELETE FROM [dbo].[Users] WHERE ID = @UserID");
+      .input("EmployeeID", sql.NVarChar, employeeID)
+      .query("DELETE FROM [dbo].[Emp_Master] WHERE EmployeeID = @EmployeeID");
 
     res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
@@ -502,9 +444,20 @@ router.delete("/users/:id", async (req, res) => {
 });
 
 
+//06 nov
+router.get("/departments", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query("SELECT DepartmentName FROM Departments");
+    res.status(200).json(result.recordset.map((row) => row.DepartmentName));
+  } catch (error) {
+    console.error("Error fetching departments:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+//end
+
 ///27 Nov
-
-
 router.get("/presentEmployees", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -680,84 +633,6 @@ router.get("/departments/worker-requirements", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-// router.post("/departments/update-resources", async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
-
-//     // Query to calculate present workers per department
-//     const presentWorkersQuery = `
-//       SELECT 
-//         Department,
-//         COUNT(EmployeeID) AS PresentWorkers
-//       FROM UserActivity
-//       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
-//       GROUP BY Department;
-//     `;
-
-//     const presentWorkers = await pool.request().query(presentWorkersQuery);
-
-//     // Update all departments' AvailableResource to 0 as a default
-//     await pool.request().query(`
-//       UPDATE Departments
-//       SET AvailableResource = 0;
-//     `);
-
-//     // Loop through departments with present workers and update AvailableResource
-//     for (const worker of presentWorkers.recordset) {
-//       await pool
-//         .request()
-//         .input("PresentWorkers", sql.Int, worker.PresentWorkers)
-//         .input("Department", sql.NVarChar, worker.Department)
-//         .query(`
-//           UPDATE Departments
-//           SET AvailableResource = @PresentWorkers
-//           WHERE DepartmentName = @Department;
-//         `);
-//     }
-
-//     res.status(200).json({ message: "Available resources updated successfully." });
-//   } catch (error) {
-//     console.error("Error updating available resources:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
-
-// router.put("/departments/update-lot", async (req, res) => {
-//   const { DepartmentName, LotQuantity } = req.body;
-
-//   if (!DepartmentName || !LotQuantity) {
-//     return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
-//   }
-
-//   try {
-//     const pool = await poolPromise;
-
-//     // Define a rule for workers per lot
-//     const workersPerLot = 4000; // Example: 1 worker required for every 4000 units
-
-//     const requiredWorkers = Math.ceil(LotQuantity / workersPerLot);
-
-//     // Update LotQuantity and RequiredResource
-//     await pool.request()
-//       .input("LotQuantity", sql.Int, LotQuantity)
-//       .input("RequiredResource", sql.Int, requiredWorkers)
-//       .input("DepartmentName", sql.NVarChar, DepartmentName)
-//       .query(`
-//         UPDATE Departments
-//         SET LotQuantity = @LotQuantity,
-//             RequiredResource = @RequiredResource
-//         WHERE DepartmentName = @DepartmentName
-//       `);
-
-//     res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
-//   } catch (error) {
-//     console.error("Error updating lot quantity:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 
 

@@ -99,10 +99,10 @@ function Workers() {
   // Define columns for DataTable
   const columns = [
     
-    { name: "Department Name", selector: (row) => row.DepartmentName, sortable: true },
-    { name: "Lot Quantity", selector: (row) => row.LotQuantity, sortable: true },
-    { name: "Required Resource", selector: (row) => row.RequiredResource, sortable: true },
-    { name: "Available Resource", selector: (row) => row.AvailableResource, sortable: true },
+    { name: "DEPARTMENT NAME", selector: (row) => row.DepartmentName, sortable: true },
+    { name: "LOT QUANTITY", selector: (row) => row.LotQuantity, sortable: true },
+    { name: "REQUIRED RESOURCE", selector: (row) => row.RequiredResource, sortable: true },
+    { name: "AVAILABLE RESOURCE", selector: (row) => row.AvailableResource, sortable: true },
     {
       name: "To Fill",
       selector: (row) => row.ToFill,

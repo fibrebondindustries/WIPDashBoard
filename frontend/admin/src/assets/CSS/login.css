@@ -58,7 +58,7 @@
 
   #alertPlaceholder {
     position: fixed;
-    top: 20px; /* Distance from the top */
+    top: 65px; /* Distance from the top */
     left: 50%;
     transform: translateX(-50%); /* Center horizontally */
     z-index: 2000 !important; /* Ensure it appears above other elements */
