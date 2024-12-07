@@ -478,20 +478,30 @@ function Dashboard() {
         });
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      displayErrorMessage("Database Connection Lost");
     }
   }, []);
 
-    const displayErrorMessage = (message) => {
-    const tableBody = document.getElementById("table-body");
-    if (tableBody) {
-      tableBody.innerHTML = `<tr>
-        <td colspan="7" class="text-center text-danger font-weight-bold text-uppercase">
-          ${message}
-        </td>
-      </tr>`;
-    }
+  // const displayErrorMessage = (message) => {
+  //   const tableBody = document.getElementById("table-body");
+  //   if (tableBody) {
+  //     tableBody.innerHTML = `<tr>
+  //       <td colspan="7" class="text-center text-danger font-weight-bold text-uppercase">
+  //         ${message}
+  //       </td>
+  //     </tr>`;
+  //   }
+  // };
+
+  const displayErrorMessage = (message) => {
+    setFilteredData([
+      {
+        errorMessage: message,
+      },
+    ]);
   };
+
+  
   const handleSearch = useCallback(() => {
     if (searchQuery.trim() === "") {
       setFilteredData(data);
@@ -643,7 +653,17 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.map((row, index) => (
+                {filteredData.length > 0 && filteredData[0].errorMessage ? (
+                <tr>
+                  <td
+                    colSpan="7"
+                    className="text-center text-danger font-weight-bold text-uppercase"
+                  >
+                    {filteredData[0].errorMessage}
+                  </td>
+                </tr>
+              ) : (
+                  filteredData.map((row, index) => (
                     <tr key={index}>
                       <td>{row["JOB ORDER NO"]}</td>
                       <td>
@@ -655,7 +675,8 @@ useEffect(() => {
                       <td>{row["QUANTITY"]}</td>
                       <td>{row["DEPARTMENT"]}</td>
                     </tr>
-                  ))}
+                      ))
+                  )}
                 </tbody>
               </table>
             </div>

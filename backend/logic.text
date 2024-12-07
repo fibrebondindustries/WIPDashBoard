@@ -1,0 +1,89 @@
+with all data -----
+WITH DepartmentSummary AS (
+    SELECT 
+        st.[DEPARTMENT],
+        SUM(ISNULL(st.[QUANTITY], 0)) AS TotalQuantity,
+        wh.[Quantity] AS QuantityPerMin,
+        wh.[Quantity Per Hour],
+        dr.[LotQuantityPerWorker], -- Ratio for calculating resources
+        34500 AS StandardQuantity -- Replace this with the standard quantity for each department if required
+    FROM [dbo].[StagingTable] st
+    LEFT JOIN [dbo].[WorkingHours] wh
+        ON st.[DEPARTMENT] = wh.[Departments]
+    LEFT JOIN (
+        VALUES
+        ('FOAM CUTTING', 10000),
+        ('GLUING', 6666),
+        ('PRESSING', 10000),
+        ('BELT CUTTING DEPT', 5000),
+        ('SKRWING DEPARTMENT', 5000),
+        ('PESTING', 2500),
+        ('NOKE', 3333),
+        ('COLOUR DEPARTMENT', 1666),
+        ('DESIGN DEPARTMENT', 2222),
+        ('LOOPI DEPARTMENT', 2857),
+        ('PUCTURE DEPARTMENT', 2857),
+        ('BUCKLE STITCHING', 5000),
+        ('BUCKLE BURNING', 10000),
+        ('BELT CHECKING & CLEANING', 5000),
+        ('SCREW FITTING', 1666),
+        ('PANNI PACKING', 2857),
+        ('BOX FOLDING', 10000),
+        ('BOX PACKING', 6666),
+        ('CARTON MAKING', 10000),
+        ('BELT STITCHING', 2857),
+        ('PVC', 1666)
+    ) AS dr([DepartmentName], [LotQuantityPerWorker])
+        ON st.[DEPARTMENT] = dr.[DepartmentName]
+    GROUP BY 
+        st.[DEPARTMENT], 
+        wh.[Quantity],
+        wh.[Quantity Per Hour],
+        dr.[LotQuantityPerWorker]
+)
+SELECT 
+    ds.[DEPARTMENT],
+    ds.[TotalQuantity],
+    ds.[QuantityPerMin],
+    ds.[Quantity Per Hour],
+    ds.[LotQuantityPerWorker],
+    CEILING(ds.[TotalQuantity] / ds.[LotQuantityPerWorker]) AS RequiredResource, -- Calculate resources dynamically
+    CASE 
+        WHEN (ds.[TotalQuantity] - ds.[StandardQuantity]) > 0 
+            THEN CEILING((ds.[TotalQuantity] - ds.[StandardQuantity]) / ds.[QuantityPerMin])
+        ELSE 0
+    END AS RequiredExtraTime,
+    d.[AvailableResource],
+    (CEILING(ds.[TotalQuantity] / ds.[LotQuantityPerWorker]) - d.[AvailableResource]) AS ToFill
+FROM DepartmentSummary ds
+LEFT JOIN [dbo].[Departments] d
+    ON ds.[DEPARTMENT] = d.[DepartmentName];
+--------------------------------
+
+with working hours
+WITH DepartmentSummary AS (
+    SELECT 
+        st.[DEPARTMENT],
+        SUM(ISNULL(st.[QUANTITY], 0)) AS TotalQuantity,
+        wh.[Quantity] AS QuantityPerMin,
+        wh.[Quantity Per Hour],
+        34500 AS StandardQuantity -- Replace this with the standard quantity for each department if required
+    FROM [dbo].[StagingTable] st
+    LEFT JOIN [dbo].[WorkingHours] wh
+        ON st.[DEPARTMENT] = wh.[Departments]
+    GROUP BY 
+        st.[DEPARTMENT], 
+        wh.[Quantity],
+        wh.[Quantity Per Hour]
+)
+SELECT 
+    ds.[DEPARTMENT],
+    ds.[TotalQuantity],
+    ds.[QuantityPerMin],
+    ds.[Quantity Per Hour],
+    CASE 
+        WHEN (ds.[TotalQuantity] - ds.[StandardQuantity]) > 0 
+            THEN CEILING((ds.[TotalQuantity] - ds.[StandardQuantity]) / ds.[QuantityPerMin])
+        ELSE 0
+    END AS RequiredExtraTime
+FROM DepartmentSummary ds;
