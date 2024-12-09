@@ -30,17 +30,71 @@ function Workers() {
   };
 
   // Fetch department data
+  // const fetchDepartments = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axiosInstance.get("/api/departments/worker-requirements");
+  //     setDepartments(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching department data:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchDepartments = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/api/departments/worker-requirements");
-      setDepartments(response.data);
+  
+      // Fetch department data
+      const departmentsResponse = await axiosInstance.get("/api/departments/worker-requirements");
+  
+      // Fetch WIP data
+      const wipResponse = await axiosInstance.get("/api/wip");
+  
+      // Map WIP data to match department data
+      const updatedDepartments = departmentsResponse.data.map((department) => {
+        const wipData = wipResponse.data.data.find(
+          (wip) => wip.DEPARTMENT === department.DEPARTMENT
+        );
+  
+        return {
+          ...department,
+          Quantity: wipData ? wipData.Quantity : "N/A", // Add Quantity from WIP data
+        };
+      });
+  
+      setDepartments(updatedDepartments); // Update state with merged data
     } catch (error) {
-      console.error("Error fetching department data:", error);
+      console.error("Error fetching department or WIP data:", error);
+      showAlert("Failed to fetch data. Please try again.", "danger");
     } finally {
       setLoading(false);
     }
   };
+
+  
+  // Approve extra time
+  const handleApproveExtraTime = async (departmentName, extraTime) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.post("/api/departments/approve-extra-time", {
+        departmentName,
+        extraTime,
+      });
+      showAlert(response.data.message || "Extra time approved successfully!", "success");
+      fetchDepartments(); // Refresh table data
+    } catch (error) {
+      console.error("Error approving extra time:", error);
+      showAlert("Failed to approve extra time. Please try again.", "danger");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments(); // Fetch data on component load
+  }, []);
 
   // Update resources
   const updateResources = async () => {
@@ -87,33 +141,116 @@ function Workers() {
     fetchDepartments(); // Fetch data on component load
   }, []);
 
-   // Handle search filtering
-   useEffect(() => {
+  //  // Handle search filtering
+  useEffect(() => {
     const filtered = departments.filter((item) =>
-      item.DepartmentName.toLowerCase().includes(searchText.toLowerCase()),
-      
+      (item.DEPARTMENT || "").toLowerCase().includes(searchText.toLowerCase())
     );
     setFilteredData(filtered);
   }, [searchText, departments]);
+  
+  //  useEffect(() => {
+  //   const filtered = departments.filter((item) =>
+  //     item.DepartmentName.toLowerCase().includes(searchText.toLowerCase()),
+      
+  //   );
+  //   setFilteredData(filtered);
+  // }, [searchText, departments]);
 
   // Define columns for DataTable
-  const columns = [
+  // const columns = [
     
-    { name: "DEPARTMENT NAME", selector: (row) => row.DepartmentName, sortable: true },
-    { name: "LOT QUANTITY", selector: (row) => row.LotQuantity, sortable: true },
+  //   { name: "DEPARTMENT NAME", selector: (row) => row.DepartmentName, sortable: true },
+  //   { name: "LOT QUANTITY", selector: (row) => row.LotQuantity, sortable: true },
+  //   { name: "REQUIRED RESOURCE", selector: (row) => row.RequiredResource, sortable: true },
+  //   { name: "AVAILABLE RESOURCE", selector: (row) => row.AvailableResource, sortable: true },
+  //   {
+  //     name: "To Fill",
+  //     selector: (row) => row.ToFill,
+  //     sortable: true,
+  //     cell: (row) => (
+  //       <span style={{ color: row.ToFill > 0 ? "red" : "green" }}>
+  //         {row.ToFill}
+  //       </span>
+  //     ),
+  //   },
+  // ];
+
+  const columns = [
+    { name: "DEPARTMENT NAME", selector: (row) => row.DEPARTMENT, sortable: true },
+    { name: "QUANTITY", selector: (row) => row.TotalQuantity, sortable: true },
+    {
+      name: "UPDATED QUANTITY",
+      selector: (row) => (row.Quantity !== null ? row.Quantity : "N/A"), // Handle null value
+      sortable: true,
+    },
+    
     { name: "REQUIRED RESOURCE", selector: (row) => row.RequiredResource, sortable: true },
     { name: "AVAILABLE RESOURCE", selector: (row) => row.AvailableResource, sortable: true },
     {
-      name: "To Fill",
+      name: "TO FILL",
       selector: (row) => row.ToFill,
-      sortable: true,
       cell: (row) => (
         <span style={{ color: row.ToFill > 0 ? "red" : "green" }}>
           {row.ToFill}
         </span>
       ),
     },
+    {
+      name: "REQUIRED EXTRA TIME",
+      selector: (row) => row.RequiredExtraTime,
+      cell: (row) =>
+        row.RequiredExtraTime > 0 ? (
+          <>
+            {`${row.RequiredExtraTime} mins `}
+            <button
+              className="btn btn-sm btn-outline-success ms-2"
+              onClick={() => handleApproveExtraTime(row.DEPARTMENT, row.RequiredExtraTime)}
+            >
+              ✔
+            </button>
+          </>
+        ) : (
+          "No Extra Time"
+        ),
+    },
   ];
+  //   {
+  //     name: "REQUIRED EXTRA TIME",
+  //     selector: (row) => row.RequiredExtraTime,
+  //     cell: (row) =>
+  //       row.RequiredExtraTime > 0
+  //         ? `${row.RequiredExtraTime} mins`
+  //         : "No Extra Time",
+  //   },
+  // ];
+  
+  const handleSendToDatabase = async () => {
+    try {
+      setLoading(true);
+  
+      // First, trigger updateResources to update the department data
+      // await updateResources();
+  
+      // Prepare payload for the API
+      const payload = departments.map((department) => ({
+        departmentName: department.DEPARTMENT,
+        availableResource: department.AvailableResource,
+        toFill: department.ToFill,
+      }));
+  
+      // Send data to the backend
+      const response = await axiosInstance.post("/api/departments/save-resources", payload);
+  
+       showAlert(response.data.message || "Resources saved to the database successfully!", "success");
+    } catch (error) {
+      console.error("Error saving resources to the database:", error);
+      showAlert("Failed to save resources to the database. Please try again.", "danger");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
@@ -132,24 +269,21 @@ function Workers() {
           <div className="d-flex justify-content-between align-items-center">
             <h2 className="mb-5">Manage Workers</h2>
             <div>
+            
               <button
+              className="btn btn-success me-2"
+              onClick={handleSendToDatabase}
+              disabled={loading}
+            >
+              {loading ? "Processing..." : "Save Resources"}
+            </button>
+
+             <button
                 className="btn btn-success me-2"
                 onClick={updateResources}
                 disabled={loading}
               >
                 {loading ? "Updating..." : "Update Resources"}
-              </button>
-              <button
-                className="btn btn-outline-primary"
-                onClick={() => {
-                  if (selectedDepartment) {
-                    setShowModal(true);
-                  } else {
-                    showAlert("Please select a department first!", "danger");
-                  }
-                }}
-              >
-                Update Lot Quantity
               </button>
             </div>
           </div>
@@ -168,7 +302,7 @@ function Workers() {
             data={filteredData}
             pagination
             progressPending={loading}
-            selectableRows
+            // selectableRows
             onSelectedRowsChange={(state) => {
               if (state.selectedRows.length > 0) {
                 setSelectedDepartment(state.selectedRows[0]); // Select the first user from selected rows

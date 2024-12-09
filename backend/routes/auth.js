@@ -614,19 +614,167 @@ router.get("/temporaryDepartments", async (req, res) => {
 
 
 ///////////// worker module 
+// router.get("/departments/worker-requirements", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(`
+//       SELECT 
+//         DepartmentName,
+//         LotQuantity,
+//         RequiredResource,
+//         AvailableResource,
+//         (RequiredResource - AvailableResource) AS ToFill
+//       FROM Departments
+//     `);
+
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching department worker requirements:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+// // Define Department Ratios (Fixed Lots per Worker for Each Department)
+
+
+
+// router.get("/departments/worker-requirements", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(`
+//       WITH DepartmentSummary AS (
+//           SELECT 
+//               st.[DEPARTMENT],
+//               SUM(ISNULL(st.[QUANTITY], 0)) AS TotalQuantity,
+//               wh.[Quantity] AS QuantityPerMin,
+//               wh.[Quantity Per Hour],
+//               dr.[LotQuantityPerWorker],
+//               34500 AS StandardQuantity 
+//           FROM [dbo].[StagingTable] st
+//           LEFT JOIN [dbo].[WorkingHours] wh
+//               ON st.[DEPARTMENT] = wh.[Departments]
+//           LEFT JOIN (
+//               VALUES
+//               ('FOAM CUTTING', 10000),
+//               ('GLUING', 6666),
+//               ('PRESSING', 10000),
+//               ('BELT CUTTING DEPT', 5000),
+//               ('SKRWING DEPARTMENT', 5000),
+//               ('PESTING', 2500),
+//               ('NOKE', 3333),
+//               ('COLOUR DEPARTMENT', 1666),
+//               ('DESIGN DEPARTMENT', 2222),
+//               ('LOOPI DEPARTMENT', 2857),
+//               ('PUCTURE DEPARTMENT', 2857),
+//               ('BUCKLE STITCHING', 5000),
+//               ('BUCKLE BURNING', 10000),
+//               ('BELT CHECKING & CLEANING', 5000),
+//               ('SCREW FITTING', 1666),
+//               ('PANNI PACKING', 2857),
+//               ('BOX FOLDING', 10000),
+//               ('BOX PACKING', 6666),
+//               ('CARTON MAKING', 10000),
+//               ('BELT STITCHING', 2857),
+//               ('PVC', 1666)
+//           ) AS dr([DepartmentName], [LotQuantityPerWorker])
+//               ON st.[DEPARTMENT] = dr.[DepartmentName]
+//           GROUP BY 
+//               st.[DEPARTMENT], 
+//               wh.[Quantity],
+//               wh.[Quantity Per Hour],
+//               dr.[LotQuantityPerWorker]
+//       )
+//       SELECT 
+//           ds.[DEPARTMENT],
+//           ds.[TotalQuantity],
+//           ds.[QuantityPerMin],
+//           ds.[Quantity Per Hour],
+//           ds.[LotQuantityPerWorker],
+//           CEILING(ds.[TotalQuantity] / ds.[LotQuantityPerWorker]) AS RequiredResource, -- Calculate resources dynamically
+//           CASE 
+//               WHEN (ds.[TotalQuantity] - ds.[StandardQuantity]) > 0 
+//                   THEN CEILING((ds.[TotalQuantity] - ds.[StandardQuantity]) / ds.[QuantityPerMin])
+//               ELSE 0
+//           END AS RequiredExtraTime,
+//           d.[AvailableResource],
+//           (CEILING(ds.[TotalQuantity] / ds.[LotQuantityPerWorker]) - d.[AvailableResource]) AS ToFill
+//       FROM DepartmentSummary ds
+//       LEFT JOIN [dbo].[Departments] d
+//           ON ds.[DEPARTMENT] = d.[DepartmentName];
+//     `);
+
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching department worker requirements:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 router.get("/departments/worker-requirements", async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
+      WITH DepartmentSummary AS (
+          SELECT 
+              st.[DEPARTMENT],
+              SUM(ISNULL(st.[QUANTITY], 0)) AS TotalQuantity, -- Total Quantity for the department
+              wh.[Quantity] AS QuantityPerMin, -- Quantity completed per minute
+              wh.[Quantity Per Hour], -- Quantity completed per hour
+              dr.[LotQuantityPerWorker], -- Worker ratio
+              34500 AS StandardQuantity -- Standard benchmark quantity
+          FROM [dbo].[StagingTable] st
+          LEFT JOIN [dbo].[WorkingHours] wh
+              ON st.[DEPARTMENT] = wh.[Departments]
+          LEFT JOIN (
+              VALUES
+              ('FOAM CUTTING', 10000),
+              ('GLUING', 6666),
+              ('PRESSING', 10000),
+              ('BELT CUTTING DEPT', 5000),
+              ('SKRWING DEPARTMENT', 5000),
+              ('PESTING', 2500),
+              ('NOKE', 3333),
+              ('COLOUR DEPARTMENT', 1666),
+              ('DESIGN DEPARTMENT', 2222),
+              ('LOOPI DEPARTMENT', 2857),
+              ('PUCTURE DEPARTMENT', 2857),
+              ('BUCKLE STITCHING', 5000),
+              ('BUCKLE BURNING', 10000),
+              ('BELT CHECKING & CLEANING', 5000),
+              ('SCREW FITTING', 1666),
+              ('PANNI PACKING', 2857),
+              ('BOX FOLDING', 10000),
+              ('BOX PACKING', 6666),
+              ('CARTON MAKING', 10000),
+              ('BELT STITCHING', 2857),
+              ('PVC', 1666)
+          ) AS dr([DepartmentName], [LotQuantityPerWorker])
+              ON st.[DEPARTMENT] = dr.[DepartmentName]
+          GROUP BY 
+              st.[DEPARTMENT], 
+              wh.[Quantity],
+              wh.[Quantity Per Hour],
+              dr.[LotQuantityPerWorker]
+      )
       SELECT 
-        DepartmentName,
-        LotQuantity,
-        RequiredResource,
-        AvailableResource,
-        (RequiredResource - AvailableResource) AS ToFill
-      FROM Departments
+          ds.[DEPARTMENT],
+          ds.[TotalQuantity], -- Total quantity from the staging table
+          ds.[QuantityPerMin], -- Quantity completed per minute
+          ds.[Quantity Per Hour], -- Quantity completed per hour
+          ds.[LotQuantityPerWorker], -- Worker ratio
+          CEILING(CAST(ds.[TotalQuantity] AS FLOAT) / ds.[LotQuantityPerWorker]) AS RequiredResource, -- Calculate resources dynamically with rounding up
+          CASE 
+              WHEN (ds.[TotalQuantity] - ds.[StandardQuantity]) > 0 
+                  THEN CEILING((ds.[TotalQuantity] - ds.[StandardQuantity]) / ds.[QuantityPerMin]) -- Calculate extra time required if total quantity exceeds the standard
+              ELSE 0
+          END AS RequiredExtraTime,
+          d.[AvailableResource], -- Available workers in the department
+          (CEILING(CAST(ds.[TotalQuantity] AS FLOAT) / ds.[LotQuantityPerWorker]) - d.[AvailableResource]) AS ToFill -- Workers to fill
+      FROM DepartmentSummary ds
+      LEFT JOIN [dbo].[Departments] d
+          ON ds.[DEPARTMENT] = d.[DepartmentName];
     `);
 
+    // Return the result as JSON
     res.status(200).json(result.recordset);
   } catch (error) {
     console.error("Error fetching department worker requirements:", error);
@@ -635,8 +783,6 @@ router.get("/departments/worker-requirements", async (req, res) => {
 });
 
 
-
-// Define Department Ratios (Fixed Lots per Worker for Each Department)
 const departmentRatios = {
   "FOAM CUTTING": 10000,
   "GLUING": 6666,
@@ -660,7 +806,6 @@ const departmentRatios = {
   "BELT STITCHING": 2857,
   "PVC": 1666,
 };
-
 // Update /departments/update-resources Endpoint
 router.post("/departments/update-resources", async (req, res) => {
   try {
@@ -711,44 +856,44 @@ router.post("/departments/update-resources", async (req, res) => {
   }
 });
 
-// Update /departments/update-lot Endpoint
-router.put("/departments/update-lot", async (req, res) => {
-  const { DepartmentName, LotQuantity } = req.body;
+// // Update /departments/update-lot Endpoint
+// router.put("/departments/update-lot", async (req, res) => {
+//   const { DepartmentName, LotQuantity } = req.body;
 
-  if (!DepartmentName || !LotQuantity) {
-    return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
-  }
+//   if (!DepartmentName || !LotQuantity) {
+//     return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
+//   }
 
-  try {
-    const pool = await poolPromise;
+//   try {
+//     const pool = await poolPromise;
 
-    // Get the ratio for the specified department
-    const ratio = departmentRatios[DepartmentName];
-    if (!ratio) {
-      return res.status(400).json({ error: `No ratio defined for department: ${DepartmentName}` });
-    }
+//     // Get the ratio for the specified department
+//     const ratio = departmentRatios[DepartmentName];
+//     if (!ratio) {
+//       return res.status(400).json({ error: `No ratio defined for department: ${DepartmentName}` });
+//     }
 
-    const requiredWorkers = Math.ceil(LotQuantity / ratio);
+//     const requiredWorkers = Math.ceil(LotQuantity / ratio);
 
-    // Update LotQuantity and RequiredResource
-    await pool
-      .request()
-      .input("LotQuantity", sql.Int, LotQuantity)
-      .input("RequiredResource", sql.Int, requiredWorkers)
-      .input("DepartmentName", sql.NVarChar, DepartmentName)
-      .query(`
-        UPDATE Departments
-        SET LotQuantity = @LotQuantity,
-            RequiredResource = @RequiredResource
-        WHERE DepartmentName = @DepartmentName;
-      `);
+//     // Update LotQuantity and RequiredResource
+//     await pool
+//       .request()
+//       .input("LotQuantity", sql.Int, LotQuantity)
+//       .input("RequiredResource", sql.Int, requiredWorkers)
+//       .input("DepartmentName", sql.NVarChar, DepartmentName)
+//       .query(`
+//         UPDATE Departments
+//         SET LotQuantity = @LotQuantity,
+//             RequiredResource = @RequiredResource
+//         WHERE DepartmentName = @DepartmentName;
+//       `);
 
-    res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
-  } catch (error) {
-    console.error("Error updating lot quantity:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+//     res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
+//   } catch (error) {
+//     console.error("Error updating lot quantity:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
 
 router.get("/departments/:name", async (req, res) => {
   const { name } = req.params;
@@ -779,6 +924,150 @@ router.get("/departments/:name", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
+
+router.post("/departments/approve-extra-time", async (req, res) => {
+  const { departmentName, extraTime } = req.body;
+
+  if (!departmentName || !extraTime) {
+    return res.status(400).json({ error: "Department name and extra time are required." });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Fetch QuantityPerMin for the department from WorkingHours
+    const quantityPerMinResult = await pool
+      .request()
+      .input("DepartmentName", sql.NVarChar, departmentName)
+      .query(`
+        SELECT [Quantity] AS QuantityPerMin
+        FROM [dbo].[WorkingHours]
+        WHERE [Departments] = @DepartmentName
+      `);
+
+    if (quantityPerMinResult.recordset.length === 0) {
+      return res.status(404).json({ error: "Department not found in WorkingHours." });
+    }
+
+    const quantityPerMin = quantityPerMinResult.recordset[0].QuantityPerMin;
+
+    // Calculate the quantity to deduct for the approved extra time
+    const quantityToDeduct = extraTime * quantityPerMin;
+
+    // Update TotalQuantity in the StagingTable for the department
+    const updateQuery = `
+      UPDATE [dbo].[WIP]
+      SET [QUANTITY] = [Wip_quantity] - @QuantityToDeduct
+      WHERE [DEPARTMENT] = @DepartmentName
+    `;
+    const updateResult = await pool
+      .request()
+      .input("QuantityToDeduct", sql.Int, quantityToDeduct)
+      .input("DepartmentName", sql.NVarChar, departmentName)
+      .query(updateQuery);
+
+    if (updateResult.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "No rows updated. Ensure department exists in StagingTable." });
+    }
+
+    res.status(200).json({
+      message: `Approved extra time successfully! Deducted ${quantityToDeduct} from total quantity.`,
+    });
+  } catch (error) {
+    console.error("Error approving extra time:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/departments/save-resources", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Iterate through the payload and update or insert records
+    for (const record of req.body) {
+      const { departmentName, availableResource, toFill } = record;
+
+      // Check if the record exists
+      const checkRecordQuery = `
+        SELECT COUNT(*) AS Count
+        FROM [dbo].[WIP]
+        WHERE [DEPARTMENT] = @DepartmentName;
+      `;
+      const recordExists = await pool
+        .request()
+        .input("DepartmentName", sql.NVarChar, departmentName)
+        .query(checkRecordQuery);
+
+      if (recordExists.recordset[0].Count > 0) {
+        // Update existing record
+        await pool
+          .request()
+          .input("DepartmentName", sql.NVarChar, departmentName)
+          .input("Worker_in_Factory", sql.Int, availableResource)
+          .input("Worker_to_fill", sql.Int, toFill)
+          .query(`
+            UPDATE [dbo].[WIP]
+            SET [Worker_in_Factory] = @Worker_in_Factory,
+                [Worker_to_fill] = @Worker_to_fill
+            WHERE [DEPARTMENT] = @DepartmentName;
+          `);
+      } else {
+        // Insert new record
+        await pool
+          .request()
+          .input("DepartmentName", sql.NVarChar, departmentName)
+          .input("Worker_in_Factory", sql.Int, availableResource)
+          .input("Worker_to_fill", sql.Int, toFill)
+          .query(`
+            INSERT INTO [dbo].[WIP] ([DEPARTMENT], [Worker_in_Factory], [Worker_to_fill])
+            VALUES (@DepartmentName, @Worker_in_Factory, @Worker_to_fill);
+          `);
+      }
+    }
+
+    res.status(200).json({ message: "Data saved to WIP table successfully!" });
+  } catch (error) {
+    console.error("Error saving data to WIP table:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// GET API to fetch all WIP data
+router.get("/wip", async (req, res) => {
+  try {
+    const pool = await poolPromise; // Get database connection
+    const query = `
+      SELECT 
+        [DEPARTMENT],
+        [Quantity],
+        [Worker_in_Factory],
+        [Worker_to_fill],
+        [WorkerStatus],
+        [Wip_quantity],
+        [Result]
+      FROM [dbo].[WIP]
+    `;
+
+    const result = await pool.request().query(query); // Execute the query
+
+    res.status(200).json({
+      success: true,
+      data: result.recordset, // Send all results as JSON
+    });
+  } catch (error) {
+    console.error("Error fetching WIP data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching WIP data. Please try again.",
+    });
+  }
+});
+
+
+
 
 
 

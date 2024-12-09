@@ -60,7 +60,7 @@ LEFT JOIN [dbo].[Departments] d
     ON ds.[DEPARTMENT] = d.[DepartmentName];
 --------------------------------
 
-with working hours
+---with working hours
 WITH DepartmentSummary AS (
     SELECT 
         st.[DEPARTMENT],

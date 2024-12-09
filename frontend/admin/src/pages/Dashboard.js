@@ -411,7 +411,7 @@ function Dashboard() {
 
           // Find worker requirement for the department
           const workerRequirement = fetchedWorkerRequirements.find(
-            (req) => req.DepartmentName.toLowerCase() === department.toLowerCase()
+            (req) => req.DEPARTMENT.toLowerCase() === department.toLowerCase()
           );
 
           // Determine blue condition
