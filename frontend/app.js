@@ -185,33 +185,7 @@ function scrollFilterRight() {
 
 
 ////20Nov Code
-// async function fetchLastUpdatedDate() {
-//     try {
-//         // Fetch all data from the API
-//         const response = await fetch('http://localhost:5050/api/data');
-//         const data = await response.json();
 
-//         if (data && data.length > 0) {
-//             // Extract the most recent `Updated_Time`
-//             const lastUpdated = data.reduce((latest, current) => {
-//                 // Compare the string representation of Updated_Time
-//                 return current['Updated_Time'] > latest['Updated_Time'] ? current : latest;
-//             });
-
-//             // Use the Updated_Time value directly since it’s already formatted
-//             const formattedDate = lastUpdated['Updated_Time'];
-
-//             // Append the formatted date to the input box
-//             document.getElementById('updatedDate').value = formattedDate;
-//         } else {
-//             console.error("No data available to fetch the last updated time.");
-//             document.getElementById('updatedDate').value = "No data available";
-//         }
-//     } catch (error) {
-//         console.error("Error fetching last updated time:", error);
-//         document.getElementById('updatedDate').value = "Error fetching date";
-//     }
-// }
 
 
 async function fetchLastUpdatedDate() {

@@ -8,6 +8,8 @@ import UserDashboard from './components/UserDashboard';
 import UserManagement from "./pages/UserManagement";
 import Department from './pages/Department'
 import Workers from './pages/Workers';
+import WIPLogin from './WIP/Login'; // Importing the new Login component
+import WIPDashboard from './WIP/WIPHome';
 
 function App() {
     return (
@@ -56,7 +58,11 @@ function App() {
                                 <Workers  />
                             </ProtectedRoute>
                         }
-                    />Workers
+                    />
+                      {/* New Routes for WIP */}
+                      <Route path="/wip-login" element={<WIPLogin />} />
+                      <Route path="/wip-dashboard" element={<WIPDashboard />} />
+
                 </Routes>
             </div>
         </BrowserRouter>
