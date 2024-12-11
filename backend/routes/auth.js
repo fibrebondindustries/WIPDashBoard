@@ -4,6 +4,51 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 
 // Create an API endpoint to retrieve data
+// router.get("/data", async (req, res) => {
+//   try {
+//     const department = req.query.department; // Get department filter from query
+//     const jobOrderNo = req.query.jobOrderNo; // Get jobOrderNo filter from query
+//     const pool = await poolPromise;
+//     const request = pool.request();
+
+    // // Base query to join StagingTable with Description table
+    // let query = `
+    //         SELECT T1.*, T2.[Description]
+    //         FROM [dbo].[StagingTable] T1
+    //         LEFT JOIN [dbo].[Description] T2 ON T1.[JOB ORDER NO] = T2.[JOB ORDER NO]
+    //     `;
+
+ 
+//     // Adding conditions based on provided filters
+//     if (department === "null") {
+//       // If department is 'null', filter for rows where DEPARTMENT IS NULL
+//       query += " WHERE T1.DEPARTMENT IS NULL";
+//     } else if (department && jobOrderNo) {
+//       // If both department and jobOrderNo are provided, filter by both
+//       query +=
+//         " WHERE T1.DEPARTMENT = @department AND T1.[JOB ORDER NO] = @jobOrderNo";
+//       request.input("department", sql.NVarChar, department);
+//       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
+//     } else if (department) {
+//       // If only department is provided, filter by department
+//       query += " WHERE T1.DEPARTMENT = @department";
+//       request.input("department", sql.NVarChar, department);
+//     } else if (jobOrderNo) {
+//       // If only jobOrderNo is provided, filter by jobOrderNo
+//       query += " WHERE T1.[JOB ORDER NO] = @jobOrderNo";
+//       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
+//     }
+
+//     const result = await request.query(query);
+//     res.json(result.recordset);
+//   } catch (err) {
+//     console.error("Query failed:", err);
+//     isDatabaseConnected = false; // Mark as disconnected if an error occurs
+//     res.status(500).send("Error fetching data");
+//   }
+// });
+
+
 router.get("/data", async (req, res) => {
   try {
     const department = req.query.department; // Get department filter from query
@@ -11,30 +56,38 @@ router.get("/data", async (req, res) => {
     const pool = await poolPromise;
     const request = pool.request();
 
-    // Base query to join StagingTable with Description table
+    // Base query to join StagingTable with WIP table
     let query = `
-            SELECT T1.*, T2.[Description]
-            FROM [dbo].[StagingTable] T1
-            LEFT JOIN [dbo].[Description] T2 ON T1.[JOB ORDER NO] = T2.[JOB ORDER NO]
-        `;
+      SELECT 
+        T1.[JOB ORDER NO], 
+        T1.[JOB ORDER DATE], 
+        T1.[ITEM NAME], 
+        T1.[PROCESS NAME], 
+        T1.[PROCESS GROUP], 
+        T1.[QUANTITY], 
+        T1.[DEPARTMENT],
+        T1.[Updated_Time],
+        T2.[Description],
+        WIP.[WorkerStatus],
+        WIP.[Result],
+        WIP.[Wip_quantity]
+      FROM [dbo].[StagingTable] T1
+      LEFT JOIN [dbo].[WIP] WIP ON T1.[DEPARTMENT] = WIP.[DEPARTMENT]
+      LEFT JOIN [dbo].[Description] T2 ON T1.[JOB ORDER NO] = T2.[JOB ORDER NO]
+    `;
 
- 
     // Adding conditions based on provided filters
     if (department === "null") {
-      // If department is 'null', filter for rows where DEPARTMENT IS NULL
       query += " WHERE T1.DEPARTMENT IS NULL";
     } else if (department && jobOrderNo) {
-      // If both department and jobOrderNo are provided, filter by both
       query +=
         " WHERE T1.DEPARTMENT = @department AND T1.[JOB ORDER NO] = @jobOrderNo";
       request.input("department", sql.NVarChar, department);
       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
     } else if (department) {
-      // If only department is provided, filter by department
       query += " WHERE T1.DEPARTMENT = @department";
       request.input("department", sql.NVarChar, department);
     } else if (jobOrderNo) {
-      // If only jobOrderNo is provided, filter by jobOrderNo
       query += " WHERE T1.[JOB ORDER NO] = @jobOrderNo";
       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
     }
@@ -43,10 +96,10 @@ router.get("/data", async (req, res) => {
     res.json(result.recordset);
   } catch (err) {
     console.error("Query failed:", err);
-    isDatabaseConnected = false; // Mark as disconnected if an error occurs
     res.status(500).send("Error fetching data");
   }
 });
+
 
 // Listen for SQL connection errors
 sql.on("error", (err) => {
@@ -637,77 +690,7 @@ router.get("/temporaryDepartments", async (req, res) => {
 
 
 
-// router.get("/departments/worker-requirements", async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
-//     const result = await pool.request().query(`
-//       WITH DepartmentSummary AS (
-//           SELECT 
-//               st.[DEPARTMENT],
-//               SUM(ISNULL(st.[QUANTITY], 0)) AS TotalQuantity,
-//               wh.[Quantity] AS QuantityPerMin,
-//               wh.[Quantity Per Hour],
-//               dr.[LotQuantityPerWorker],
-//               34500 AS StandardQuantity 
-//           FROM [dbo].[StagingTable] st
-//           LEFT JOIN [dbo].[WorkingHours] wh
-//               ON st.[DEPARTMENT] = wh.[Departments]
-//           LEFT JOIN (
-//               VALUES
-//               ('FOAM CUTTING', 10000),
-//               ('GLUING', 6666),
-//               ('PRESSING', 10000),
-//               ('BELT CUTTING DEPT', 5000),
-//               ('SKRWING DEPARTMENT', 5000),
-//               ('PESTING', 2500),
-//               ('NOKE', 3333),
-//               ('COLOUR DEPARTMENT', 1666),
-//               ('DESIGN DEPARTMENT', 2222),
-//               ('LOOPI DEPARTMENT', 2857),
-//               ('PUCTURE DEPARTMENT', 2857),
-//               ('BUCKLE STITCHING', 5000),
-//               ('BUCKLE BURNING', 10000),
-//               ('BELT CHECKING & CLEANING', 5000),
-//               ('SCREW FITTING', 1666),
-//               ('PANNI PACKING', 2857),
-//               ('BOX FOLDING', 10000),
-//               ('BOX PACKING', 6666),
-//               ('CARTON MAKING', 10000),
-//               ('BELT STITCHING', 2857),
-//               ('PVC', 1666)
-//           ) AS dr([DepartmentName], [LotQuantityPerWorker])
-//               ON st.[DEPARTMENT] = dr.[DepartmentName]
-//           GROUP BY 
-//               st.[DEPARTMENT], 
-//               wh.[Quantity],
-//               wh.[Quantity Per Hour],
-//               dr.[LotQuantityPerWorker]
-//       )
-//       SELECT 
-//           ds.[DEPARTMENT],
-//           ds.[TotalQuantity],
-//           ds.[QuantityPerMin],
-//           ds.[Quantity Per Hour],
-//           ds.[LotQuantityPerWorker],
-//           CEILING(ds.[TotalQuantity] / ds.[LotQuantityPerWorker]) AS RequiredResource, -- Calculate resources dynamically
-//           CASE 
-//               WHEN (ds.[TotalQuantity] - ds.[StandardQuantity]) > 0 
-//                   THEN CEILING((ds.[TotalQuantity] - ds.[StandardQuantity]) / ds.[QuantityPerMin])
-//               ELSE 0
-//           END AS RequiredExtraTime,
-//           d.[AvailableResource],
-//           (CEILING(ds.[TotalQuantity] / ds.[LotQuantityPerWorker]) - d.[AvailableResource]) AS ToFill
-//       FROM DepartmentSummary ds
-//       LEFT JOIN [dbo].[Departments] d
-//           ON ds.[DEPARTMENT] = d.[DepartmentName];
-//     `);
 
-//     res.status(200).json(result.recordset);
-//   } catch (error) {
-//     console.error("Error fetching department worker requirements:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 router.get("/departments/worker-requirements", async (req, res) => {
   try {
@@ -981,13 +964,23 @@ router.post("/departments/approve-extra-time", async (req, res) => {
   }
 });
 
+
 router.post("/departments/save-resources", async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // Iterate through the payload and update or insert records
     for (const record of req.body) {
-      const { departmentName, availableResource, toFill } = record;
+      const {
+        departmentName,
+        availableResource,
+        toFill,
+        quantity,
+        requiredExtraTime,
+      } = record;
+
+      // Ensure quantity is an integer
+      const updatedQuantity =
+        requiredExtraTime === 0 && quantity > 0 ? 0 : parseInt(quantity, 10);
 
       // Check if the record exists
       const checkRecordQuery = `
@@ -1007,10 +1000,12 @@ router.post("/departments/save-resources", async (req, res) => {
           .input("DepartmentName", sql.NVarChar, departmentName)
           .input("Worker_in_Factory", sql.Int, availableResource)
           .input("Worker_to_fill", sql.Int, toFill)
+          .input("Quantity", sql.Int, updatedQuantity) // Ensure Quantity is an integer
           .query(`
             UPDATE [dbo].[WIP]
             SET [Worker_in_Factory] = @Worker_in_Factory,
-                [Worker_to_fill] = @Worker_to_fill
+                [Worker_to_fill] = @Worker_to_fill,
+                [Quantity] = @Quantity
             WHERE [DEPARTMENT] = @DepartmentName;
           `);
       } else {
@@ -1020,9 +1015,10 @@ router.post("/departments/save-resources", async (req, res) => {
           .input("DepartmentName", sql.NVarChar, departmentName)
           .input("Worker_in_Factory", sql.Int, availableResource)
           .input("Worker_to_fill", sql.Int, toFill)
+          .input("Quantity", sql.Int, updatedQuantity) // Ensure Quantity is an integer
           .query(`
-            INSERT INTO [dbo].[WIP] ([DEPARTMENT], [Worker_in_Factory], [Worker_to_fill])
-            VALUES (@DepartmentName, @Worker_in_Factory, @Worker_to_fill);
+            INSERT INTO [dbo].[WIP] ([DEPARTMENT], [Worker_in_Factory], [Worker_to_fill], [Quantity])
+            VALUES (@DepartmentName, @Worker_in_Factory, @Worker_to_fill, @Quantity);
           `);
       }
     }
@@ -1033,6 +1029,11 @@ router.post("/departments/save-resources", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
+
+
+
 
 
 // GET API to fetch all WIP data

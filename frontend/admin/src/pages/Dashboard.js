@@ -316,50 +316,48 @@
 //           </div>
 //         </main>
 //       </div>
-//      {/* Modal */}
+    //  {/* Modal */}
      
-//       {isModalOpen && modalData && (
-//         <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
-//           <div className="modal-dialog">
-//             <div className="modal-content">
-//               <div className="modal-header">
-//                 <h5 className="modal-title">Job Order Description</h5>
-//                 <button
-//                   type="button"
-//                   className="btn-close"
-//                   onClick={() => setIsModalOpen(false)}
-//                 ></button>
-//               </div>
-//               <div className="modal-body">
-//                 <p>
-//                   <strong>Job Order No:</strong> {modalData["JOB ORDER NO"]}
-//                 </p>
-//                 <p>
-//                   <strong>Description:</strong> {modalData.Description || "No Description"}
-//                 </p>
-//               </div>
-//               <div className="modal-footer">
-//                 <button
-//                   type="button"
-//                   className="btn btn-secondary"
-//                   onClick={() => setIsModalOpen(false)}
-//                 >
-//                   Close
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
+    //   {isModalOpen && modalData && (
+    //     <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
+    //       <div className="modal-dialog">
+    //         <div className="modal-content">
+    //           <div className="modal-header">
+    //             <h5 className="modal-title">Job Order Description</h5>
+    //             <button
+    //               type="button"
+    //               className="btn-close"
+    //               onClick={() => setIsModalOpen(false)}
+    //             ></button>
+    //           </div>
+    //           <div className="modal-body">
+    //             <p>
+    //               <strong>Job Order No:</strong> {modalData["JOB ORDER NO"]}
+    //             </p>
+    //             <p>
+    //               <strong>Description:</strong> {modalData.Description || "No Description"}
+    //             </p>
+    //           </div>
+    //           <div className="modal-footer">
+    //             <button
+    //               type="button"
+    //               className="btn btn-secondary"
+    //               onClick={() => setIsModalOpen(false)}
+    //             >
+    //               Close
+    //             </button>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     </div>
+    //   )}
 //     </div>
 //   );
 // }
 // export default Dashboard;
 
-// ---------------------------------------
 
-
-
+// ----------------------------- old 
 
 
 
@@ -373,57 +371,141 @@ function Dashboard() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [workerRequirements, setWorkerRequirements] = useState([]);
+  const [workerRequirements,] = useState([]); //setWorkerRequirements
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [modalData, setModalData] = useState(null); // State for modal data
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
   
+  // const fetchData = useCallback(async () => {
+  //   try {
+  //     // Fetch data from `/api/data`
+  //     const dataResponse = await axiosInstance.get("/api/data");
+  //     const fetchedData = dataResponse.data;
+  //     setData(fetchedData);
+
+  //     // Fetch worker requirements from `/api/departments/worker-requirements`
+  //     const workerResponse = await axiosInstance.get(
+  //       "/api/departments/worker-requirements"
+  //     );
+  //     const fetchedWorkerRequirements = workerResponse.data;
+  //     setWorkerRequirements(fetchedWorkerRequirements);
+
+  //     // Process data
+  //     const departmentSums = fetchedData.reduce((acc, row) => {
+  //       const dept = row["DEPARTMENT"] || "Department Not Available";
+  //       acc[dept] = (acc[dept] || 0) + (row["QUANTITY"] || 0);
+  //       return acc;
+  //     }, {});
+
+  //     const filterContainer = document.getElementById("filter-container");
+  //     if (filterContainer) {
+  //       filterContainer.innerHTML = ""; // Clear existing buttons
+
+  //       Object.keys(departmentSums).forEach((department) => {
+  //         const sum = departmentSums[department];
+
+  //         // Find worker requirement for the department
+  //         const workerRequirement = fetchedWorkerRequirements.find(
+  //           (req) => req.DEPARTMENT.toLowerCase() === department.toLowerCase()
+  //         );
+
+  //         // Determine blue condition
+  //         const blueCondition =
+  //           workerRequirement &&
+  //           workerRequirement.RequiredResource > workerRequirement.AvailableResource;
+
+  //         // Determine other conditions
+  //         const orangeCondition = sum < 29000;
+  //         const greenCondition = sum >= 29000 && sum <= 34500;
+  //         const redCondition = sum > 34500;
+
+  //         // Create button
+  //         const button = document.createElement("div");
+  //         button.className = "filter-btn btn btn-outline-secondary";
+  //         button.innerHTML = `
+  //           <div class="button-content">
+  //             <span class="button-text">${department}</span>
+  //             <span class="button-lights">
+  //               <label class="radio-wrapper">
+  //                 <input type="radio" name="${department}-light" disabled ${
+  //           orangeCondition ? "checked" : ""
+  //         } />
+  //                 <span class="radio orange-light ${orangeCondition ? "active" : ""}"></span>
+  //               </label>
+  //               <label class="radio-wrapper">
+  //                 <input type="radio" name="${department}-light" disabled ${
+  //           greenCondition ? "checked" : ""
+  //         } />
+  //                 <span class="radio green-light ${greenCondition ? "active" : ""}"></span>
+  //               </label>
+  //               <label class="radio-wrapper">
+  //                 <input type="radio" name="${department}-light" disabled ${
+  //           redCondition ? "checked" : ""
+  //         } />
+  //                 <span class="radio red-light ${redCondition ? "active" : ""}"></span>
+  //               </label>
+  //               <label class="radio-wrapper">
+  //                 <input type="radio" name="${department}-light" disabled ${
+  //           blueCondition ? "checked" : ""
+  //         } />
+  //                 <span class="radio blue-light ${blueCondition ? "active" : ""}"></span>
+  //               </label>
+  //             </span>
+  //           </div>
+  //         `;
+  //         if (blueCondition) {
+  //           button.querySelector('.blue-light').style.backgroundColor = 'blue';
+  //         }
+
+  //           // Add tooltip attribute
+  //           button.setAttribute("data-bs-toggle", "tooltip");
+  //           button.setAttribute("data-bs-placement", "top");
+  //           button.setAttribute("title", `Total Quantity: ${sum}`);
+  //         // Add click event
+  //         button.onclick = () => {
+  //           const filtered = fetchedData.filter(
+  //             (row) => row["DEPARTMENT"] === department
+  //           );
+  //           setFilteredData(filtered);
+  //         };
+
+  //         filterContainer.appendChild(button);
+  //       });
+  //     }
+  //   } catch (error) {
+  //     displayErrorMessage("Database Connection Lost");
+  //   }
+  // }, []);
+
   const fetchData = useCallback(async () => {
     try {
       // Fetch data from `/api/data`
       const dataResponse = await axiosInstance.get("/api/data");
       const fetchedData = dataResponse.data;
       setData(fetchedData);
-
-      // Fetch worker requirements from `/api/departments/worker-requirements`
-      const workerResponse = await axiosInstance.get(
-        "/api/departments/worker-requirements"
-      );
-      const fetchedWorkerRequirements = workerResponse.data;
-      setWorkerRequirements(fetchedWorkerRequirements);
-
-      // Process data
-      const departmentSums = fetchedData.reduce((acc, row) => {
-        const dept = row["DEPARTMENT"] || "Department Not Available";
-        acc[dept] = (acc[dept] || 0) + (row["QUANTITY"] || 0);
-        return acc;
-      }, {});
-
+  
       const filterContainer = document.getElementById("filter-container");
       if (filterContainer) {
         filterContainer.innerHTML = ""; // Clear existing buttons
-
-        Object.keys(departmentSums).forEach((department) => {
-          const sum = departmentSums[department];
-
-          // Find worker requirement for the department
-          const workerRequirement = fetchedWorkerRequirements.find(
-            (req) => req.DEPARTMENT.toLowerCase() === department.toLowerCase()
-          );
-
-          // Determine blue condition
-          const blueCondition =
-            workerRequirement &&
-            workerRequirement.RequiredResource > workerRequirement.AvailableResource;
-
-          // Determine other conditions
-          const orangeCondition = sum < 29000;
-          const greenCondition = sum >= 29000 && sum <= 34500;
-          const redCondition = sum > 34500;
-
+  
+        // Group data by department
+        const departmentGroups = fetchedData.reduce((acc, row) => {
+          const dept = row["DEPARTMENT"] || "Department Not Available";
+          acc[dept] = acc[dept] || [];
+          acc[dept].push(row);
+          return acc;
+        }, {});
+  
+        // Create filter buttons
+        Object.keys(departmentGroups).forEach((department) => {
+          const rows = departmentGroups[department];
+          const resultColor = rows[0]["Result"]; // Get Result for color
+          const workerStatus = rows[0]["WorkerStatus"]; // Get WorkerStatus for blue condition
+          const wipQuantity = rows[0]["Wip_quantity"] || "0"; // Use correct key name
           // Create button
           const button = document.createElement("div");
           button.className = "filter-btn btn btn-outline-secondary";
@@ -433,39 +515,52 @@ function Dashboard() {
               <span class="button-lights">
                 <label class="radio-wrapper">
                   <input type="radio" name="${department}-light" disabled ${
-            orangeCondition ? "checked" : ""
+            resultColor === "Orange" ? "checked" : ""
           } />
-                  <span class="radio orange-light ${orangeCondition ? "active" : ""}"></span>
+                  <span class="radio orange-light ${
+                    resultColor === "Orange" ? "active" : ""
+                  }"></span>
                 </label>
                 <label class="radio-wrapper">
                   <input type="radio" name="${department}-light" disabled ${
-            greenCondition ? "checked" : ""
+            resultColor === "Green" ? "checked" : ""
           } />
-                  <span class="radio green-light ${greenCondition ? "active" : ""}"></span>
+                  <span class="radio green-light ${
+                    resultColor === "Green" ? "active" : ""
+                  }"></span>
                 </label>
                 <label class="radio-wrapper">
                   <input type="radio" name="${department}-light" disabled ${
-            redCondition ? "checked" : ""
+            resultColor === "Red" ? "checked" : ""
           } />
-                  <span class="radio red-light ${redCondition ? "active" : ""}"></span>
+                  <span class="radio red-light ${
+                    resultColor === "Red" ? "active" : ""
+                  }"></span>
                 </label>
                 <label class="radio-wrapper">
                   <input type="radio" name="${department}-light" disabled ${
-            blueCondition ? "checked" : ""
+            workerStatus === "Yes" ? "checked" : ""
           } />
-                  <span class="radio blue-light ${blueCondition ? "active" : ""}"></span>
+                  <span class="radio blue-light ${
+                    workerStatus === "Yes" ? "active" : ""
+                  }"></span>
                 </label>
               </span>
             </div>
           `;
-          if (blueCondition) {
-            button.querySelector('.blue-light').style.backgroundColor = 'blue';
+         // Add blue-light styling dynamically
+         if (workerStatus === "Yes") {
+          const blueLight = button.querySelector(".blue-light");
+          if (blueLight) {
+            blueLight.style.backgroundColor = "blue"; // Apply blue background
           }
-
-            // Add tooltip attribute
-            button.setAttribute("data-bs-toggle", "tooltip");
-            button.setAttribute("data-bs-placement", "top");
-            button.setAttribute("title", `Total Quantity: ${sum}`);
+        }
+  
+          // Add tooltip attribute
+          button.setAttribute("data-bs-toggle", "tooltip");
+          button.setAttribute("data-bs-placement", "top");
+          button.setAttribute("title", `Department: ${department}\nWIP Quantity: ${wipQuantity}`);
+  
           // Add click event
           button.onclick = () => {
             const filtered = fetchedData.filter(
@@ -473,7 +568,7 @@ function Dashboard() {
             );
             setFilteredData(filtered);
           };
-
+  
           filterContainer.appendChild(button);
         });
       }
@@ -481,18 +576,10 @@ function Dashboard() {
       displayErrorMessage("Database Connection Lost");
     }
   }, []);
-
-  // const displayErrorMessage = (message) => {
-  //   const tableBody = document.getElementById("table-body");
-  //   if (tableBody) {
-  //     tableBody.innerHTML = `<tr>
-  //       <td colspan="7" class="text-center text-danger font-weight-bold text-uppercase">
-  //         ${message}
-  //       </td>
-  //     </tr>`;
-  //   }
-  // };
-
+  
+  
+  
+  
   const displayErrorMessage = (message) => {
     setFilteredData([
       {
@@ -551,27 +638,46 @@ useEffect(() => {
       }, []);
 
   const fetchLastUpdatedDate = useCallback(async () => {
-        try {
-          const response = await axiosInstance.get("/api/data");
-          if (response.data && response.data.length > 0) {
-            const lastUpdated = response.data.reduce((latest, current) => {
-              return current["Updated_Time"] > latest["Updated_Time"]
-                ? current
-                : latest;
-            });
-    
-            const formattedDate = lastUpdated["Updated_Time"];
-            const updatedDateInput = document.getElementById("updatedDate");
-            if (updatedDateInput) {
-              updatedDateInput.value = formattedDate;
-            }
+    try {
+      const response = await axiosInstance.get("/api/data");
+  
+      if (response.data && response.data.length > 0) {
+        // Filter out rows with null or undefined Updated_Time
+        const validRows = response.data.filter(
+          (row) => row["Updated_Time"] !== null && row["Updated_Time"] !== undefined
+        );
+  
+        if (validRows.length > 0) {
+          // Reduce to find the latest time
+          const lastUpdated = validRows.reduce((latest, current) => {
+            return new Date(`1970-01-01T${current["Updated_Time"]}`) >
+              new Date(`1970-01-01T${latest["Updated_Time"]}`)
+              ? current
+              : latest;
+          });
+  
+          const formattedTime = lastUpdated["Updated_Time"]; // Already in HH:mm:ss format
+  
+          // Update the input field
+          const updatedDateInput = document.getElementById("updatedDate");
+          if (updatedDateInput) {
+            updatedDateInput.value = formattedTime;
           }
-        } catch (error) {
-          console.error("Error fetching last updated time:", error);
+        } else {
+          console.warn("No valid Updated_Time values found in the data.");
         }
-      }, []);
-
-      useEffect(() => {
+      } else {
+        console.warn("No data available to fetch the last updated time.");
+      }
+    } catch (error) {
+      console.error("Error fetching last updated time:", error);
+    }
+  }, []);
+  
+      
+  
+  
+  useEffect(() => {
             fetchData();
             fetchLastUpdatedDate();
         
@@ -665,7 +771,18 @@ useEffect(() => {
               ) : (
                   filteredData.map((row, index) => (
                     <tr key={index}>
-                      <td>{row["JOB ORDER NO"]}</td>
+                      <td>
+                      <button
+                        type="button"
+                        className="btn btn-link"
+                        onClick={() => {
+                          setModalData(row);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        {row["JOB ORDER NO"]}
+                      </button>
+                    </td>
                       <td>
                         {new Date(row["JOB ORDER DATE"]).toLocaleDateString()}
                       </td>
@@ -683,6 +800,41 @@ useEffect(() => {
           </div>
         </main>
       </div>
+      {/* Modal */}
+      {isModalOpen && modalData && (
+        <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Job Order Description</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setIsModalOpen(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Job Order No:</strong> {modalData["JOB ORDER NO"]}
+                </p>
+                <p>
+                  <strong>Description:</strong> {modalData["Description"] || "No Description"}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

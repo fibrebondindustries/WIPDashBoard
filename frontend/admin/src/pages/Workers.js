@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
@@ -42,7 +42,7 @@ function Workers() {
   //   }
   // };
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       setLoading(true);
   
@@ -71,7 +71,7 @@ function Workers() {
     } finally {
       setLoading(false);
     }
-  };
+  },[]);
 
   
   // Approve extra time
@@ -92,9 +92,10 @@ function Workers() {
     }
   };
 
-  useEffect(() => {
-    fetchDepartments(); // Fetch data on component load
-  }, []);
+    // Fetch data on component load
+    useEffect(() => {
+      fetchDepartments();
+    }, [fetchDepartments]); // Dependency: fetchDepartments (memoized)
 
   // Update resources
   const updateResources = async () => {
@@ -137,9 +138,6 @@ function Workers() {
     }
   };
 
-  useEffect(() => {
-    fetchDepartments(); // Fetch data on component load
-  }, []);
 
   //  // Handle search filtering
   useEffect(() => {
@@ -181,7 +179,7 @@ function Workers() {
     { name: "QUANTITY", selector: (row) => row.TotalQuantity, sortable: true },
     {
       name: "UPDATED QUANTITY",
-      selector: (row) => (row.Quantity !== null ? row.Quantity : "N/A"), // Handle null value
+      selector: (row) => (row.Quantity !== null ? row.Quantity : "0"), // Handle null value
       sortable: true,
     },
     
@@ -215,34 +213,53 @@ function Workers() {
         ),
     },
   ];
-  //   {
-  //     name: "REQUIRED EXTRA TIME",
-  //     selector: (row) => row.RequiredExtraTime,
-  //     cell: (row) =>
-  //       row.RequiredExtraTime > 0
-  //         ? `${row.RequiredExtraTime} mins`
-  //         : "No Extra Time",
-  //   },
-  // ];
   
+  
+  // const handleSendToDatabase = async () => {
+  //   try {
+  //     setLoading(true);
+  
+  //     // First, trigger updateResources to update the department data
+  //     // await updateResources();
+  
+  //     // Prepare payload for the API
+  //     const payload = departments.map((department) => ({
+  //       departmentName: department.DEPARTMENT,
+  //       availableResource: department.AvailableResource,
+  //       toFill: department.ToFill,
+  //     }));
+  
+  //     // Send data to the backend
+  //     const response = await axiosInstance.post("/api/departments/save-resources", payload);
+  
+  //      showAlert(response.data.message || "Resources saved to the database successfully!", "success");
+  //   } catch (error) {
+  //     console.error("Error saving resources to the database:", error);
+  //     showAlert("Failed to save resources to the database. Please try again.", "danger");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
   const handleSendToDatabase = async () => {
     try {
       setLoading(true);
-  
-      // First, trigger updateResources to update the department data
-      // await updateResources();
   
       // Prepare payload for the API
       const payload = departments.map((department) => ({
         departmentName: department.DEPARTMENT,
         availableResource: department.AvailableResource,
         toFill: department.ToFill,
+        quantity: department.Quantity !== null ? department.Quantity : 0, // Include Quantity
+        requiredExtraTime:
+          department.RequiredExtraTime === "No Extra Time" ? 0 : department.RequiredExtraTime, // Include RequiredExtraTime
       }));
   
       // Send data to the backend
       const response = await axiosInstance.post("/api/departments/save-resources", payload);
   
-       showAlert(response.data.message || "Resources saved to the database successfully!", "success");
+      showAlert(response.data.message || "Resources saved to the database successfully!", "success");
     } catch (error) {
       console.error("Error saving resources to the database:", error);
       showAlert("Failed to save resources to the database. Please try again.", "danger");
@@ -250,6 +267,8 @@ function Workers() {
       setLoading(false);
     }
   };
+  
+  
   
 
   const toggleSidebar = () => {
@@ -275,7 +294,7 @@ function Workers() {
               onClick={handleSendToDatabase}
               disabled={loading}
             >
-              {loading ? "Processing..." : "Save Resources"}
+              {loading ? "Processing..." : "Update Quantity & Resources"}
             </button>
 
              <button
@@ -283,7 +302,7 @@ function Workers() {
                 onClick={updateResources}
                 disabled={loading}
               >
-                {loading ? "Updating..." : "Update Resources"}
+                {loading ? "Updating..." : "Update Table"}
               </button>
             </div>
           </div>
