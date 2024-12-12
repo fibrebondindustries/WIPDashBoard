@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import Header from "../components/Header";
+import WIPHeader from "../components/WIP-Herder";
 // import Sidebar from "../components/Sidebar";
 import "../assets/CSS/Dashboard.css";
 import axiosInstance from "../axiosConfig";
@@ -19,7 +19,29 @@ function WIPDashboard() {
 //   };
 
   
-  
+  // Function to check session on page load
+  const checkAuth = useCallback(() => {
+    const authData = sessionStorage.getItem("auth");
+    if (!authData) {
+      // Redirect to login if no session data found
+      window.location.href = "/wip-login";
+      return;
+    }
+
+    const { loggedIn, expiryTime } = JSON.parse(authData);
+    if (!loggedIn || Date.now() > expiryTime) {
+      // If not logged in or session expired, redirect to login
+      sessionStorage.removeItem("auth");
+      window.location.href = "/wip-login";
+    }
+  }, []);
+
+  // Use Effect to start session check on load
+  useEffect(() => {
+    checkAuth(); // Initial session check on load
+    const interval = setInterval(checkAuth, 1000); // Check session every second
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, [checkAuth]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -235,7 +257,7 @@ useEffect(() => {
  
 
       <div className="flex-grow-1">
-        <Header/>
+        <WIPHeader/>
         <main className="main-container p-4">
           <div className="d-flex justify-content-start mb-3">
           <span><strong style={{color:"red"}}>Red: </strong>Over Capacity </span>&nbsp;&nbsp;

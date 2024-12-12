@@ -21,7 +21,7 @@ const Login = () => {
             // Set session storage with a timestamp for 12 hours
             const expiryTime = Date.now() + 12 * 60 * 60 * 1000;
             sessionStorage.setItem("auth", JSON.stringify({ loggedIn: true, expiryTime }));
-            navigate("/User-dashboard"); // Redirect to User Dashboard
+            navigate("/Stock"); // Redirect to User Dashboard
         } else {
             setErrorMessage("Incorrect PIN. Try again.");
         }

@@ -67,6 +67,7 @@ router.get("/data", async (req, res) => {
         T1.[QUANTITY], 
         T1.[DEPARTMENT],
         T1.[Updated_Time],
+        T1.[PendingProcess],
         T2.[Description],
         WIP.[WorkerStatus],
         WIP.[Result],

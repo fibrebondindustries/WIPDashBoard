@@ -10,6 +10,11 @@ import Department from './pages/Department'
 import Workers from './pages/Workers';
 import WIPLogin from './WIP/Login'; // Importing the new Login component
 import WIPDashboard from './WIP/WIPHome';
+import Stock from "./WIP/Stock";
+import StockDetails from "./WIP/StockDetails";
+import RMShortage from './WIP/RMshortage';
+import BoxRMShortage from './WIP/BoxRMshortage';
+// import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
 function App() {
     return (
@@ -59,10 +64,16 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                    
                       {/* New Routes for WIP */}
                       <Route path="/wip-login" element={<WIPLogin />} />
                       <Route path="/wip-dashboard" element={<WIPDashboard />} />
+                      <Route path="/Stock" element={<Stock/>}/>
+                      <Route path="/stock-details" element={<StockDetails/>}/>
+                      <Route path="/rm-shortage" element={<RMShortage />} />
+                      <Route path="/box-rm-shortage" element={<BoxRMShortage />} />
 
+                      
                 </Routes>
             </div>
         </BrowserRouter>
