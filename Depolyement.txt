@@ -1,0 +1,19 @@
+deploye react project 
+------frontend-------
+1.rm -rf ./* ---clear the directory 
+2.ls -la  ---- varify and view Directory 
+3.git clone https://github.com/fibrebondindustries/WIPDashBoard.git . ---- clone the project in server 
+4.ls -la  ---- Again verify and view Directory 
+5.cd frontend/admin ---- go to directory of project 
+6.npm install  ----- install 
+7.npm run build ------- then build 
+8.mv build/* /www/wwwroot/wip.fibrebondindustries.com  ----  move the build file to root directory 
+-------backend-----------
+1.cd /www/wwwroot/wip.fibrebondindustries.com/backend   ----- go to backend folder 
+2.npm install  ----- install 
+3.npm i nodemon  ------ install nodemon
+4.npm rebuild bcrypt  ----rebuild bcrypt
+5.npm install bcrypt  ----- install bcrypt
+6.npm install bcrypt --build-from-source=false    ------ Install bcrypt without building from source
+7.npm start ------- start and test the backend 
+8.pm2 start index.js --name "backend"    ------ use pm2 for start server for always 

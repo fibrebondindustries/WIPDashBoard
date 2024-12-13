@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosConfig";
 import { AuthContext } from "../AuthContext";
 import "../assets/CSS/login.css";
+import loginLogo from "../assets/Img/loginLogo.png";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -109,7 +110,14 @@ function Login() {
     <div className="login-container">
       <div id="alertPlaceholder"></div> {/* Placeholder for alerts */}
       <div className="login-card">
-        <h2>Login</h2>
+        {/* <h2>Login</h2> */}
+        <img
+          src={loginLogo}
+          class="img-fluid rounded-circle mb-2"
+          alt="Logo"
+          style={{height:"65px", width:"65px"}}
+        />
+        
 
         {error && (
           <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>

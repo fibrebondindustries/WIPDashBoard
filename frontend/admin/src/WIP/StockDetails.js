@@ -48,14 +48,29 @@ const StockDetails = () => {
       }, [checkAuth]);
 
 
+  // const formatDate = (dateString) => {
+  //   if (!dateString) return "Invalid Date";
+  //   const [day, month, year] = dateString.split("/").map(Number);
+  //   const parsedDate = new Date(year, month - 1, day);
+  //   return isNaN(parsedDate)
+  //     ? "Invalid Date"
+  //     : parsedDate.toLocaleDateString("en-GB");
+  // };
   const formatDate = (dateString) => {
     if (!dateString) return "Invalid Date";
-    const [day, month, year] = dateString.split("/").map(Number);
+  
+    // Split the date string into day, month, and year
+    const [day, month, year] = dateString.split("-").map(Number);
+  
+    // Create a new Date object
     const parsedDate = new Date(year, month - 1, day);
+  
+    // Check if the date is valid
     return isNaN(parsedDate)
       ? "Invalid Date"
-      : parsedDate.toLocaleDateString("en-GB");
+      : parsedDate.toLocaleDateString("en-GB"); // Format as DD/MM/YYYY
   };
+  
 
   const renderRows = () => {
     return details.map((row, index) => {
@@ -92,11 +107,7 @@ const StockDetails = () => {
       <WIPHeader/>
     <div className="container mt-4">
       <style>{`
-        .navbar {
-          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-          z-index: 100;
-          position: sticky;
-        }
+        
         .table td {
           font-size: 14px;
           padding: 6px 10px;

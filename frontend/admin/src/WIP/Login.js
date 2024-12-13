@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import loginLogo from "../assets/Img/loginLogo.png";
 
 const Login = () => {
     const [pin, setPin] = useState("");
@@ -74,6 +75,12 @@ const Login = () => {
     return (
         <div style={containerStyle}>
             <div style={cardStyle}>
+                 <img
+                          src={loginLogo}
+                          class="img-fluid rounded-circle mb-2"
+                          alt="Logo"
+                          style={{height:"50px", width:"50px"}}
+                        />
                 <h2>Enter PIN to Access</h2>
                 <form onSubmit={handleLogin}>
                     <input
