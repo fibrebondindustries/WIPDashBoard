@@ -65,15 +65,23 @@ function WIPDashboard() {
         // Create filter buttons
         Object.keys(departmentGroups).forEach((department) => {
           const rows = departmentGroups[department];
+
+          // Check if any row in this department has PendingProcess: "Yes"
+        const hasPendingProcess = rows.some(
+          (row) => row["PendingProcess"] === "Yes"
+        );
+        
           const resultColor = rows[0]["Result"]; // Get Result for color
           const workerStatus = rows[0]["WorkerStatus"]; // Get WorkerStatus for blue condition
           const wipQuantity = rows[0]["Wip_quantity"] || "0"; // Use correct key name
           // Create button
-          const button = document.createElement("div");
+          const button = document.createElement("div");/// <span class="button-text">${department}</span>
           button.className = "filter-btn btn btn-outline-secondary";
-          button.innerHTML = `
+          button.innerHTML = ` 
             <div class="button-content">
-              <span class="button-text">${department}</span>
+               <span class="button-text" style="${
+              hasPendingProcess ? "color: #0033cc;" : ""
+            }">${department}</span>
               <span class="button-lights">
                 <label class="radio-wrapper">
                   <input type="radio" name="${department}-light" disabled ${
@@ -114,7 +122,7 @@ function WIPDashboard() {
          if (workerStatus === "Yes") {
           const blueLight = button.querySelector(".blue-light");
           if (blueLight) {
-            blueLight.style.backgroundColor = "blue"; // Apply blue background
+            blueLight.style.backgroundColor = "#cc66ff"; // Apply blue background //lavender color 
           }
         }
   
@@ -250,7 +258,9 @@ useEffect(() => {
 
           const handleViewAll = async () => {
                 await fetchData(); // Refetch all data
-              };    
+              };   
+              
+              
   return (
     
     <div className="d-flex dashboard">
@@ -262,8 +272,9 @@ useEffect(() => {
           <div className="d-flex justify-content-start mb-3">
           <span><strong style={{color:"red"}}>Red: </strong>Over Capacity </span>&nbsp;&nbsp;
           <span><strong style={{color:"green"}}>Green: </strong>All Okay </span>&nbsp;&nbsp;
-          <span><strong style={{color:"orange"}}>Oragne: </strong>Under Capacity </span>&nbsp;&nbsp;
-          <span><strong style={{color:"blue"}}>Blue: </strong>Less Workers </span>&nbsp;&nbsp;
+          <span><strong style={{color:"orange"}}>Orange: </strong>Under Capacity </span>&nbsp;&nbsp;
+          <span><strong style={{color:"blue"}}>Blue: </strong>Process Issue Pending </span>&nbsp;&nbsp;
+          <span><strong style={{color:"#cc66ff"}}>Lavender: </strong>Less Workers </span>&nbsp;&nbsp;
           </div>
           <div className="mb-0" style={{zIndex:"2",position:"relative"}}>
             <input
@@ -327,8 +338,13 @@ useEffect(() => {
                   </td>
                 </tr>
               ) : (
-                  filteredData.map((row, index) => (
-                    <tr key={index}>
+                  filteredData.map((row, index) => {
+                   // Check if the row has PendingProcess: "Yes"
+                   const rowClass =
+                   row["PendingProcess"] === "Yes" ? "table-danger" : "";
+
+                 return (
+                   <tr key={index} className={rowClass}>
                       <td>
                       <button
                         type="button"
@@ -350,7 +366,9 @@ useEffect(() => {
                       <td>{row["QUANTITY"]}</td>
                       <td>{row["DEPARTMENT"]}</td>
                     </tr>
-                      ))
+                      // ))
+                    );
+                  })
                   )}
                 </tbody>
               </table>

@@ -704,7 +704,7 @@ router.get("/departments/worker-requirements", async (req, res) => {
               wh.[Quantity] AS QuantityPerMin, -- Quantity completed per minute
               wh.[Quantity Per Hour], -- Quantity completed per hour
               dr.[LotQuantityPerWorker], -- Worker ratio
-              34500 AS StandardQuantity -- Standard benchmark quantity
+              23000 AS StandardQuantity -- Standard benchmark quantity
           FROM [dbo].[StagingTable] st
           LEFT JOIN [dbo].[WorkingHours] wh
               ON st.[DEPARTMENT] = wh.[Departments]
