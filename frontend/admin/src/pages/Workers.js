@@ -30,18 +30,6 @@ function Workers() {
   };
 
   // Fetch department data
-  // const fetchDepartments = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await axiosInstance.get("/api/departments/worker-requirements");
-  //     setDepartments(response.data);
-  //   } catch (error) {
-  //     console.error("Error fetching department data:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchDepartments = useCallback(async () => {
     try {
       setLoading(true);

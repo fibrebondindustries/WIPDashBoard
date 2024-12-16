@@ -697,7 +697,7 @@ router.get("/departments/worker-requirements", async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
-      WITH DepartmentSummary AS (
+     WITH DepartmentSummary AS (
           SELECT 
               st.[DEPARTMENT],
               SUM(ISNULL(st.[QUANTITY], 0)) AS TotalQuantity, -- Total Quantity for the department
@@ -740,19 +740,77 @@ router.get("/departments/worker-requirements", async (req, res) => {
               dr.[LotQuantityPerWorker]
       )
       SELECT 
-          ds.[DEPARTMENT],
-          ds.[TotalQuantity], -- Total quantity from the staging table
-          ds.[QuantityPerMin], -- Quantity completed per minute
-          ds.[Quantity Per Hour], -- Quantity completed per hour
-          ds.[LotQuantityPerWorker], -- Worker ratio
-          CEILING(CAST(ds.[TotalQuantity] AS FLOAT) / ds.[LotQuantityPerWorker]) AS RequiredResource, -- Calculate resources dynamically with rounding up
+   ds.[DEPARTMENT],
+  ds.[TotalQuantity], -- Total quantity from the staging table
+  ds.[QuantityPerMin], -- Quantity completed per minute
+   ds.[Quantity Per Hour], -- Quantity completed per hour
+  ds.[LotQuantityPerWorker], -- Worker ratio
+   CASE 
+       WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 2
+       WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 4
+       WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 6
+       WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 3
+       WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 6
+       WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 9
+       WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+       WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
+       WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
+       WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+       WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
+       WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
+       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 6
+       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 9
+       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 12
+       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 15
+       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 18
+       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 12
+       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 18
+       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 24
+       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 30
+       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 36
+       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 4
+       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 6
+       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
+       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 10
+       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 12
+       ELSE CEILING(CAST(ds.[TotalQuantity] AS FLOAT) / ds.[LotQuantityPerWorker]) 
+   END AS RequiredResource,-- Calculate resources dynamically with rounding up
           CASE 
               WHEN (ds.[TotalQuantity] - ds.[StandardQuantity]) > 0 
                   THEN CEILING((ds.[TotalQuantity] - ds.[StandardQuantity]) / ds.[QuantityPerMin]) -- Calculate extra time required if total quantity exceeds the standard
               ELSE 0
           END AS RequiredExtraTime,
           d.[AvailableResource], -- Available workers in the department
-          (CEILING(CAST(ds.[TotalQuantity] AS FLOAT) / ds.[LotQuantityPerWorker]) - d.[AvailableResource]) AS ToFill -- Workers to fill
+(CASE 
+   WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 2
+   WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 4
+   WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 6
+   WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 3
+   WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 6
+   WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 9
+   WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+   WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
+   WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
+   WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+   WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
+   WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
+   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 6
+   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 9
+   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 12
+   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 15
+   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 18
+   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 12
+   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 18
+   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 24
+   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 30
+   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 36
+   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 4
+   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 6
+   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
+   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 10
+   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 12
+   ELSE CEILING(CAST(ds.[TotalQuantity] AS FLOAT) / ds.[LotQuantityPerWorker])
+END - d.[AvailableResource]) AS ToFill-- Workers to fill
       FROM DepartmentSummary ds
       LEFT JOIN [dbo].[Departments] d
           ON ds.[DEPARTMENT] = d.[DepartmentName];

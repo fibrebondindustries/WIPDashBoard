@@ -152,7 +152,7 @@ function Department() {
       // setShowAssignModal(false);
       handleCloseAssignModal(); // Reset and close the modal
       // fetchUsers();
-      // fetchPresentEmployees();
+      
       fetchTemporaryDepartments(); // Fetch updated temporary department data
     } catch (error) {
       console.error("Error assigning department:", error);

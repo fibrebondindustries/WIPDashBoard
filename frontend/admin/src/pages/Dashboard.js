@@ -358,28 +358,7 @@
 
 
 // ----------------------------- old 
-
-
-
-import React, { useState, useEffect, useCallback } from "react";
-import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
-import "../assets/CSS/Dashboard.css";
-import axiosInstance from "../axiosConfig";
-
-function Dashboard() {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [workerRequirements,] = useState([]); //setWorkerRequirements
-  const [searchQuery, setSearchQuery] = useState("");
-  const [modalData, setModalData] = useState(null); // State for modal data
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
-  const toggleSidebar = () => {
-    setIsSidebarVisible(!isSidebarVisible);
-  };
-
-  
+//// ---backup code for filter
   // const fetchData = useCallback(async () => {
   //   try {
   //     // Fetch data from `/api/data`
@@ -481,7 +460,34 @@ function Dashboard() {
   //   }
   // }, []);
 
-  const fetchData = useCallback(async () => {
+ 
+// ---backup code
+
+
+import React, { useState, useEffect, useCallback } from "react";
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
+import "../assets/CSS/Dashboard.css";
+import axiosInstance from "../axiosConfig";
+
+function Dashboard() {
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [workerRequirements,] = useState([]); //setWorkerRequirements
+  const [searchQuery, setSearchQuery] = useState("");
+  const [modalData, setModalData] = useState(null); // State for modal data
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+  const [presentEmployees, setPresentEmployees] = useState([]); // Present employees data
+  const [filteredPresentEmployees, setFilteredPresentEmployees] = useState([]);
+
+
+  const toggleSidebar = () => {
+    setIsSidebarVisible(!isSidebarVisible);
+  };
+
+  
+ const fetchData = useCallback(async () => {
     try {
       // Fetch data from `/api/data`
       const dataResponse = await axiosInstance.get("/api/data");
@@ -576,7 +582,13 @@ function Dashboard() {
               (row) => row["DEPARTMENT"] === department
             );
             setFilteredData(filtered);
+              // Filter present employees
+            const filteredEmployees = presentEmployees.filter(
+              (emp) => emp.Department === department
+            );
+            setFilteredPresentEmployees(filteredEmployees);
           };
+          // };
   
           filterContainer.appendChild(button);
         });
@@ -584,7 +596,7 @@ function Dashboard() {
     } catch (error) {
       displayErrorMessage("Database Connection Lost");
     }
-  }, []);
+  }, [presentEmployees]);
   
   
   
@@ -686,18 +698,40 @@ useEffect(() => {
       
   
   
-  useEffect(() => {
-            fetchData();
-            fetchLastUpdatedDate();
-        
+  useEffect(() => {            
             const interval = setInterval(checkServerHealth, 5050);
             return () => clearInterval(interval);
-          }, [fetchData, fetchLastUpdatedDate, checkServerHealth]);
+          }, [checkServerHealth]);
 
 
           const handleViewAll = async () => {
                 await fetchData(); // Refetch all data
               };    
+
+              useEffect(() => {
+                
+                fetchLastUpdatedDate();
+                fetchPresentEmployees();
+              }, [fetchLastUpdatedDate]);
+              
+ // Fetch Present Employees
+  const fetchPresentEmployees = async () => {
+
+  try {
+    const response = await axiosInstance.get("/api/presentEmployees");
+    setPresentEmployees(response.data);
+    setFilteredPresentEmployees(response.data); // Default to all employees
+  } catch (error) {
+    console.error("Error fetching present employees:", error);
+  }
+};
+
+useEffect(() => {
+  fetchPresentEmployees();
+}, []);
+
+
+
   return (
     <div className="d-flex dashboard">
       <div className={isSidebarVisible ? "sidebar-container" : "sidebar-hidden"}>
@@ -748,6 +782,20 @@ useEffect(() => {
 
           <div className="container mt-0">
             <div className="table-responsive">
+            <div className="d-flex">
+              {/* <p>
+                <strong>Present Employees:</strong>{" "}
+                {presentEmployees.reduce((acc, curr) => acc + curr.PresentEmployees, 0)}
+              </p> */}
+              <p>
+              <strong>Present Employees:</strong>{" "}
+              {filteredPresentEmployees.reduce(
+                (acc, curr) => acc + curr.PresentEmployees,
+                0
+              )}
+            </p>
+
+            </div>
             <div className="d-flex justify-content-end">
                  <button
                    onClick={handleViewAll}
@@ -778,9 +826,14 @@ useEffect(() => {
                     {filteredData[0].errorMessage}
                   </td>
                 </tr>
-              ) : (
-                  filteredData.map((row, index) => (
-                    <tr key={index}>
+             ) : (
+              filteredData.map((row, index) => {
+               // Check if the row has PendingProcess: "Yes"
+               const rowClass =
+               row["PendingProcess"] === "Yes" ? "table-info" : "";
+
+             return (
+               <tr key={index} className={rowClass}>
                       <td>
                       <button
                         type="button"
@@ -802,7 +855,9 @@ useEffect(() => {
                       <td>{row["QUANTITY"]}</td>
                       <td>{row["DEPARTMENT"]}</td>
                     </tr>
-                      ))
+                     // ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>
