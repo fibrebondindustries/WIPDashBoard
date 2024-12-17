@@ -18,3 +18,9 @@ pm2 stop all   ---- need to stop running server first
 6.npm install bcrypt --build-from-source=false    ------ Install bcrypt without building from source
 7.npm start ------- start and test the backend 
 8.pm2 start index.js --name "backend"    ------ use pm2 for start server for always 
+
+if any error while deploying backend need to Clean existing node_modules:
+1. rm -rf node_modules package-lock.json
+2. npm install --prefer-offline --no-audit
+3. npm rebuild bcrypt
+then repeat 7 and 8 step of backend

@@ -15,6 +15,7 @@ function UserManagement() {
     password: "",
     auth: "",
     employeeID: "",
+    newEmployeeID: "",
     department: "",
   });
   const [selectedUserId, setSelectedUserId] = useState(null); // Selected user for update/delete
@@ -96,12 +97,17 @@ function UserManagement() {
       Password: formData.password, // Include password (may be empty)
       Auth: formData.auth,
       EmployeeID: formData.employeeID,
+      NewEmployeeID: selectedUserId ? formData.newEmployeeID : undefined, // Only include newEmployeeID during updates
       Department: formData.department,
     };
+
   
+
     try {
       if (selectedUserId) {
         // Update user
+        transformedData.EmployeeID = formData.employeeID;
+       transformedData.NewEmployeeID = formData.newEmployeeID || formData.employeeID;
         const response = await axiosInstance.put(`/api/users/${selectedUserId}`, transformedData);
   
         // Check for error response from backend
@@ -175,6 +181,7 @@ function UserManagement() {
       password: "",
       auth: userToEdit.Auth,
       employeeID: userToEdit.EmployeeID,
+      newEmployeeID: userToEdit.EmployeeID,
       department: userToEdit.Department,
     });
     setShowModal(true);
@@ -286,22 +293,25 @@ function UserManagement() {
                         </select>
                       </div>
                       <div className="mb-3">
+                        <label className="form-label">{selectedUserId ? "New Employee ID" : "Employee ID"}</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name={selectedUserId ? "newEmployeeID" : "employeeID"} // Use newEmployeeID during updates
+                          value={selectedUserId ? formData.newEmployeeID : formData.employeeID} // Conditional value
+                          onChange={handleInputChange}
+                          placeholder={selectedUserId ? "Enter New Employee ID" : "Enter Employee ID"}
+                          required
+                        />
+                      </div>
+
+                      {/* <div className="mb-3">
                         <label className="form-label">Employee ID</label>
                         <input
                           type="text"
                           className="form-control"
-                          name="employeeID"
-                          value={formData.employeeID}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      {/* <div className="mb-3">
-                        <label className="form-label">Department</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="department"
-                          value={formData.department}
+                          name="newEmployeeID"
+                          value={formData.newEmployeeID}
                           onChange={handleInputChange}
                         />
                       </div> */}

@@ -399,7 +399,7 @@ router.get("/users/:employeeID", async (req, res) => {
 ///update user
 router.put("/users/:employeeID", async (req, res) => {
   const { employeeID } = req.params;
-  const { Name, Auth, Department, Password } = req.body;
+  const { Name, Auth, Department, Password, NewEmployeeID  } = req.body;
 
  
   if (!Name) {
@@ -450,12 +450,14 @@ router.put("/users/:employeeID", async (req, res) => {
       .input("Department", sql.NVarChar, Department)
       .input("Password", sql.NVarChar, hashedPassword)
       .input("EmployeeID", sql.NVarChar, employeeID) // Match EmployeeID in WHERE clause
+      .input("NewEmployeeID", sql.NVarChar, NewEmployeeID || employeeID) // Use existing if not provided
       .query(`
         UPDATE [dbo].[Emp_Master]
         SET Name = @Name, 
             Auth = @Auth, 
             Department = @Department,
-            Password = @Password
+            Password = @Password,
+            EmployeeID = @NewEmployeeID
         WHERE EmployeeID = @EmployeeID
       `);
 
