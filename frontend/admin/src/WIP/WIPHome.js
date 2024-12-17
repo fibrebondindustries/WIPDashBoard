@@ -293,9 +293,9 @@ useEffect(() => {
         <WIPHeader/>
         <main className="main-container p-4">
           <div className="d-flex justify-content-start mb-3">
-          <span><strong style={{color:"red"}}>Red: </strong>Over Capacity </span>&nbsp;&nbsp;
+          <span><strong style={{color:"red"}}>Red: </strong>Over Capacity (Above <strong>23000</strong>)</span>&nbsp;&nbsp;
           <span><strong style={{color:"green"}}>Green: </strong>All Okay </span>&nbsp;&nbsp;
-          <span><strong style={{color:"orange"}}>Orange: </strong>Under Capacity </span>&nbsp;&nbsp;
+          <span><strong style={{color:"orange"}}>Orange: </strong>Under Capacity (Below <strong>19000</strong>)</span>&nbsp;&nbsp;
           <span><strong style={{color:"blue"}}>Blue: </strong>Process Issue Pending </span>&nbsp;&nbsp;
           <span><strong style={{color:"#cc66ff"}}>Lavender: </strong>Less Workers </span>&nbsp;&nbsp;
           </div>

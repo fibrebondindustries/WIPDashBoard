@@ -10,6 +10,7 @@ deploye react project
 8.mv build/* /www/wwwroot/wip.fibrebondindustries.com  ----  move the build file to root directory 
 -------backend-----------
 1.cd /www/wwwroot/wip.fibrebondindustries.com/backend   ----- go to backend folder 
+pm2 stop all   ---- need to stop running server first
 2.npm install  ----- install 
 3.npm i nodemon  ------ install nodemon
 4.npm rebuild bcrypt  ----rebuild bcrypt
