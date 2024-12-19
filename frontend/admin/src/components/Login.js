@@ -78,14 +78,25 @@ function Login() {
       // Show success alert
       showAlert("Login successful! Redirecting...", "success");
 
+      // setTimeout(() => {
+      //   // Redirect based on the user's role
+      //   if (userData.Auth === "User") {
+      //     navigate("/User-dashboard");
+      //   } else {
+      //     navigate("/Admin-dashboard");
+      //   }
+      // }, 2000);
       setTimeout(() => {
-        // Redirect based on the user's role
         if (userData.Auth === "User") {
-          navigate("/User-dashboard");
-        } else {
-          navigate("/Admin-dashboard");
-        }
-      }, 2000);
+            navigate("/User-dashboard");
+        } else if (userData.Auth === "Admin") {
+            navigate("/Admin-dashboard");
+        } else if (userData.Auth === "Supervisor") {
+            navigate("/ticket-home"); // Redirect Supervisor to TicketHome
+        }else if (userData.Auth === "SuperAdmin") {
+          navigate("/Admin-dashboard"); // Redirect Supervisor to TicketHome
+      }
+    }, 2000);
     } catch (err) {
       setError(err.response?.data?.error || "Something went wrong");
     }

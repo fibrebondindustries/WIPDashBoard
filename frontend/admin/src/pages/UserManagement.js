@@ -289,6 +289,8 @@ function UserManagement() {
                         >
                           <option value="">Select Role</option>
                           <option value="Admin">Admin</option>
+                          <option value="Supervisor">Supervisor</option>
+                          <option value="SuperAdmin">SuperAdmin</option>
                           <option value="User">User</option>
                         </select>
                       </div>

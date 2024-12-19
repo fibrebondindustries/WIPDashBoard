@@ -311,6 +311,11 @@ router.post("/login", async (req, res) => {
         `);
     }
 
+    // Handle Supervisor and SuperAdmin roles // 19 Dec 
+    if (user.recordset[0].Auth === "Supervisor" || user.recordset[0].Auth === "SuperAdmin") {
+      // console.log(`${user.recordset[0].Auth} logged in successfully`);
+    }
+
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -1128,8 +1133,301 @@ router.get("/wip", async (req, res) => {
   }
 });
 
+///// Ticketing API /////
 
 
+// POST API to create a ticket
+router.post("/tickets", async (req, res) => {
+  const { Category, Subject, Brief_Description, Priority, EmployeeID } = req.body; // Extract EmployeeID from body
+
+  try {
+    const pool = await poolPromise;
+
+    // Get Supervisor Name and Department
+    const supervisor = await pool
+      .request()
+      .input("EmployeeID", sql.NVarChar, EmployeeID)
+      .query(`
+        SELECT Name, Department 
+        FROM [dbo].[Emp_Master] 
+        WHERE EmployeeID = @EmployeeID
+      `);
+
+    if (supervisor.recordset.length === 0) {
+      return res.status(404).json({ error: "Supervisor not found" });
+    }
+
+    const { Name, Department } = supervisor.recordset[0];
+
+    // Insert the ticket
+    await pool
+      .request()
+      .input("Category", sql.NVarChar, Category)
+      .input("Subject", sql.NVarChar, Subject)
+      .input("Brief_Description", sql.NVarChar, Brief_Description)
+      .input("Supervisor_Name", sql.NVarChar, Name)
+      .input("Priority", sql.NVarChar, Priority)
+      .input("Status", sql.NVarChar, "Open") // Default to "Open" if not provided
+      .input("RaiseDate", sql.DateTime, new Date())
+      .query(`
+        INSERT INTO [dbo].[TICKETS] 
+        (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, RaiseDate)
+        VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @RaiseDate)
+      `);
+
+    res.status(201).json({ message: "Ticket created successfully!" });
+  } catch (error) {
+    console.error("Error creating ticket:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+// router.post("/tickets", async (req, res) => {
+//   const {
+//     Category,
+//     Subject,
+//     Brief_Description,
+//     Supervisor_Name,
+//     Priority,
+//   } = req.body;
+
+//   const Status = "Open"; // Default status when a ticket is created
+
+//   try {
+//     const pool = await poolPromise; // Ensure the connection is established
+//     const query = `
+//       INSERT INTO TICKETS (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status)
+//       VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status)
+//     `;
+//     await pool
+//       .request()
+//       .input("Category", Category)
+//       .input("Subject", Subject)
+//       .input("Brief_Description", Brief_Description)
+//       .input("Supervisor_Name", Supervisor_Name)
+//       .input("Priority", Priority)
+//       .input("Status", Status)
+//       .query(query);
+
+//     return res.status(201).json({ message: "Ticket created successfully" });
+//   } catch (error) {
+//     console.error("Error inserting ticket:", error);
+//     return res.status(500).json({ error: "Failed to create ticket" });
+//   }
+// });
+
+// GET API to fetch all tickets ADMIN
+router.get("/ticketsAdmin", async (req, res) => {
+  try {
+    const pool = await poolPromise; // Ensure the connection is established
+    const query = `SELECT * FROM TICKETS`;
+    const result = await pool.request().query(query);
+    return res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    return res.status(500).json({ error: "Failed to fetch tickets" });
+  }
+});
+router.get("/tickets", async (req, res) => {
+  const { EmployeeID } = req.query; // Pass EmployeeID as a query parameter
+
+  try {
+    const pool = await poolPromise;
+
+    // Fetch tickets only for the logged-in supervisor
+    const tickets = await pool
+      .request()
+      .input("EmployeeID", sql.NVarChar, EmployeeID)
+      .query(`
+        SELECT * 
+        FROM [dbo].[TICKETS]
+        WHERE Supervisor_Name IN (
+          SELECT Name 
+          FROM [dbo].[Emp_Master] 
+          WHERE EmployeeID = @EmployeeID
+        )
+      `);
+
+    res.status(200).json(tickets.recordset);
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+// PUT API to update a ticket
+router.put("/tickets/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    Category,
+    Subject,
+    Brief_Description,
+    Supervisor_Name,
+    Priority,
+    Status,
+  } = req.body;
+
+  try {
+    const pool = await poolPromise;
+    const query = `
+      UPDATE TICKETS
+      SET Category = @Category,
+          Subject = @Subject,
+          Brief_Description = @Brief_Description,
+          Supervisor_Name = @Supervisor_Name,
+          Priority = @Priority,
+          Status = @Status
+      WHERE ID = @ID
+    `;
+
+    const result = await pool
+      .request()
+      .input("ID", id)
+      .input("Category", Category)
+      .input("Subject", Subject)
+      .input("Brief_Description", Brief_Description)
+      .input("Supervisor_Name", Supervisor_Name)
+      .input("Priority", Priority)
+      .input("Status", Status)
+      .query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    return res.status(200).json({ message: "Ticket updated successfully" });
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    return res.status(500).json({ error: "Failed to update ticket" });
+  }
+});
+
+
+// PATCH API to partially update a ticket
+router.patch("/tickets/:id", async (req, res) => {
+  const { id } = req.params;
+  const fields = req.body; // Fields to update dynamically
+
+  try {
+    if (Object.keys(fields).length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    let setQuery = Object.keys(fields)
+      .map((key) => `${key} = @${key}`)
+      .join(", ");
+
+    const query = `UPDATE TICKETS SET ${setQuery} WHERE ID = @ID`;
+
+    const pool = await poolPromise;
+    const request = pool.request().input("ID", id);
+
+    // Dynamically add inputs to the query
+    Object.keys(fields).forEach((key) => {
+      request.input(key, fields[key]);
+    });
+
+    const result = await request.query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    return res.status(200).json({ message: "Ticket updated successfully" });
+  } catch (error) {
+    console.error("Error partially updating ticket:", error);
+    return res.status(500).json({ error: "Failed to update ticket" });
+  }
+});
+
+
+// DELETE API to delete a ticket
+router.delete("/tickets/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await poolPromise;
+    const query = `DELETE FROM TICKETS WHERE ID = @ID`;
+    const result = await pool.request().input("ID", id).query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    return res.status(200).json({ message: "Ticket deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting ticket:", error);
+    return res.status(500).json({ error: "Failed to delete ticket" });
+  }
+});
+
+
+// Confirm Ticket API: Move resolved ticket to Solved_Tickets table
+router.post("/tickets/confirm/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await poolPromise;
+
+    // Fetch the ticket from the TICKETS table
+    const ticket = await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .query(`
+        SELECT 
+          Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate
+        FROM [dbo].[TICKETS]
+        WHERE ID = @ID
+      `);
+
+    if (ticket.recordset.length === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const ticketData = ticket.recordset[0];
+
+    // Ensure the ticket is Resolved before moving
+    if (ticketData.Status !== "Resolved") {
+      return res.status(400).json({ error: "Only resolved tickets can be confirmed" });
+    }
+
+    // Move the ticket to Solved_Tickets table
+    await pool
+      .request()
+      .input("Category", sql.NVarChar, ticketData.Category)
+      .input("Subject", sql.NVarChar, ticketData.Subject)
+      .input("Brief_Description", sql.NVarChar, ticketData.Brief_Description)
+      .input("Supervisor_Name", sql.NVarChar, ticketData.Supervisor_Name)
+      .input("Priority", sql.NVarChar, ticketData.Priority)
+      .input("Status", sql.NVarChar, ticketData.Status)
+      .input("ID", sql.Int, ticketData.ID)
+      .input("RaiseDate", sql.DateTime, ticketData.RaiseDate)
+      .input("SolvedDate", sql.DateTime, new Date())
+      .query(`
+        INSERT INTO [dbo].[Solved_Tickets]
+        (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate)
+        VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate)
+      `);
+
+    // Delete the ticket from TICKETS table
+    await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .query(`
+        DELETE FROM [dbo].[TICKETS]
+        WHERE ID = @ID
+      `);
+
+    res.status(200).json({ message: "Ticket confirmed and moved to solved tickets" });
+  } catch (error) {
+    console.error("Error confirming ticket:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 

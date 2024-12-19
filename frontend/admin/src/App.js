@@ -14,6 +14,9 @@ import Stock from "./WIP/Stock";
 import StockDetails from "./WIP/StockDetails";
 import RMShortage from './WIP/RMshortage';
 import BoxRMShortage from './WIP/BoxRMshortage';
+import TicketHome from './Tickets/Home';
+import AdminTicketManagement from './pages/Ticketing';
+
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
 function App() {
@@ -73,6 +76,24 @@ function App() {
                       <Route path="/rm-shortage" element={<RMShortage />} />
                       <Route path="/box-rm-shortage" element={<BoxRMShortage />} />
 
+                      {/* New Routes for WIP */}
+                        <Route
+                        path="/ticket-home"
+                        element={
+                            <ProtectedRoute>
+                                <TicketHome />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                      <Route
+                        path="/ticket-admin"
+                        element={
+                            <ProtectedRoute>
+                                <AdminTicketManagement />
+                            </ProtectedRoute>
+                        }
+                    />
                       
                 </Routes>
             </div>

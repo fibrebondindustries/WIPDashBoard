@@ -9,15 +9,10 @@ export const AuthProvider = ({ children }) => {
         const savedUser = localStorage.getItem('user');
         return savedUser ? JSON.parse(savedUser) : null;
     });
-    // const getISTTime = () => {
-    //     const now = new Date();
-    //     const offset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5:30
-    //     const istTime = new Date(now.getTime() + offset);
-    //     return istTime.toISOString().replace('T', ' ').slice(0, 19); // Format as 'YYYY-MM-DD HH:MM:SS'
-    // };
+   
     const login = (userData) => {
-        const { Name, EmployeeID, Department  } = userData;
-        const minimalUser = { Name, EmployeeID,Department  }; // Include Auth for routing
+        const { Name, EmployeeID, Auth, Department  } = userData;
+        const minimalUser = { Name, EmployeeID, Auth, Department  }; // Include Auth for routing
         setUser(minimalUser);
         localStorage.setItem('user', JSON.stringify(minimalUser));
 

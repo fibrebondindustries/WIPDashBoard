@@ -12,6 +12,7 @@ const Login = () => {
 
         const correctPin1 = "112024"; // Hardcoded PIN for Admin Dashboard
         const correctPin2 = "112244"; // Hardcoded PIN for Stock Dashboard
+        // const correctPin3 = "122024"; // Hardcoded PIN for Ticket Dashboard
 
         if (pin === correctPin1) {
             // Set session storage with a timestamp for 12 hours
@@ -23,7 +24,14 @@ const Login = () => {
             const expiryTime = Date.now() + 12 * 60 * 60 * 1000;
             sessionStorage.setItem("auth", JSON.stringify({ loggedIn: true, expiryTime }));
             navigate("/Stock"); // Redirect to User Dashboard
-        } else {
+        } 
+        // else if (pin === correctPin3) {
+        //     // Set session storage with a timestamp for 12 hours
+        //     const expiryTime = Date.now() + 12 * 60 * 60 * 1000;
+        //     sessionStorage.setItem("auth", JSON.stringify({ loggedIn: true, expiryTime }));
+        //     navigate("/ticket-home"); // Redirect to User Dashboard
+        // }
+         else {
             setErrorMessage("Incorrect PIN. Try again.");
         }
     };
