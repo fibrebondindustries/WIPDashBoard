@@ -4,6 +4,8 @@ const cron = require('node-cron'); // Import node-cron
 const { poolPromise, sql } = require('./config/db'); // Ensure you have the DB connection properly configured
 const dbCheckMiddleware = require('./middleware/dbCheck');
 const authRoutes = require('./routes/auth');
+const https = require('https');
+const fs = require('fs');
 
 const app = express();
 const PORT = 5050;
@@ -62,13 +64,6 @@ cron.schedule("0 * * * *", async () => { // This runs the job every minute
 cron.schedule("0 * * * *", async () => { // Runs every 2 minutes
     try {
       const pool = await poolPromise;
-  
-      // // Step 1: Find all UserActivity records where LogoutTime is NULL
-      // const userActivityResult = await pool.request().query(`
-      //   SELECT EmployeeID, Department 
-      //   FROM UserActivity
-      //   WHERE LogoutTime IS NULL
-      // `);
 
        // Step 1: Find all active UserActivity records where LogoutTime is NULL and 12 hours have passed since LoginTime
        const userActivityResult = await pool.request().query(`
@@ -117,7 +112,19 @@ cron.schedule("0 * * * *", async () => { // Runs every 2 minutes
       console.error("Error in cron job:", error.message);
     }
   });
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on ${PORT}`);
+// // Start the server
+// app.listen(PORT, () => {
+//     console.log(`Server is running on ${PORT}`);
+// });
+
+
+// HTTPS Configuration for local development
+const options = {
+  cert: fs.readFileSync('./ssl/server.crt'),  // Path to your SSL certificate
+  key: fs.readFileSync('./ssl/server.key')   // Path to your private key
+};
+
+// Start the server with HTTPS https://localhost:5050
+https.createServer(options, app).listen(PORT, () => {
+  console.log(`Server is running on ${PORT}`);
 });
