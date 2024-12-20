@@ -1430,5 +1430,35 @@ router.post("/tickets/confirm/:id", async (req, res) => {
 });
 
 
+/// new api for WIP Dashboard 
+router.get("/matched-data", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool.request().query(`
+      SELECT 
+          ST.[JOB ORDER NO], 
+          ST.[DEPARTMENT], 
+          D.[REXINE NAME], 
+          D.[BLACK], 
+          D.[BROWN], 
+          D.[TAN], 
+          D.[LOT ID]
+      FROM 
+          [dbo].[StagingTable] ST
+      INNER JOIN 
+          [dbo].[Design] D
+      ON 
+          ST.[ITEM NAME] = D.[LOT ID]
+    `);
+
+    res.status(200).json(result.recordset); // Return the matched data
+  } catch (error) {
+    console.error("Error fetching matched data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 module.exports = router;

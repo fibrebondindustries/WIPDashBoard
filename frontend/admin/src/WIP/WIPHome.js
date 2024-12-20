@@ -16,6 +16,7 @@ function WIPDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
   const [presentEmployees, setPresentEmployees] = useState([]); // Present employees data
   const [filteredPresentEmployees, setFilteredPresentEmployees] = useState([]);
+  const [matchedData, setMatchedData] = useState([]); // State to store matched data
 
   
   // Function to check session on page load
@@ -283,6 +284,31 @@ useEffect(() => {
     fetchPresentEmployees();
   }, []);
   
+/// this is for model form table data //20 DEC
+ const fetchMatchedData = useCallback(async () => {
+  if (!modalData) return;
+
+  try {
+    const response = await axiosInstance.get("/api/matched-data");
+    const fetchedData = response.data;
+
+    // Filter data based on modalData's JOB ORDER NO
+    const filteredData = fetchedData.filter(
+      (row) => row["JOB ORDER NO"] === modalData["JOB ORDER NO"]
+    );
+
+    setMatchedData(filteredData);
+  } catch (error) {
+    console.error("Error fetching matched data:", error);
+  }
+}, [modalData]);
+
+// Call fetchMatchedData when modalData changes or modal opens
+useEffect(() => {
+  if (isModalOpen && modalData) {
+    fetchMatchedData();
+  }
+}, [isModalOpen, modalData, fetchMatchedData]);
   
   return (
     
@@ -414,7 +440,7 @@ useEffect(() => {
         </main>
       </div>
       {/* Modal */}
-      {isModalOpen && modalData && (
+      {/* {isModalOpen && modalData && (
         <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
           <div className="modal-dialog">
             <div className="modal-content">
@@ -433,6 +459,70 @@ useEffect(() => {
                 <p>
                   <strong>Description:</strong> {modalData["Description"] || "No Description"}
                 </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )} */}
+      {isModalOpen && modalData && (
+        <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Job Order Details</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setIsModalOpen(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                {/* Job Order Details */}
+                <p>
+                  <strong>Job Order No:</strong> {modalData["JOB ORDER NO"]}
+                </p>
+                <p>
+                  <strong>Description:</strong> {modalData["Description"] || "No Description"}
+                </p>
+
+                {/* Rexine Data Table */}
+                {matchedData.length > 0 ? (
+                  <div className="table-responsive">
+                    <table className="table table-bordered table-striped">
+                      <thead>
+                        <tr>
+                          <th>Rexine Name</th>
+                          <th>Black</th>
+                          <th>Brown</th>
+                          <th>Tan</th>
+                          <th>Lot ID</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {matchedData.map((row, index) => (
+                          <tr key={index}>
+                            <td>{row["REXINE NAME"]}</td>
+                            <td>{row["BLACK"]}</td>
+                            <td>{row["BROWN"]}</td>
+                            <td>{row["TAN"]}</td>
+                            <td>{row["LOT ID"]}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p>No Design data found.</p>
+                )}
               </div>
               <div className="modal-footer">
                 <button
