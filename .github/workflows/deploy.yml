@@ -27,14 +27,17 @@ jobs:
         npm install
         CI=false npm run build
 
-    # Step 4: Deploy Frontend to VPS
+    # Step 4: Deploy Frontend to VPS using SSH
     - name: Deploy Frontend to VPS
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
-          rm -rf /www/wwwroot/wip.fibrebondindustries.com/*
-          exit
-        EOF
-        scp -r ./frontend/admin/build/* ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
+        ssh root@${{ secrets.VPS_IP }} "rm -rf /www/wwwroot/wip.fibrebondindustries.com/*"
+        scp -r ./frontend/admin/build/* root@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
 
     # Step 5: Set up Node.js for Backend
     - name: Set up Node.js for Backend
@@ -44,8 +47,14 @@ jobs:
 
     # Step 6: Deploy Backend to VPS
     - name: Deploy Backend to VPS
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
+        ssh root@${{ secrets.VPS_IP }} << 'EOF'
           cd /www/wwwroot/wip.fibrebondindustries.com/backend
           pm2 stop all || true
           git pull origin main
