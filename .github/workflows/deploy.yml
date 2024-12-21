@@ -1,0 +1,60 @@
+name: CI/CD for WIP Dashboard
+
+on:
+  push:
+    branches:
+      - main # Trigger on push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Node.js for Frontend
+    - name: Set up Node.js for Frontend
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # Step 3: Install Frontend Dependencies and Build
+    - name: Install and Build Frontend
+      working-directory: frontend/admin
+      run: |
+        npm install
+        npm run build
+
+    # Step 4: Deploy Frontend to VPS
+    - name: Deploy Frontend to VPS
+      env:
+        SSH_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      run: |
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+          rm -rf /www/wwwroot/wip.fibrebondindustries.com/*
+          exit
+        EOF
+        sshpass -p "$SSH_PASSWORD" scp -r ./frontend/admin/build/* ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
+
+    # Step 5: Set up Node.js for Backend
+    - name: Set up Node.js for Backend
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # Step 6: Deploy Backend to VPS
+    - name: Deploy Backend to VPS
+      env:
+        SSH_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      run: |
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+          cd /www/wwwroot/wip.fibrebondindustries.com/backend
+          pm2 stop all || true
+          git pull origin main
+          npm install
+          npm rebuild bcrypt
+          pm2 start index.js --name "backend"
+          exit
+        EOF
