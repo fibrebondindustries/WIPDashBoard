@@ -3,7 +3,7 @@ name: CI/CD for WIP Dashboard
 on:
   push:
     branches:
-      - main # Trigger on push to the main branch
+      - main
 
 jobs:
   deploy:
@@ -33,11 +33,11 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       run: |
         mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
-        ssh root@${{ secrets.VPS_IP }} "rm -rf /www/wwwroot/wip.fibrebondindustries.com/*"
-        scp -r ./frontend/admin/build/* root@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@${{ secrets.VPS_IP }} "rm -rf /www/wwwroot/wip.fibrebondindustries.com/*"
+        scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -r ./frontend/admin/build/* root@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
 
     # Step 5: Set up Node.js for Backend
     - name: Set up Node.js for Backend
@@ -51,10 +51,10 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       run: |
         mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
-        ssh root@${{ secrets.VPS_IP }} << 'EOF'
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@${{ secrets.VPS_IP }} << 'EOF'
           cd /www/wwwroot/wip.fibrebondindustries.com/backend
           pm2 stop all || true
           git pull origin main
