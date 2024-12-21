@@ -29,14 +29,12 @@ jobs:
 
     # Step 4: Deploy Frontend to VPS
     - name: Deploy Frontend to VPS
-      env:
-        SSH_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
-        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
           rm -rf /www/wwwroot/wip.fibrebondindustries.com/*
           exit
         EOF
-        sshpass -p "$SSH_PASSWORD" scp -r ./frontend/admin/build/* ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
+        scp -r ./frontend/admin/build/* ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
 
     # Step 5: Set up Node.js for Backend
     - name: Set up Node.js for Backend
@@ -46,10 +44,8 @@ jobs:
 
     # Step 6: Deploy Backend to VPS
     - name: Deploy Backend to VPS
-      env:
-        SSH_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
-        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
           cd /www/wwwroot/wip.fibrebondindustries.com/backend
           pm2 stop all || true
           git pull origin main
