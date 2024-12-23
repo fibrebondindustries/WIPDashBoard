@@ -1,0 +1,65 @@
+name: CI/CD for WIP Dashboard
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Node.js for Frontend
+    - name: Set up Node.js for Frontend
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # Step 3: Install Frontend Dependencies and Build
+    - name: Install and Build Frontend
+      working-directory: frontend/admin
+      run: |
+        npm install
+        CI=false npm run build
+
+    # Step 4: Deploy Frontend to VPS using SSH
+    - name: Deploy Frontend to VPS
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@${{ secrets.VPS_IP }} "rm -rf /www/wwwroot/wip.fibrebondindustries.com/*"
+        scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -r ./frontend/admin/build/* root@${{ secrets.VPS_IP }}:/www/wwwroot/wip.fibrebondindustries.com/
+
+    # Step 5: Set up Node.js for Backend
+    - name: Set up Node.js for Backend
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # Step 6: Deploy Backend to VPS
+    - name: Deploy Backend to VPS
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@${{ secrets.VPS_IP }} << 'EOF'
+          cd /www/wwwroot/wip.fibrebondindustries.com/backend
+          pm2 stop all || true
+          git pull origin main
+          npm install
+          npm rebuild bcrypt
+          pm2 start index.js --name "backend"
+          exit
+        EOF
