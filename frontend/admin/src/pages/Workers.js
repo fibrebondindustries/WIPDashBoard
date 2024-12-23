@@ -262,6 +262,7 @@ function Workers() {
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
+  
 
   return (
     <div className="d-flex">

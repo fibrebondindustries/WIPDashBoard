@@ -675,30 +675,6 @@ router.get("/temporaryDepartments", async (req, res) => {
 
 
 ///////////// worker module 
-// router.get("/departments/worker-requirements", async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
-//     const result = await pool.request().query(`
-//       SELECT 
-//         DepartmentName,
-//         LotQuantity,
-//         RequiredResource,
-//         AvailableResource,
-//         (RequiredResource - AvailableResource) AS ToFill
-//       FROM Departments
-//     `);
-
-//     res.status(200).json(result.recordset);
-//   } catch (error) {
-//     console.error("Error fetching department worker requirements:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-// // Define Department Ratios (Fixed Lots per Worker for Each Department)
-
-
-
-
 
 router.get("/departments/worker-requirements", async (req, res) => {
   try {
@@ -1184,39 +1160,7 @@ router.post("/tickets", async (req, res) => {
 
 
 
-// router.post("/tickets", async (req, res) => {
-//   const {
-//     Category,
-//     Subject,
-//     Brief_Description,
-//     Supervisor_Name,
-//     Priority,
-//   } = req.body;
 
-//   const Status = "Open"; // Default status when a ticket is created
-
-//   try {
-//     const pool = await poolPromise; // Ensure the connection is established
-//     const query = `
-//       INSERT INTO TICKETS (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status)
-//       VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status)
-//     `;
-//     await pool
-//       .request()
-//       .input("Category", Category)
-//       .input("Subject", Subject)
-//       .input("Brief_Description", Brief_Description)
-//       .input("Supervisor_Name", Supervisor_Name)
-//       .input("Priority", Priority)
-//       .input("Status", Status)
-//       .query(query);
-
-//     return res.status(201).json({ message: "Ticket created successfully" });
-//   } catch (error) {
-//     console.error("Error inserting ticket:", error);
-//     return res.status(500).json({ error: "Failed to create ticket" });
-//   }
-// });
 
 // GET API to fetch all tickets ADMIN
 router.get("/ticketsAdmin", async (req, res) => {
@@ -1430,7 +1374,7 @@ router.post("/tickets/confirm/:id", async (req, res) => {
 });
 
 
-/// new api for WIP Dashboard 
+/// new api for WIP Dashboard Design table in model 
 router.get("/matched-data", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -1459,6 +1403,78 @@ router.get("/matched-data", async (req, res) => {
   }
 });
 
+
+// POST API for Worker Allocation
+router.post("/worker-allocation", async (req, res) => {
+  const { From_Dep, Worker_Name, To_Department } = req.body;
+
+  if (!From_Dep || !Worker_Name || !To_Department) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    await pool.request()
+      .input("From_Dep", From_Dep)
+      .input("Worker_Name", Worker_Name)
+      .input("To_Department", To_Department)
+      .query(`
+        INSERT INTO [dbo].[WorkerAllocation] ([From_Dep], [Worker_Name], [To_Department])
+        VALUES (@From_Dep, @Worker_Name, @To_Department)
+      `);
+
+    res.status(201).json({ message: "Worker allocation added successfully" });
+  } catch (error) {
+    console.error("Error inserting worker allocation:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// DELETE API for Worker Allocation
+router.delete("/worker-allocation/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "ID is required" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input("ID", id)
+      .query(`
+        DELETE FROM [dbo].[WorkerAllocation]
+        WHERE [ID] = @ID
+      `);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Worker allocation not found" });
+    }
+
+    res.status(200).json({ message: "Worker allocation deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting worker allocation:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET API for Worker Allocation
+router.get("/worker-allocation", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT [ID], [From_Dep], [Worker_Name], [To_Department]
+      FROM [dbo].[WorkerAllocation]
+      ORDER BY [ID] ASC
+    `);
+
+    res.status(200).json(result.recordset); // Return all records
+  } catch (error) {
+    console.error("Error fetching worker allocations:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 module.exports = router;

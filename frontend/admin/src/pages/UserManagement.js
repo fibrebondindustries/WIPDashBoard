@@ -327,10 +327,12 @@ function UserManagement() {
                           required
                         >
                           <option value="">Select Department</option>
+                          <option value="Reserve">Reserve worker</option>
                           {departments.map((dept, index) => (
                             <option key={index} value={dept}>
                               {dept}
                             </option>
+                            
                           ))}
                         </select>
                       </div>

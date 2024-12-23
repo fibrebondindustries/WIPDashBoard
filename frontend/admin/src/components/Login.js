@@ -92,7 +92,7 @@ function Login() {
         } else if (userData.Auth === "Admin") {
             navigate("/Admin-dashboard");
         } else if (userData.Auth === "Supervisor") {
-            navigate("/ticket-home"); // Redirect Supervisor to TicketHome
+            navigate("/Admin-dashboard"); // Redirect Supervisor to TicketHome
         }else if (userData.Auth === "SuperAdmin") {
           navigate("/Admin-dashboard"); // Redirect Supervisor to TicketHome
       }

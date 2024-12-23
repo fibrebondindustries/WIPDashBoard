@@ -28,7 +28,7 @@ const Sidebar = () => {
   return (
     <div className="d-flex flex-column vh-100 bg-light sidebar">
       <div className=" text-center">
-        <a className="navbar-brand" href="#">
+        <a className="navbar-brand" >
           <img
             src={logo}
             className="mt-2"
@@ -50,7 +50,7 @@ const Sidebar = () => {
             <i className="bi bi-speedometer2"></i> Dashboard
           </NavLink>
         </li>
-        <li className="nav-item">
+        {/* <li className="nav-item">
           <NavLink to="/users" 
            className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
           // className="nav-link" 
@@ -58,44 +58,59 @@ const Sidebar = () => {
           >
             <i className="bi bi-card-list"></i> Users
           </NavLink>
-        </li>
-        <li className="nav-item">
+        </li> */}
+        {(user?.Auth === "Admin" || user?.Auth === "SuperAdmin") && (
+          <li className="nav-item">
+            <NavLink
+              to="/users"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Users
+            </NavLink>
+          </li>
+        )}
+        {/* <li className="nav-item">
           <NavLink
             to="/department"
             className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-            // className="nav-link"
-            // activeClassName="active"
           >
             <i className="bi bi-calendar-check"></i> Department
           </NavLink>
-        </li>
-        <li className="nav-item">
+        </li> */}
+        {(user?.Auth === "Admin" || user?.Auth === "SuperAdmin") && (
+          <li className="nav-item">
+            <NavLink
+              to="/department"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Department
+            </NavLink>
+          </li>
+        )}
+        {/* <li className="nav-item">
           <NavLink to="/workers"
           className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
            >
             <i className="bi bi-calendar-check"></i> Workers
           </NavLink>
-        </li>
-        {/* <li className="nav-item">
-          <NavLink to="/ticket-admin"
-          className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-           >
-            <i className="bi bi-calendar-check"></i> Ticketing
-          </NavLink>
         </li> */}
-          {/* Ticketing Link - Only Visible to SuperAdmin */}
-          {/* {user?.Auth === "SuperAdmin" && (
+         {(user?.Auth === "Admin" || user?.Auth === "SuperAdmin") && (
           <li className="nav-item">
             <NavLink
-              to="/ticket-admin"
+              to="/workers"
               className={({ isActive }) =>
                 isActive ? "nav-link active" : "nav-link"
               }
             >
-              <i className="bi bi-calendar-check"></i> Ticketing
+              <i className="bi bi-calendar-check"></i> Workers
             </NavLink>
           </li>
-        )} */}
+        )}
+          {/* Ticketing Link - Only Visible to SuperAdmin */}
          {user?.Auth === "SuperAdmin" && (
           <li className="nav-item">
             <NavLink
@@ -105,6 +120,21 @@ const Sidebar = () => {
               }
             >
               <i className="bi bi-calendar-check"></i> Ticketing{" "}
+              {ticketCount > 0 && (
+                <span className="badge bg-danger">{ticketCount}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
+        {user?.Auth === "Supervisor" && (
+          <li className="nav-item">
+            <NavLink
+              to="/ticket-home"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Raise Ticket{" "}
               {ticketCount > 0 && (
                 <span className="badge bg-danger">{ticketCount}</span>
               )}

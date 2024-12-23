@@ -10,13 +10,14 @@ function WIPDashboard() {
 //   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [workerRequirements,] = useState([]); //setWorkerRequirements
+  const [workerRequirements, setWorkerRequirements] = useState([]); //setWorkerRequirements
   const [searchQuery, setSearchQuery] = useState("");
   const [modalData, setModalData] = useState(null); // State for modal data
   const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
   const [presentEmployees, setPresentEmployees] = useState([]); // Present employees data
   const [filteredPresentEmployees, setFilteredPresentEmployees] = useState([]);
   const [matchedData, setMatchedData] = useState([]); // State to store matched data
+   const [filteredRequiredResources, setFilteredRequiredResources] = useState(0);
 
   
   // Function to check session on page load
@@ -42,6 +43,23 @@ function WIPDashboard() {
     const interval = setInterval(checkAuth, 1000); // Check session every second
     return () => clearInterval(interval); // Cleanup interval on component unmount
   }, [checkAuth]);
+
+  const fetchWorkerRequirements = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/api/departments/worker-requirements");
+      const fetchedRequirements = response.data;
+      setWorkerRequirements(fetchedRequirements);
+  
+      // Default filtered count is the total of all RequiredResource values
+      const totalResources = fetchedRequirements.reduce(
+        (sum, item) => sum + (item.RequiredResource || 0),
+        0
+      );
+      setFilteredRequiredResources(totalResources);
+    } catch (error) {
+      console.error("Error fetching worker requirements:", error);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -132,25 +150,46 @@ function WIPDashboard() {
           button.setAttribute("title", `Department: ${department}\nWIP Quantity: ${wipQuantity}`);
   
           // Add click event
-          button.onclick = () => {
-            const filtered = fetchedData.filter(
-              (row) => row["DEPARTMENT"] === department
-            );
-            setFilteredData(filtered);
-            // Filter present employees
-            const filteredEmployees = presentEmployees.filter(
-              (emp) => emp.Department === department
-            );
-            setFilteredPresentEmployees(filteredEmployees);
-          };
+        //   button.onclick = () => {
+        //     const filtered = fetchedData.filter(
+        //       (row) => row["DEPARTMENT"] === department
+        //     );
+        //     setFilteredData(filtered);
+        //     // Filter present employees
+        //     const filteredEmployees = presentEmployees.filter(
+        //       (emp) => emp.Department === department
+        //     );
+        //     setFilteredPresentEmployees(filteredEmployees);
+        //   };
   
-          filterContainer.appendChild(button);
-        });
+        //   filterContainer.appendChild(button);
+        // });
+        button.onclick = () => {
+          const filtered = fetchedData.filter(
+            (row) => row["DEPARTMENT"] === department
+          );
+          setFilteredData(filtered);
+
+          // Update filtered required resources
+          const departmentRequirement = workerRequirements.find(
+            (req) => req.DEPARTMENT === department
+          );
+          setFilteredRequiredResources(departmentRequirement?.RequiredResource || 0);
+
+          // Filter present employees
+          const filteredEmployees = presentEmployees.filter(
+            (emp) => emp.Department === department
+          );
+          setFilteredPresentEmployees(filteredEmployees);
+        };
+
+        filterContainer.appendChild(button);
+      });
       }
     } catch (error) {
       displayErrorMessage("Database Connection Lost");
     }
-  }, [presentEmployees]);
+  }, [workerRequirements, presentEmployees]);
   
   
   
@@ -266,7 +305,8 @@ useEffect(() => {
                   
                   fetchLastUpdatedDate();
                   fetchPresentEmployees();
-                }, [fetchLastUpdatedDate]);
+                  fetchWorkerRequirements();
+                }, [fetchLastUpdatedDate,fetchWorkerRequirements]);
 
   // Fetch Present Employees
   const fetchPresentEmployees = async () => {
@@ -318,13 +358,69 @@ useEffect(() => {
       <div className="flex-grow-1">
         <WIPHeader/>
         <main className="main-container p-4">
-          <div className="d-flex justify-content-start mb-3">
+          {/* <div className="d-flex justify-content-start mb-3">
           <span><strong style={{color:"red"}}>Red: </strong>Over Capacity (Above <strong>23000</strong>)</span>&nbsp;&nbsp;
           <span><strong style={{color:"green"}}>Green: </strong>All Okay </span>&nbsp;&nbsp;
           <span><strong style={{color:"orange"}}>Orange: </strong>Under Capacity (Below <strong>19000</strong>)</span>&nbsp;&nbsp;
           <span><strong style={{color:"blue"}}>Blue: </strong>Process Issue Pending </span>&nbsp;&nbsp;
           <span><strong style={{color:"#cc66ff"}}>Lavender: </strong>Less Workers </span>&nbsp;&nbsp;
-          </div>
+          </div> */}
+            <table style={{ width: "100%", fontSize: "12px", borderCollapse: "collapse" }} className="mb-3">
+              <tbody>
+                <tr>
+                  {/* First Div */}
+                  <td style={{ width: "50%", verticalAlign: "top", padding: "8px" }}>
+                    <div style={{ display: "grid" }}>
+                      <span>
+                        <strong style={{ color: "red" }}>Red:</strong> Over Capacity (Above <strong>23000</strong>)
+                      </span>
+                      <span>
+                        <strong style={{ color: "green" }}>Green:</strong> All Okay
+                      </span>
+                      <span>
+                        <strong style={{ color: "orange" }}>Orange:</strong> Under Capacity (Below <strong>19000</strong>)
+                      </span>
+                      <span>
+                        <strong style={{ color: "blue" }}>Blue:</strong> Process Issue Pending
+                      </span>
+                      <span>
+                        <strong style={{ color: "#cc66ff" }}>Lavender:</strong> Less Workers
+                      </span>
+                    </div>
+                  </td>
+                  {/* Second Div */}
+                  <td style={{ width: "50%", verticalAlign: "top", padding: "8px", textAlign: "right" }}>
+                    <div style={{ display: "grid" }}>
+                      <span>               
+                        <strong>Present Workers:</strong>{" "}
+                      {filteredPresentEmployees.reduce(
+                        (acc, curr) => acc + curr.PresentEmployees,
+                        0
+                      )}
+                      </span>
+                      <span>
+                      <strong>Standard Required Workers:</strong> {filteredRequiredResources}
+                      </span>
+                      <span>
+                      <strong>Total Required Workers:</strong>{" "}
+                      {Math.max(
+                        0,
+                        filteredRequiredResources - filteredPresentEmployees.reduce(
+                          (acc, curr) => acc + curr.PresentEmployees,
+                          0
+                        )
+                      )}
+                    </span>
+                      
+                    <span>
+                    <strong>Reserved Worker:</strong>{" "}
+                    {presentEmployees.filter(emp => emp.Department === "Reserve").reduce((acc, curr) => acc + curr.PresentEmployees, 0)}
+                  </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+          </table>
           <div className="mb-0" style={{zIndex:"2",position:"relative"}}>
             <input
               type="text"
@@ -356,11 +452,8 @@ useEffect(() => {
 
           <div className="container mt-0">
             <div className="table-responsive">
-            <div className="d-flex">
-              {/* <p>
-                <strong>Present Employees:</strong>{" "}
-                {presentEmployees.reduce((acc, curr) => acc + curr.PresentEmployees, 0)}
-              </p> */}
+            {/* <div className="d-flex">
+            
               <p>
               <strong>Present Employees:</strong>{" "}
               {filteredPresentEmployees.reduce(
@@ -369,7 +462,7 @@ useEffect(() => {
               )}
             </p>
 
-            </div>
+            </div> */}
             <div className="d-flex justify-content-end">
                  <button
                    onClick={handleViewAll}

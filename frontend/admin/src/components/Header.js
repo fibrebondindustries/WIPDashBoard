@@ -8,6 +8,8 @@ import User from "../assets/Img/User.gif";
 const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const { logout } = useContext(AuthContext);
 
+
+  const user = JSON.parse(localStorage.getItem("user"));
   return (
     <div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -54,7 +56,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           {/* Navbar Links and Profile Dropdown */}
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0"></ul>
-            {/* <h5>Welcome</h5> */}
+            <span style={{marginLeft:"-21rem"}}>Welcome,{user?.Name}! </span>
             {/* Profile Dropdown */}
             <div className="dropdown">
               <a
