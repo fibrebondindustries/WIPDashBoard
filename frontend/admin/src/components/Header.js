@@ -4,12 +4,12 @@ import { AuthContext } from "../AuthContext";
 import "../assets/CSS/Header.css"; // Import the custom CSS for styling
 import logo from "../assets/Img/Logo-1.png";
 import User from "../assets/Img/User.gif";
-
+import Bell from "../assets/Img/BellIcon.png";
 const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const { logout } = useContext(AuthContext);
 
-
-  const user = JSON.parse(localStorage.getItem("user"));
+   // Get the user object from localStorage
+   const user = JSON.parse(localStorage.getItem("user"));
   return (
     <div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -56,7 +56,22 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           {/* Navbar Links and Profile Dropdown */}
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0"></ul>
-            <span style={{marginLeft:"-21rem"}}>Welcome,{user?.Name}! </span>
+
+            <span style={{ marginLeft: "-21rem" }}>
+              {/* Conditionally Render Bell Icon for Supervisors */}
+              {user?.Auth === "Supervisor" && (
+                <a name="" id="" className="btn" href="#" role="button">
+                  <span style={{color:"red"}}>1</span>
+                  <img
+                    src={Bell}
+                    className="img-fluid rounded-top"
+                    alt="Bell Icon"
+                    style={{ height: "20px", width: "20px" }}
+                  />
+                </a>
+              )}
+              Welcome, {user?.Name}!
+            </span>
             {/* Profile Dropdown */}
             <div className="dropdown">
               <a
@@ -66,7 +81,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                 id="dropdownMenuLink"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
-                style={{ marginRight: "20px" ,justifyContent: "end"}}
+                style={{ marginRight: "20px", justifyContent: "end" }}
               >
                 <img
                   src={User}
@@ -102,9 +117,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           </div>
         </div>
       </nav>
-      
     </div>
-    
   );
 };
 

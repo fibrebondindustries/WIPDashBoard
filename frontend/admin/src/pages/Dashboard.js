@@ -3,6 +3,9 @@ import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import "../assets/CSS/Dashboard.css";
 import axiosInstance from "../axiosConfig";
+import { CSVLink } from "react-csv"; // Import CSVLink // 24 Dec 2024
+
+
 
 function Dashboard() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -17,29 +20,39 @@ function Dashboard() {
  const [matchedData, setMatchedData] = useState([]); // State to store matched data
 //  const [totalRequiredResources, setTotalRequiredResources] = useState(0);
  const [filteredRequiredResources, setFilteredRequiredResources] = useState(0);
+ const [workerAllocations, setWorkerAllocations] = useState([]); // State to store worker allocation data
+ const [departments, setDepartments] = useState([]);
+
+ const [isAllocationModalOpen, setIsAllocationModalOpen] = useState(false); // State to control modal visibility
+ const [filteredPresentWorkers, setFilteredPresentWorkers] = useState([]);
+// Add this state to store all users from the API
+const [users, setUsers] = useState([]);
+
+
+ const [formData, setFormData] = useState({
+   From_Dep: "",
+   Worker_Name: "",
+   To_Department: "",
+ }); // State for form data
 
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
    // Fetch Worker Requirements
-  //  const fetchWorkerRequirements = useCallback(async () => {
-  //   try {
-  //     const response = await axiosInstance.get("/api/departments/worker-requirements");
-  //     const fetchedRequirements = response.data;
-  //     setWorkerRequirements(fetchedRequirements);
+// Fetch users on component mount
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const { data } = await axiosInstance.get("/api/AllUsers"); // Destructure data directly
+      setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
-  //     // Calculate total required resources
-  //     const totalResources = fetchedRequirements.reduce(
-  //       (sum, item) => sum + (item.RequiredResource || 0),
-  //       0
-  //     );
-  //     setTotalRequiredResources(totalResources);
-  //     setFilteredRequiredResources(totalResources); // Default filtered count is the total
-  //   } catch (error) {
-  //     console.error("Error fetching worker requirements:", error);
-  //   }
-  // }, []);
+  fetchUsers();
+}, []);
 
   const fetchWorkerRequirements = useCallback(async () => {
     try {
@@ -78,7 +91,7 @@ function Dashboard() {
           return acc;
         }, {});
   
-        // Create filter buttons
+        // Create filter buttons for each department "Yogesh"
         Object.keys(departmentGroups).forEach((department) => {
           const rows = departmentGroups[department];
 
@@ -351,6 +364,156 @@ useEffect(() => {
   }
 }, [isModalOpen, modalData, fetchMatchedData]);
 
+
+//Worker Allocation code  24 Dec 2024, Yogesh
+
+// Fetch Worker Allocation Data
+const fetchWorkerAllocations = useCallback(async () => {
+  try {
+    const response = await axiosInstance.get("/api/worker-allocation");
+    setWorkerAllocations(response.data);
+  } catch (error) {
+    console.error("Error fetching worker allocations:", error);
+  }
+}, []);
+
+useEffect(() => {
+  fetchWorkerAllocations();
+}, [fetchWorkerAllocations]);
+
+ // Define CSV headers
+ const csvHeaders = [
+  // { label: "ID", key: "ID" },
+  { label: "From Department", key: "From_Dep" },
+  { label: "Worker Name", key: "Worker_Name" },
+  { label: "To Department", key: "To_Department" },
+];
+
+
+const handleFormChange = async (e) => {
+  const { name, value } = e.target;
+  setFormData((prevFormData) => ({
+    ...prevFormData,
+    [name]: value,
+  }));
+
+  if (name === "From_Dep" && value) {
+    try {
+      const response = await axiosInstance.get("/api/presentEmployees");
+      const presentWorkers = response.data;
+
+      // Filter workers by department
+      const filteredWorkers = presentWorkers.filter(
+        (worker) => worker.Department === value
+      );
+
+      // console.log("Filtered Workers:", filteredWorkers); // Log filtered workers
+      setFilteredPresentWorkers(filteredWorkers); // Update filtered workers
+    } catch (error) {
+      console.error("Error fetching filtered present workers:", error);
+    }
+  }
+};
+const showAlert = (message, type) => {
+  const alertPlaceholder = document.getElementById("alertPlaceholder");
+  const alertHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+      <strong>${type === "success" ? "Success!" : "Error!"}</strong> ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>`;
+  alertPlaceholder.innerHTML = alertHTML;
+  setTimeout(() => {
+    alertPlaceholder.innerHTML = "";
+  }, 2000);
+};
+
+
+// const handleFormSubmit = async (e) => {
+//   e.preventDefault();
+//   try {
+//     await axiosInstance.post("/api/worker-allocation", formData); // POST API
+//     showAlert("Worker allocation added successfully!", "success");
+//     setFormData({ From_Dep: "", Worker_Name: "", To_Department: "" }); // Reset form
+//     // setIsAllocationModalOpen(false); // Close modal
+//     fetchWorkerAllocations(); // Refresh table data
+//   } catch (error) {
+//     console.error("Error adding worker allocation:", error);
+//     showAlert("Failed to add worker allocation. Please try again.", "danger");
+//   }
+// };
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+
+  // Parse the selected worker's value
+  const selectedWorker = JSON.parse(formData.Worker_Name);
+
+  const updatedFormData = {
+    ...formData,
+    Worker_Name: selectedWorker.WorkerName, // Use the name
+    EmployeeID: selectedWorker.EmployeeID,  // Add the ID if needed
+  };
+
+  try {
+    await axiosInstance.post("/api/worker-allocation", updatedFormData);
+
+    showAlert("Worker allocation added successfully!", "success");
+
+    // Reset form and refresh table
+    setFormData({ From_Dep: "", Worker_Name: "", To_Department: "" });
+    setFilteredPresentWorkers([]);
+    setIsAllocationModalOpen(false);
+    fetchWorkerAllocations();
+  } catch (error) {
+    console.error("Error adding worker allocation:", error);
+    showAlert("Failed to add worker allocation. Please try again.", "danger");
+  }
+};
+
+
+
+
+
+const handleDelete = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this allocation?")) {
+    return;
+  }
+
+  try {
+    await axiosInstance.delete(`/api/worker-allocation/${id}`);
+    showAlert("Worker allocation deleted successfully!", "success");
+    fetchWorkerAllocations(); // Refresh table data
+  } catch (error) {
+    console.error("Error deleting worker allocation:", error);
+    alert("Failed to delete worker allocation. Please try again.");
+  }
+};
+
+
+const fetchDepartments = async () => {
+  try {
+    const response = await axiosInstance.get("/api/departments");
+    setDepartments(response.data);
+  } catch (error) {
+    console.error("Error fetching departments:", error);
+  }
+};
+
+useEffect(() => {
+  fetchDepartments();
+}, []);
+
+// Helper function to get the name by EmployeeID
+const getWorkerNameById = (employeeId) => {
+  const user = users.find((user) => user.EmployeeID === employeeId);
+  return user ? user.Name : employeeId; // Fallback to EmployeeID if Name is not found
+};
+const handleCloseModal = () => {
+  setFormData({ From_Dep: "", Worker_Name: "", To_Department: "" }); // Reset form
+  setFilteredPresentWorkers([]); // Clear filtered workers
+  setIsAllocationModalOpen(false); // Close modal
+};
+
+
   return (
     <div className="d-flex dashboard">
       <div className={isSidebarVisible ? "sidebar-container" : "sidebar-hidden"}>
@@ -426,7 +589,7 @@ useEffect(() => {
                 </tr>
               </tbody>
           </table>
-          <div className="mb-0" style={{zIndex:"2",position:"relative"}}>
+          <div className="mb-0" style={{display:"none"}}>
             <input
               type="text"
               className="form-control"
@@ -438,7 +601,7 @@ useEffect(() => {
           </div>
           <div
             className="container-fluid  d-flex justify-content-end align-items-center mb-2"
-            style={{ marginTop: "-36px", position: "relative" }}
+            style={{position: "relative" }}
           >
             <p className="font-weight-bold text-uppercase mb-0 mr-2">
               LAST UPDATED TIME&nbsp;
@@ -455,19 +618,83 @@ useEffect(() => {
             <div id="filter-container" className="filter-grid w-100"></div>
           </div>
 
-          <div className="container mt-0">
-            <div className="table-responsive">
-            {/* <div className="d-flex">
-          
-              <p>
-              <strong>Present Workers:</strong>{" "}
-              {filteredPresentEmployees.reduce(
-                (acc, curr) => acc + curr.PresentEmployees,
-                0
-              )}
-            </p>
+          {/* Table to Display Worker Allocation */}
+          <div className="container table-responsive mt-4" >
+          <div className="d-flex justify-content-end">
+            <button
+              type="button"
+              className="btn btn-outline-primary mb-3 me-3"
+              onClick={() => setIsAllocationModalOpen(true)}
+            >
+             Allocate Workers
+            </button>
+             {/* Export Button */}
+             <div className="d-flex justify-content-end mb-3" >
+             <CSVLink
+              data={workerAllocations}
+              headers={csvHeaders}
+              filename="worker_allocations.csv"
+              className="btn btn-success"
+              // style={{display:"none"}}
+            >
+              Export
+            </CSVLink>
+            </div>
+          </div>
+            <table className="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>I D</th>
+                  <th>From Department</th>
+                  <th>Worker Name</th>
+                  <th>To Department</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {workerAllocations.length > 0 ? (
+                  workerAllocations.map((allocation) => (
+                    <tr key={allocation.ID}>
+                      <td>{allocation.ID}</td>
+                      <td>{allocation.From_Dep}</td>
+                      <td>{allocation.Worker_Name}</td>
+                      <td>{allocation.To_Department}</td>
+                      <td>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(allocation.ID)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center">
+                      No data available.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-            </div> */}
+          {/* end */}
+          <div className="container mt-0">
+            <div style={{position:"absolute"}}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search Item Name"
+              style={{ width: "auto" }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            </div>
+        
+            <div className="table-responsive">
+           
             <div className="d-flex justify-content-end">
                  <button
                    onClick={handleViewAll}
@@ -537,7 +764,7 @@ useEffect(() => {
           </div>
         </main>
       </div>
-      {/* Modal */}
+      {/* Modal JOS Related Data*/}
       {isModalOpen && modalData && (
         <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
           <div className="modal-dialog modal-lg">
@@ -602,6 +829,137 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+          {/* Modal for Worker Allocation */}
+          {isAllocationModalOpen && (
+            <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
+              <div className="modal-dialog">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Add Worker Allocation</h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setIsAllocationModalOpen(false)}
+                    ></button>
+                  </div>
+                  <form onSubmit={handleFormSubmit}>
+                    <div className="modal-body">
+                      <div className="mb-3">
+                        <label htmlFor="From_Dep" className="form-label">
+                          From Department
+                        </label>
+                        {/* <input
+                          type="text"
+                          className="form-control"
+                          
+                          name="From_Dep"
+                          value={formData.From_Dep}
+                          onChange={handleFormChange}
+                          required
+                        /> */}
+                          <select
+                          className="form-control"
+                          id="From_Dep"
+                          name="From_Dep"
+                          value={formData.From_Dep}
+                          onChange={handleFormChange}
+                          required
+                        >
+                          <option value="">Select Department</option>
+                          {/* <option value="Reserve">Reserve worker</option> */}
+                          {departments.map((dept, index) => (
+                            <option key={index} value={dept}>
+                              {dept}
+                            </option>
+                            
+                          ))}
+                        </select>
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="Worker_Name" className="form-label">
+                          Worker Name
+                        </label>
+                        {/* <input
+                          type="text"
+                          className="form-control"
+                          id="Worker_Name"
+                          name="Worker_Name"
+                          value={formData.Worker_Name}
+                          onChange={handleFormChange}
+                          required
+                        /> */}
+                          <select
+                            className="form-control"
+                            id="Worker_Name"
+                            name="Worker_Name"
+                            value={formData.Worker_Name}
+                            onChange={handleFormChange}
+                            required
+                          >
+                            <option value="">Select Worker</option>
+                            {filteredPresentWorkers.length > 0 ? (
+                              filteredPresentWorkers.map((worker, index) => (
+                                <option
+                              key={index}
+                              value={JSON.stringify({
+                              EmployeeID: worker.EmployeeID,
+                              WorkerName: getWorkerNameById(worker.EmployeeID),
+                            })}
+                          >
+                            {getWorkerNameById(worker.EmployeeID)} {/* Display worker name */}
+                          </option>
+
+                            ))
+                          ) : (
+                            <option value="">No workers available</option>
+                          )}
+                        </select>
+
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="To_Department" className="form-label">
+                          To Department
+                        </label>
+                         <select
+                          className="form-control"
+                          id="To_Department"
+                          name="To_Department"
+                          value={formData.To_Department}
+                          onChange={handleFormChange}
+                          required
+                        >
+                          <option value="">Select Department</option>
+                          {/* <option value="Reserve">Reserve worker</option> */}
+                          {departments.map((dept, index) => (
+                            <option key={index} value={dept}>
+                              {dept}
+                            </option>
+                            
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        // onClick={() => setIsAllocationModalOpen(false)}
+                        onClick={handleCloseModal}
+                      >
+                        Close
+                      </button>
+                      <button type="submit" className="btn btn-primary">
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+
 
     </div>
   );

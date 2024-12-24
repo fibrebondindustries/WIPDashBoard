@@ -124,7 +124,7 @@ function TicketHome() {
     }
   };
 
-  // Function to confirm ticket
+  // Function to confirm ticket deletion
 const confirmTicket = async (id) => {
   if (!window.confirm("Are you sure you want to confirm this ticket?")) return;
 
@@ -146,7 +146,7 @@ const confirmTicket = async (id) => {
       </div>
       <div className="flex-grow-1">
       <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
-        <main className="main-container p-4">
+        <main className="main-container p-4" style={{height:"-webkit-fill-available"}}>
           <div className="container mt-0">
             {/* Filter Section */}
             <div className="d-flex justify-content-end mb-3">
