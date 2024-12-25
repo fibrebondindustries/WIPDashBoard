@@ -132,28 +132,68 @@ function UserDashboard() {
   };
   
    // Handle "OUT" Button Click
-   const handleMarkOut = async () => {
-    const logoutTime = getISTTime();
+  //  const handleMarkOut = async () => {
+  //   const logoutTime = getISTTime();
+  //   if (!window.confirm("Are you sure you want to mark out?")) {
+  //     return;
+  //   }
+  //   try {
+  //     await axiosInstance.post("/api/logout", {
+  //       EmployeeID: user?.EmployeeID,
+  //       logoutTime: logoutTime,
+  //     });
+
+  //     showAlert("Marked Out successfully!" , "success");
+
+  //     // Clear local storage and navigate to login page
+  //     // localStorage.removeItem("user");
+  //     // localStorage.removeItem("loginTime");
+  //     //  navigate("/"); // Redirect to login page
+  //   } catch (err) {
+  //     console.error("Error marking logout time:", err);
+  //     showAlert("Failed to record logout time. Please try again.", "danger");
+  //   }
+  // };
+  // Handle "OUT" Button Click
+const handleMarkOut = async () => {
+   try {
+    // Check for active session using /presentEmployees API
+    const activeSessionResponse = await axiosInstance.get("/api/presentEmployees");
+    const activeEmployees = activeSessionResponse.data;
+
+    // Check if the user has an active session
+    const isActive = activeEmployees.some(
+      (employee) => employee.EmployeeID === user?.EmployeeID
+    );
+
+    if (!isActive) {
+      showAlert("No active session found. You are not marked in.", "danger");
+      return; // Stop further processing
+    }
+    
     if (!window.confirm("Are you sure you want to mark out?")) {
       return;
     }
-    try {
-      await axiosInstance.post("/api/logout", {
-        EmployeeID: user?.EmployeeID,
-        logoutTime: logoutTime,
-      });
 
-      showAlert("Marked Out successfully!" , "success");
+    // Proceed with marking OUT if an active session exists
+    const logoutTime = getISTTime();
+    await axiosInstance.post("/api/logout", {
+      EmployeeID: user?.EmployeeID,
+      logoutTime: logoutTime, // Optional: Can be handled by the backend as well
+    });
 
-      // Clear local storage and navigate to login page
-      // localStorage.removeItem("user");
-      // localStorage.removeItem("loginTime");
-      //  navigate("/"); // Redirect to login page
-    } catch (err) {
-      console.error("Error marking logout time:", err);
-      showAlert("Failed to record logout time. Please try again.", "danger");
-    }
-  };
+    showAlert("Marked Out successfully!", "success");
+
+    // Clear local storage and navigate to login page (if needed)
+    // localStorage.removeItem("user");
+    // localStorage.removeItem("loginTime");
+    // navigate("/"); // Redirect to login page (optional)
+  } catch (err) {
+    console.error("Error marking logout time:", err);
+    showAlert("Failed to record logout time. Please try again.", "danger");
+  }
+};
+
 
   const showAlert = (message, type) => {
     const alertPlaceholder = document.getElementById("alertPlaceholder");

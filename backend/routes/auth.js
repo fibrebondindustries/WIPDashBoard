@@ -368,17 +368,76 @@ router.post("/mark-in", async (req, res) => {
 
 
 
-router.post("/logout", async (req, res) => {
-  const { EmployeeID, logoutTime } = req.body;
+// router.post("/logout", async (req, res) => {
+//   const { EmployeeID, logoutTime } = req.body;
 
-  if (!EmployeeID || !logoutTime) {
-    return res.status(400).json({ error: "Missing required fields" });
+//   if (!EmployeeID || !logoutTime) {
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   try {
+//     const pool = await poolPromise;
+
+//     // Set logoutTime to current IST time in ISO format
+//     const logoutTime = new Date().toISOString();
+
+//     // Update LogoutTime for the latest login entry
+//     await pool
+//       .request()
+//       .input("EmployeeID", sql.NVarChar, EmployeeID)
+//       .input("LogoutTime", sql.DateTime, logoutTime)
+//       .query(`
+//         UPDATE UserActivity
+//         SET LogoutTime = @LogoutTime
+//         WHERE EmployeeID = @EmployeeID
+//           AND LogoutTime IS NULL
+//       `);
+
+//     res.status(200).json({ message: "Logout time updated successfully" });
+//   } catch (err) {
+//     console.error("Error updating logout time:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+
+
+
+///26 nov
+
+
+router.post("/logout", async (req, res) => {
+  const { EmployeeID } = req.body;
+
+  if (!EmployeeID) {
+    return res.status(400).json({ error: "EmployeeID is required" });
   }
 
   try {
     const pool = await poolPromise;
 
-    // Update LogoutTime for the latest login entry
+    // Set logoutTime to current IST time in ISO format
+    const logoutTime = new Date().toISOString();
+
+    // Check if there is an active session for the EmployeeID
+    const activeSessionResult = await pool
+      .request()
+      .input("EmployeeID", sql.NVarChar, EmployeeID)
+      .query(`
+        SELECT TOP 1 ID
+        FROM UserActivity
+        WHERE EmployeeID = @EmployeeID
+          AND LogoutTime IS NULL
+        ORDER BY LoginTime DESC
+      `);
+
+    if (activeSessionResult.recordset.length === 0) {
+      return res.status(404).json({
+        error: "No active session found for the given Employee ID",
+      });
+    }
+
+    // Update LogoutTime for the active session
     await pool
       .request()
       .input("EmployeeID", sql.NVarChar, EmployeeID)
@@ -390,17 +449,19 @@ router.post("/logout", async (req, res) => {
           AND LogoutTime IS NULL
       `);
 
-    res.status(200).json({ message: "Logout time updated successfully" });
+    res.status(200).json({
+      message: "User marked OUT successfully",
+      EmployeeID,
+      LogoutTime: logoutTime,
+    });
   } catch (err) {
-    console.error("Error updating logout time:", err);
+    console.error("Error marking user OUT:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 
 
-
-///26 nov
 
 router.get("/AllUsers", async (req, res) => {
   try {
