@@ -298,18 +298,18 @@ router.post("/login", async (req, res) => {
       activeDepartment = departmentHistory.recordset[0].TemporaryDepartment;
     }
 
-    if (user.recordset[0].Auth === "User") {
-      const loginTime = new Date().toISOString();
-      await pool
-        .request()
-        .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-        .input("LoginTime", sql.DateTime, loginTime)
-        .input("Department", sql.NVarChar, activeDepartment)
-        .query(`
-          INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
-          VALUES (@EmployeeID, @LoginTime, @Department)
-        `);
-    }
+    // if (user.recordset[0].Auth === "User") {
+    //   const loginTime = new Date().toISOString();
+    //   await pool
+    //     .request()
+    //     .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
+    //     .input("LoginTime", sql.DateTime, loginTime)
+    //     .input("Department", sql.NVarChar, activeDepartment)
+    //     .query(`
+    //       INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
+    //       VALUES (@EmployeeID, @LoginTime, @Department)
+    //     `);
+    // }
 
     // Handle Supervisor and SuperAdmin roles // 19 Dec 
     if (user.recordset[0].Auth === "Supervisor" || user.recordset[0].Auth === "SuperAdmin") {
@@ -330,6 +330,42 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
+////Marke Attendance
+router.post("/mark-in", async (req, res) => {
+  const { EmployeeID, Department } = req.body;
+
+  if (!EmployeeID || !Department) {
+    return res.status(400).json({ error: "EmployeeID and Department are required" });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    const loginTime = new Date().toISOString();
+    await pool
+      .request()
+      .input("EmployeeID", sql.NVarChar, EmployeeID)
+      .input("LoginTime", sql.DateTime, loginTime)
+      .input("Department", sql.NVarChar, Department)
+      .query(`
+        INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
+        VALUES (@EmployeeID, @LoginTime, @Department)
+      `);
+
+    res.status(200).json({
+      message: "User marked IN successfully",
+      EmployeeID,
+      LoginTime: loginTime,
+    });
+  } catch (err) {
+    console.error("Error marking user IN:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 
 router.post("/logout", async (req, res) => {

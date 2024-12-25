@@ -1,90 +1,5 @@
-// import React, { useContext, useEffect, useCallback } from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import axiosInstance from '../axiosConfig';
-// import { AuthContext } from '../AuthContext';
-
-// function UserDashboard() {
-//     const { user, logout } = useContext(AuthContext);
-//     const navigate = useNavigate();
-
-//     const getISTTime = () => {
-//         const now = new Date();
-//         // Convert the time to IST
-//         const offset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5:30
-//         const istTime = new Date(now.getTime() + offset);
-//         return istTime.toISOString().replace('T', ' ').slice(0, 19); // Format as 'YYYY-MM-DD HH:MM:SS'
-//     };
-
-//     // Wrap handleLogout in useCallback to avoid redefinition on every render
-//     const handleLogout = useCallback(async () => {
-//         const logoutTime = getISTTime(); // Use IST time
-//         // const loginTime = localStorage.getItem('loginTime');
-
-//         try {
-//             // Send login and logout times to the server
-//             await axiosInstance.post('/api/logout', {
-//                 EmployeeID: user?.EmployeeID,
-//                 //loginTime,
-//                 logoutTime,
-//                 //Department: user?.Department, // Include Department
-//             });
-
-//             // Clear local storage and context
-//             localStorage.removeItem('loginTime');
-//             localStorage.removeItem('user');
-//             logout();
-//             navigate('/'); // Redirect to login page
-//         } catch (err) {
-//             console.error('Error logging out:', err);
-//         }
-//     }, [logout, navigate, user?.EmployeeID]);
-
-//     // useEffect(() => {
-//     //     const sessionExpiration = localStorage.getItem('sessionExpiration');
-//     //     const currentTime = new Date();
-
-//     //     if (!sessionExpiration || currentTime > new Date(sessionExpiration)) {
-//     //         handleLogout(); // Automatically logout if session expires
-//     //     }
-//     // }, [handleLogout]); // Now handleLogout is stable due to useCallback
-
-//     useEffect(() => {
-//         const checkSessionExpiration = () => {
-//             const sessionExpiration = localStorage.getItem('sessionExpiration');
-//             const currentTime = new Date();
-
-//             if (!sessionExpiration || currentTime > new Date(sessionExpiration)) {
-//                 handleLogout(); // Automatically logout if session expires
-//                 window.location.reload(); // Reload the page after logout
-//             }
-//         };
-
-//         // Check session expiration immediately
-//         checkSessionExpiration();
-
-//         // Optionally, check periodically (e.g., every 5 seconds)
-//         const interval = setInterval(checkSessionExpiration, 5000);
-
-//         return () => clearInterval(interval); // Cleanup interval on unmount
-//     }, [handleLogout]);
-
-//     return (
-//         <div>
-
-//             <h1>Welcome, {user?.Name}!</h1>
-//             <p>Employee ID: {user?.EmployeeID}</p>
-//             <p>Department: {user?.Department || 'Not Assigned'}</p> {/* Display Department */}
-//             <button className="btn btn-danger mt-3" onClick={handleLogout}>
-//                 Logout
-//             </button>
-//         </div>
-//     );
-// }
-
-// export default UserDashboard;
-
-import React, { useContext, useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosConfig";
 import { AuthContext } from "../AuthContext";
 import Logo from "../assets/Img/Logo-1.png";
@@ -94,7 +9,7 @@ function UserDashboard() {
   const { user, logout } = useContext(AuthContext);
   const [department, setDepartment] = useState("Not Assigned");
   const [temporaryDepartment, setTemporaryDepartment] = useState("Not Assigned");
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const getISTTime = () => {
     const now = new Date();
@@ -105,30 +20,30 @@ function UserDashboard() {
   };
 
   // Wrap handleLogout in useCallback to avoid redefinition on every render
-  const handleLogout = useCallback(async () => {
-    const logoutTime = getISTTime(); // Use IST time
-    // const loginTime = localStorage.getItem('loginTime');
+  // const handleLogout = useCallback(async () => {
+  //   const logoutTime = getISTTime(); // Use IST time
+  //   // const loginTime = localStorage.getItem('loginTime');
 
-    try {
-      // Send login and logout times to the server
-      await axiosInstance.post("/api/logout", {
-        EmployeeID: user?.EmployeeID,
-        //loginTime,
-        logoutTime,
-        //Department: user?.Department, // Include Department
-      });
+  //   try {
+  //     // Send login and logout times to the server
+  //     await axiosInstance.post("/api/logout", {
+  //       EmployeeID: user?.EmployeeID,
+  //       //loginTime,
+  //       logoutTime,
+  //       //Department: user?.Department, // Include Department
+  //     });
 
-      // Clear local storage and context
-      localStorage.removeItem("loginTime");
-      localStorage.removeItem("user");
-      logout();
-      navigate("/"); // Redirect to login page
-    } catch (err) {
-      console.error("Error logging out:", err);
-    }
-  }, [logout, navigate, user?.EmployeeID]);
+  //     // Clear local storage and context
+  //     localStorage.removeItem("loginTime");
+  //     localStorage.removeItem("user");
+  //     logout();
+  //     navigate("/"); // Redirect to login page
+  //   } catch (err) {
+  //     console.error("Error logging out:", err);
+  //   }
+  // }, [logout, navigate, user?.EmployeeID]);
 
-/// 3 Dec
+  /// 3 Dec
   // Fetch user department
   useEffect(() => {
     const fetchUsers = async () => {
@@ -169,7 +84,7 @@ function UserDashboard() {
       const currentTime = new Date();
 
       if (!sessionExpiration || currentTime > new Date(sessionExpiration)) {
-        handleLogout(); // Automatically logout if session expires
+        // handleLogout(); // Automatically logout if session expires
         window.location.reload(); // Reload the page after logout
       }
     };
@@ -181,10 +96,80 @@ function UserDashboard() {
     const interval = setInterval(checkSessionExpiration, 5000);
 
     return () => clearInterval(interval); // Cleanup interval on unmount
-  }, [handleLogout]);
+  }, []);
 
+
+  // Handle "IN" Button Click
+  const handleMarkIn = async () => {
+    const loginTime = getISTTime();
+  
+    try {
+      // Check for active session using /presentEmployees API
+      const activeSessionResponse = await axiosInstance.get("/api/presentEmployees");
+      const activeEmployees = activeSessionResponse.data;
+  
+      // Check if the user is already logged in
+      const isActive = activeEmployees.some(
+        (employee) => employee.EmployeeID === user?.EmployeeID
+      );
+  
+      if (isActive) {
+        showAlert("You are already marked in." , "danger");
+        return; // Stop further processing  
+      }
+  
+      // Proceed with marking IN if no active session exists
+      await axiosInstance.post("/api/mark-in", {
+        EmployeeID: user?.EmployeeID,
+        LoginTime: loginTime,
+        Department: department,
+      });
+      showAlert("Marked In successfully!" , "success");
+    } catch (err) {
+      console.error("Error marking login time:", err);
+      alert("Failed to record login time. Please try again.");
+    }
+  };
+  
+   // Handle "OUT" Button Click
+   const handleMarkOut = async () => {
+    const logoutTime = getISTTime();
+    if (!window.confirm("Are you sure you want to mark out?")) {
+      return;
+    }
+    try {
+      await axiosInstance.post("/api/logout", {
+        EmployeeID: user?.EmployeeID,
+        logoutTime: logoutTime,
+      });
+
+      showAlert("Marked Out successfully!" , "success");
+
+      // Clear local storage and navigate to login page
+      // localStorage.removeItem("user");
+      // localStorage.removeItem("loginTime");
+      //  navigate("/"); // Redirect to login page
+    } catch (err) {
+      console.error("Error marking logout time:", err);
+      showAlert("Failed to record logout time. Please try again.", "danger");
+    }
+  };
+
+  const showAlert = (message, type) => {
+    const alertPlaceholder = document.getElementById("alertPlaceholder");
+    const alertHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        <strong>${type === "success" ? "Success!" : "Error!"}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>`;
+    alertPlaceholder.innerHTML = alertHTML;
+    setTimeout(() => {
+      alertPlaceholder.innerHTML = "";
+    }, 3000);
+  };
   return (
     <div className=" ">
+            <div id="alertPlaceholder"></div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary" style={{boxShadow:"0 1px 5px rgba(0, 0, 0, 0.2) "}}>
         <div className="container-fluid">
           <a className="navbar-brand">
@@ -255,7 +240,8 @@ function UserDashboard() {
                 <a
                   className="dropdown-item text-danger"
                   // href="#"
-                  onClick={handleLogout}
+                  // onClick={handleLogout}
+                  onClick={logout}
                 >
                   Logout
                 </a>
@@ -296,9 +282,27 @@ function UserDashboard() {
             <p style={{ fontSize: "18px", color: "#555", marginBottom: "8px" }}>
               <strong>Assigned Department:</strong> {temporaryDepartment || "Not Assigned"}
             </p>
+            {/* Buttons for IN and OUT */}
+             <div style={{ display: "flex", justifyContent: "end", gap: "20px" }}>
+              <button
+                className="btn btn-success"
+                onClick={handleMarkIn}
+              >
+                IN
+              </button>
+              <button
+                className="btn btn-danger"
+                 onClick={handleMarkOut}
+              >
+                OUT
+              </button>
+            </div>
           </div>
+
+          
         </div>
       </main>
+      
     </div>
     </div>
   );

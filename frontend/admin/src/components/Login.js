@@ -46,19 +46,19 @@ function Login() {
     e.preventDefault();
     try {
         //03 Dec
-        // Check for active session using /presentEmployees API
-      const activeSessionResponse = await axiosInstance.get("/api/presentEmployees");
-      const activeEmployees = activeSessionResponse.data;
+      // //   Check for active session using /presentEmployees API
+      // const activeSessionResponse = await axiosInstance.get("/api/presentEmployees");
+      // const activeEmployees = activeSessionResponse.data;
 
-      // Check if the entered identifier exists in the list of active employees
-      const isActive = activeEmployees.some(
-        (employee) => employee.EmployeeID === formData.identifier
-      );
+      // // Check if the entered identifier exists in the list of active employees
+      // const isActive = activeEmployees.some(
+      //   (employee) => employee.EmployeeID === formData.identifier
+      // );
 
-      if (isActive) {
-        showAlert("This user is already logged in. Please log out first.", "danger");
-        return; // Stop further processing
-      }
+      // if (isActive) {
+      //   showAlert("This user is already logged in. Please log out first.", "danger");
+      //   return; // Stop further processing
+      // }
       //end
 
 
