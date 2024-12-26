@@ -978,44 +978,47 @@ router.post("/departments/update-resources", async (req, res) => {
   }
 });
 
-// // Update /departments/update-lot Endpoint
-// router.put("/departments/update-lot", async (req, res) => {
-//   const { DepartmentName, LotQuantity } = req.body;
 
-//   if (!DepartmentName || !LotQuantity) {
-//     return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
-//   }
 
-//   try {
-//     const pool = await poolPromise;
 
-//     // Get the ratio for the specified department
-//     const ratio = departmentRatios[DepartmentName];
-//     if (!ratio) {
-//       return res.status(400).json({ error: `No ratio defined for department: ${DepartmentName}` });
-//     }
+// Update /departments/update-lot Endpoint
+router.put("/departments/update-lot", async (req, res) => {
+  const { DepartmentName, LotQuantity } = req.body;
 
-//     const requiredWorkers = Math.ceil(LotQuantity / ratio);
+  if (!DepartmentName || !LotQuantity) {
+    return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
+  }
 
-//     // Update LotQuantity and RequiredResource
-//     await pool
-//       .request()
-//       .input("LotQuantity", sql.Int, LotQuantity)
-//       .input("RequiredResource", sql.Int, requiredWorkers)
-//       .input("DepartmentName", sql.NVarChar, DepartmentName)
-//       .query(`
-//         UPDATE Departments
-//         SET LotQuantity = @LotQuantity,
-//             RequiredResource = @RequiredResource
-//         WHERE DepartmentName = @DepartmentName;
-//       `);
+  try {
+    const pool = await poolPromise;
 
-//     res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
-//   } catch (error) {
-//     console.error("Error updating lot quantity:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
+    // Get the ratio for the specified department
+    const ratio = departmentRatios[DepartmentName];
+    if (!ratio) {
+      return res.status(400).json({ error: `No ratio defined for department: ${DepartmentName}` });
+    }
+
+    const requiredWorkers = Math.ceil(LotQuantity / ratio);
+
+    // Update LotQuantity and RequiredResource
+    await pool
+      .request()
+      .input("LotQuantity", sql.Int, LotQuantity)
+      .input("RequiredResource", sql.Int, requiredWorkers)
+      .input("DepartmentName", sql.NVarChar, DepartmentName)
+      .query(`
+        UPDATE Departments
+        SET LotQuantity = @LotQuantity,
+            RequiredResource = @RequiredResource
+        WHERE DepartmentName = @DepartmentName;
+      `);
+
+    res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
+  } catch (error) {
+    console.error("Error updating lot quantity:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 router.get("/departments/:name", async (req, res) => {
   const { name } = req.params;
@@ -1572,6 +1575,119 @@ router.get("/worker-allocation", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// API to get the count of rows with FirstProcess = 'yes'
+router.get("/first-process-count", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .query(`
+        SELECT 
+          [PROCESS NAME],
+          [ITEM NAME],
+          [QUANTITY],
+          [Updated_Time],
+          Supervisor,
+          Department,
+          COUNT(*) AS Count
+        FROM [dbo].[StagingTable]
+        WHERE [FirstProcess] = 'yes'
+        GROUP BY [PROCESS NAME], [ITEM NAME], [QUANTITY],[Updated_Time], Supervisor, Department
+      `);
+
+    // Send the result as a response
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching count for FirstProcess:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+// API to confirm and update records
+router.post("/confirm-process", async (req, res) => {
+  const { SupervisorName, ItemName } = req.body;
+
+  if (!SupervisorName || !ItemName) {
+    return res.status(400).json({ error: "SupervisorName and ItemName are required" });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Fetch Updated_Time and convert it to datetime
+    const newProcessTimeResult = await pool
+      .request()
+      .input("ItemName", sql.NVarChar, ItemName)
+      .query(`
+        SELECT 
+          TRY_CONVERT(datetime, REPLACE([Updated_Time], ' :', ''), 131) AS NewProcessTime
+        FROM [dbo].[StagingTable]
+        WHERE [ITEM NAME] = @ItemName;
+      `);
+
+    if (newProcessTimeResult.recordset.length === 0) {
+      return res.status(404).json({
+        error: `ItemName not found in StagingTable: ${ItemName}`,
+      });
+    }
+
+    const newProcessTime = newProcessTimeResult.recordset[0].NewProcessTime;
+
+    if (!newProcessTime) {
+      return res.status(400).json({
+        error: `Invalid Updated_Time format for ItemName: ${ItemName}`,
+      });
+    }
+
+    const confirmTime = new Date();
+
+    // Insert into ConfirmTime table
+    await pool
+      .request()
+      .input("SupervisorName", sql.NVarChar, SupervisorName)
+      .input("ConfirmTime", sql.DateTime, confirmTime)
+      .input("NewProcessTime", sql.DateTime, newProcessTime)
+      .query(`
+        INSERT INTO [dbo].[ConfirmTime] ([SupervisorName], [ConfirmTime], [NewProcessTime])
+        VALUES (@SupervisorName, @ConfirmTime, @NewProcessTime)
+      `);
+
+    // Update Updated_Time in StagingTable
+    await pool
+      .request()
+      .input("Updated_Time", sql.DateTime, confirmTime)
+      .input("ItemName", sql.NVarChar, ItemName)
+      .query(`
+        UPDATE [dbo].[StagingTable]
+        SET [Updated_Time] = @Updated_Time
+        WHERE [ITEM NAME] = @ItemName
+      `);
+
+    res.status(200).json({
+      message: "Process confirmed and timestamps updated successfully",
+    });
+  } catch (error) {
+    console.error("Error in confirm-process API:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 module.exports = router;

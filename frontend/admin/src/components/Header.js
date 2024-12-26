@@ -1,17 +1,132 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useContext } from "react";
 import { AuthContext } from "../AuthContext";
+import axiosInstance from "../axiosConfig";
 import "../assets/CSS/Header.css"; // Import the custom CSS for styling
 import logo from "../assets/Img/Logo-1.png";
 import User from "../assets/Img/User.gif";
 import Bell from "../assets/Img/BellIcon.png";
+
 const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const { logout } = useContext(AuthContext);
 
-   // Get the user object from localStorage
-   const user = JSON.parse(localStorage.getItem("user"));
+  // Get the user object from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const [processData, setProcessData] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+
+  //  useEffect(() => {
+  //   const fetchProcessCount = async () => {
+  //     try {
+  //       const response = await axiosInstance.get("/api/first-process-count");
+  //       const data = response.data;
+
+  //       // Filter data based on the logged-in supervisor's name
+  //       const supervisorData = data.find(
+  //         (item) => item.Supervisor === user?.Name
+  //       );
+
+  //       // Update the process count
+  //       setProcessCount(supervisorData ? supervisorData.Count : 0);
+  //     } catch (error) {
+  //       console.error("Error fetching process count:", error);
+  //       setProcessCount(0); // Set to 0 in case of error
+  //     }
+  //   };
+
+  //   fetchProcessCount();
+  // }, [user?.Name])
+
+  useEffect(() => {
+    const fetchProcessData = async () => {
+      try {
+        const response = await axiosInstance.get("/api/first-process-count");
+        const data = response.data;
+
+        // Filter data based on the logged-in supervisor's name
+        const supervisorData = data.filter(
+          (item) => item.Supervisor === user?.Name
+        );
+
+        setProcessData(supervisorData);
+      } catch (error) {
+        console.error("Error fetching process data:", error);
+      }
+    };
+
+    fetchProcessData();
+  }, [user?.Name]);
+
+  const handleConfirm = async (processName, itemName) => {
+    try {
+
+       // Display a confirmation dialog
+    const isConfirmed = window.confirm(
+      `Are you sure you want to confirm this Process ${processName}?`
+    );
+
+
+    // Proceed only if the user confirms
+    if (!isConfirmed) {
+      // showAlert(`${processName} - ${itemName} confirmation canceled.`, "info");
+      return;
+    }
+
+      // Get the logged-in user's name (Supervisor Name)
+      const supervisorName = user?.Name;
+  
+      // Make an API call to the confirm-process endpoint
+      await axiosInstance.post("/api/confirm-process", {
+        SupervisorName: supervisorName,
+        ItemName: itemName,
+      });
+    
+      // Handle successful response
+      showAlert(`Process confirmed successfully!`, "success");
+      
+      // console.log(`Confirmed for ${processName} - ${itemName}`);
+  
+      // Optionally, update the UI after confirmation
+      setProcessData((prevData) =>
+        prevData.filter((process) => process["ITEM NAME"] !== itemName)
+      );
+    } catch (error) {
+      console.error("Error confirming process:", error);
+      alert(
+        error.response?.data?.error || "Failed to confirm process. Please try again."
+      );
+    }
+  };
+  
+
+
+  
+  const showAlert = (message, type) => {
+    const alertPlaceholder = document.getElementById("alertPlaceholder");
+    const alertHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        <strong>${type === "success" ? "Success!" : "Error!"}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>`;
+    alertPlaceholder.innerHTML = alertHTML;
+    setTimeout(() => {
+      alertPlaceholder.innerHTML = "";
+    }, 3000);
+  };
+
+
+  const handleDone = () => {
+    // Confirmation before proceeding
+    const isConfirmed = window.confirm("Are you sure you want to mark the process as completed?");
+    if (!isConfirmed) return;
+
+    // Show success alert when "Done" button is clicked
+    showAlert("Process completed successfully!", "success");
+  };
+
   return (
     <div>
+           <div id="alertPlaceholder"></div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container-fluid">
           {/* Toggle Sidebar Button */}
@@ -60,8 +175,15 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
             <span style={{ marginLeft: "-21rem" }}>
               {/* Conditionally Render Bell Icon for Supervisors */}
               {user?.Auth === "Supervisor" && (
-                <a name="" id="" className="btn" href="#" role="button">
-                  <span style={{color:"red"}}>1</span>
+                <a
+                  name="Notification"
+                  id="Notification"
+                  className="btn"
+                  href="#"
+                  role="button"
+                  onClick={() => setShowModal(true)}
+                >
+                 <span style={{ color: "red" }}>{processData.length}</span>
                   <img
                     src={Bell}
                     className="img-fluid rounded-top"
@@ -117,6 +239,65 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           </div>
         </div>
       </nav>
+       {/* Modal */}
+       {showModal && (
+        <div className="modal show" style={{ display: "block" }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">New Process Details</h5>
+                <button
+                  className="btn btn-success"
+                  onClick={handleDone}
+                  style={{ marginLeft: "30rem" }}
+                  >
+                  Done
+                </button>
+                <button
+                  type="button"
+                  className="btn-close "
+                  onClick={() => setShowModal(false)}
+                ></button>
+             
+              </div>
+              <div className="modal-body">
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Process Name</th>
+                      <th>Item Name</th>
+                      <th>Quantity</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {processData.map((process, index) => (
+                      <tr key={index}>
+                        <td>{process["PROCESS NAME"]}</td>
+                        <td>{process["ITEM NAME"]}</td>
+                        <td>{process["QUANTITY"]}</td>
+                        <td>
+                          <button
+                            className="btn btn-outline-success"
+                            onClick={() =>
+                              handleConfirm(
+                                process["PROCESS NAME"],
+                                process["ITEM NAME"]
+                              )
+                            }
+                          >
+                            Confirm
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
