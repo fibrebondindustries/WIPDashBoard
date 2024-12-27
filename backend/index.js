@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron'); // Import node-cron
+// const axios = require("axios");
 const { poolPromise, sql } = require('./config/db'); // Ensure you have the DB connection properly configured
 const dbCheckMiddleware = require('./middleware/dbCheck');
 const authRoutes = require('./routes/auth');
@@ -112,6 +113,53 @@ cron.schedule("0 * * * *", async () => { // Runs every 2 minutes
       console.error("Error in cron job:", error.message);
     }
   });
+
+
+
+
+// Schedule the task to check for changes in UserActivity every 5 seconds
+// cron.schedule("*/5 * * * * *", async () => {
+//   try {
+//     const pool = await poolPromise;
+
+//     // Check for any recent activity in the UserActivity table within the last 5 seconds
+//     const result = await pool.request().query(`
+//       SELECT COUNT(*) AS ChangeCount
+//       FROM [dbo].[UserActivity]
+//       WHERE 
+//         DATEDIFF(SECOND, LoginTime, GETDATE()) < 5 
+//         OR DATEDIFF(SECOND, LogoutTime, GETDATE()) < 5
+//     `);
+
+//     if (result.recordset[0].ChangeCount > 0) {
+//       console.log("Detected changes in UserActivity. Triggering update-resources API...");
+
+//       // Trigger the API to update resources
+//       await axios.post("https://wip.fibrebondindustries.com/departments/update-resources", null, {
+//         httpsAgent: new https.Agent({
+//           rejectUnauthorized: false, // Accepts the SSL certificate for development
+//         }),
+//       });
+      
+
+//       console.log("API triggered successfully.");
+//     } else {
+//       console.log("No recent changes in UserActivity.");
+//     }
+//   } catch (error) {
+//     console.error("Error monitoring UserActivity or triggering API:", error);
+//   }
+// });
+
+
+
+
+
+
+
+
+
+
 // // Start the server
 // app.listen(PORT, () => {
 //     console.log(`Server is running on ${PORT}`);

@@ -905,30 +905,138 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 });
 
 
-const departmentRatios = {
-  "FOAM CUTTING": 10000,
-  "GLUING": 6666,
-  "PRESSING": 10000,
-  "BELT CUTTING DEPT": 5000,
-  "SKRWING DEPARTMENT": 5000,
-  "PESTING": 2500,
-  "NOKE": 3333,
-  "COLOUR DEPARTMENT": 1666,
-  "DESIGN DEPARTMENT": 2222,
-  "LOOPI DEPARTMENT": 2857,
-  "PUCTURE DEPARTMENT": 2857,
-  "BUCKLE STITCHING": 5000,
-  "BUCKLE BURNING": 10000,
-  "BELT CHECKING & CLEANING": 5000,
-  "SCREW FITTING": 1666,
-  "PANNI PACKING": 2857,
-  "BOX FOLDING": 10000,
-  "BOX PACKING": 6666,
-  "CARTON MAKING": 10000,
-  "BELT STITCHING": 2857,
-  "PVC": 1666,
-};
-// Update /departments/update-resources Endpoint
+// const departmentRatios = {
+//   "FOAM CUTTING": 10000,
+//   "GLUING": 6666,
+//   "PRESSING": 10000,
+//   "BELT CUTTING DEPT": 5000,
+//   "SKRWING DEPARTMENT": 5000,
+//   "PESTING": 2500,
+//   "NOKE": 3333,
+//   "COLOUR DEPARTMENT": 1666,
+//   "DESIGN DEPARTMENT": 2222,
+//   "LOOPI DEPARTMENT": 2857,
+//   "PUCTURE DEPARTMENT": 2857,
+//   "BUCKLE STITCHING": 5000,
+//   "BUCKLE BURNING": 10000,
+//   "BELT CHECKING & CLEANING": 5000,
+//   "SCREW FITTING": 1666,
+//   "PANNI PACKING": 2857,
+//   "BOX FOLDING": 10000,
+//   "BOX PACKING": 6666,
+//   "CARTON MAKING": 10000,
+//   "BELT STITCHING": 2857,
+//   "PVC": 1666,
+// };
+
+
+// // Update /departments/update-resources Endpoint
+// router.post("/departments/update-resources", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+
+//     // Query to calculate present workers per department
+//     const presentWorkersQuery = `
+//       SELECT 
+//         Department,
+//         COUNT(EmployeeID) AS PresentWorkers
+//       FROM UserActivity
+//       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
+//       GROUP BY Department;
+//     `;
+//     const presentWorkers = await pool.request().query(presentWorkersQuery);
+
+//     // Update all departments' AvailableResource and RequiredResource dynamically
+//     const departments = Object.keys(departmentRatios);
+
+//     for (const department of departments) {
+//       const lotSize = 20000; // Default Lot Quantity
+//       const ratio = departmentRatios[department];
+//       const requiredWorkers = Math.ceil(lotSize / ratio);
+
+//       // Find available workers for the department
+//       const availableWorkers =
+//         presentWorkers.recordset.find((w) => w.Department === department)?.PresentWorkers || 0;
+
+//       await pool
+//         .request()
+//         .input("DepartmentName", sql.NVarChar, department)
+//         .input("LotQuantity", sql.Int, lotSize)
+//         .input("RequiredResource", sql.Int, requiredWorkers)
+//         .input("AvailableResource", sql.Int, availableWorkers)
+//         .query(`
+//           UPDATE Departments
+//           SET LotQuantity = @LotQuantity,
+//               RequiredResource = @RequiredResource,
+//               AvailableResource = @AvailableResource
+//           WHERE DepartmentName = @DepartmentName;
+//         `);
+//     }
+
+//     res.status(200).json({ message: "Resources updated successfully!" });
+//   } catch (error) {
+//     console.error("Error updating available resources:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+
+
+
+// Update /departments/update-lot Endpoint /// not in use
+
+
+// router.post("/departments/update-resources", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+
+//     // Query to calculate present workers per department
+//     const presentWorkersQuery = `
+//       SELECT 
+//         Department,
+//         COUNT(EmployeeID) AS PresentWorkers
+//       FROM UserActivity
+//       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
+//       GROUP BY Department;
+//     `;
+//     const presentWorkers = await pool.request().query(presentWorkersQuery);
+
+//     // Query to fetch current department data for calculations
+//     const departmentDataQuery = `
+//       SELECT 
+//         DepartmentName, 
+//         AvailableResource 
+//       FROM Departments;
+//     `;
+//     const departmentData = await pool.request().query(departmentDataQuery);
+
+//     // Update each department's available resource dynamically
+//     for (const dept of departmentData.recordset) {
+//       const departmentName = dept.DepartmentName;
+
+//       // Get the number of present workers for the department
+//       const availableWorkers =
+//         presentWorkers.recordset.find((w) => w.Department === departmentName)?.PresentWorkers || 0;
+
+//       // Update the Departments table
+//       await pool
+//         .request()
+//         .input("DepartmentName", sql.NVarChar, departmentName)
+//         .input("AvailableResource", sql.Int, availableWorkers)
+//         .query(`
+//           UPDATE Departments
+//           SET AvailableResource = @AvailableResource
+//           WHERE DepartmentName = @DepartmentName;
+//         `);
+//     }
+
+//     res.status(200).json({ message: "Resources updated successfully!" });
+//   } catch (error) {
+//     console.error("Error updating available resources:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 router.post("/departments/update-resources", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -944,44 +1052,57 @@ router.post("/departments/update-resources", async (req, res) => {
     `;
     const presentWorkers = await pool.request().query(presentWorkersQuery);
 
-    // Update all departments' AvailableResource and RequiredResource dynamically
-    const departments = Object.keys(departmentRatios);
+    // Query to fetch current department data for calculations
+    const departmentDataQuery = `
+      SELECT 
+        DepartmentName, 
+        AvailableResource 
+      FROM Departments;
+    `;
+    const departmentData = await pool.request().query(departmentDataQuery);
 
-    for (const department of departments) {
-      const lotSize = 20000; // Default Lot Quantity
-      const ratio = departmentRatios[department];
-      const requiredWorkers = Math.ceil(lotSize / ratio);
+    // Loop through each department to update both tables
+    for (const dept of departmentData.recordset) {
+      const departmentName = dept.DepartmentName;
 
-      // Find available workers for the department
+      // Get the number of present workers for the department
       const availableWorkers =
-        presentWorkers.recordset.find((w) => w.Department === department)?.PresentWorkers || 0;
+        presentWorkers.recordset.find((w) => w.Department === departmentName)?.PresentWorkers || 0;
 
+      // Update the Departments table
       await pool
         .request()
-        .input("DepartmentName", sql.NVarChar, department)
-        .input("LotQuantity", sql.Int, lotSize)
-        .input("RequiredResource", sql.Int, requiredWorkers)
+        .input("DepartmentName", sql.NVarChar, departmentName)
         .input("AvailableResource", sql.Int, availableWorkers)
         .query(`
           UPDATE Departments
-          SET LotQuantity = @LotQuantity,
-              RequiredResource = @RequiredResource,
-              AvailableResource = @AvailableResource
+          SET AvailableResource = @AvailableResource
           WHERE DepartmentName = @DepartmentName;
+        `);
+
+      // Update the WIP table
+      await pool
+        .request()
+        .input("Department", sql.NVarChar, departmentName)
+        .input("Worker_in_Factory", sql.Int, availableWorkers)
+        .query(`
+          UPDATE WIP
+          SET Worker_in_Factory = @Worker_in_Factory
+          WHERE Department = @Department;
         `);
     }
 
-    res.status(200).json({ message: "Resources updated successfully!" });
+    // Execute the stored procedure to calculate and update the 'ToFill' column in WIP
+    await pool.request().query(`EXEC UpdateWIPTest`);
+
+    res.status(200).json({ message: "Resources updated successfully in both tables!" });
   } catch (error) {
-    console.error("Error updating available resources:", error);
+    console.error("Error updating resources:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 
-
-
-// Update /departments/update-lot Endpoint
 router.put("/departments/update-lot", async (req, res) => {
   const { DepartmentName, LotQuantity } = req.body;
 
@@ -1607,58 +1728,141 @@ router.get("/first-process-count", async (req, res) => {
 
 
 // API to confirm and update records
+// router.post("/confirm-process", async (req, res) => {
+//   const { SupervisorName, ItemName } = req.body;
+
+//   if (!SupervisorName || !ItemName) {
+//     return res.status(400).json({ error: "SupervisorName and ItemName are required" });
+//   }
+
+//   try {
+//     const pool = await poolPromise;
+
+//     // Fetch Updated_Time and convert it to datetime
+//     const newProcessTimeResult = await pool
+//       .request()
+//       .input("ItemName", sql.NVarChar, ItemName)
+//       .query(`
+//         SELECT 
+//         ([Updated_Time]) AS NewProcessTime
+//         FROM [dbo].[StagingTable]
+//         WHERE [ITEM NAME] = @ItemName;
+//       `);
+
+//     if (newProcessTimeResult.recordset.length === 0) {
+//       return res.status(404).json({
+//         error: `ItemName not found in StagingTable: ${ItemName}`,
+//       });
+//     }
+
+//     const newProcessTime = newProcessTimeResult.recordset[0].NewProcessTime;
+
+//     if (!newProcessTime) {
+//       return res.status(400).json({
+//         error: `Invalid Updated_Time format for ItemName: ${ItemName}`,
+//       });
+//     }
+
+//     const confirmTime = new Date();
+
+//     // Insert into ConfirmTime table
+//     await pool
+//       .request()
+//       .input("SupervisorName", sql.NVarChar, SupervisorName)
+//       .input("ConfirmTime", sql.DateTime, confirmTime)
+//       .input("NewProcessTime", sql.NVarChar, newProcessTime)
+//       .query(`
+//         INSERT INTO [dbo].[ConfirmTime] ([SupervisorName], [ConfirmTime], [NewProcessTime])
+//         VALUES (@SupervisorName, @ConfirmTime, @NewProcessTime)
+//       `);
+
+//     // Update Updated_Time in StagingTable
+//     await pool
+//       .request()
+//       .input("Updated_Time", sql.DateTime, confirmTime)
+//       .input("ItemName", sql.NVarChar, ItemName)
+//       .query(`
+//         UPDATE [dbo].[StagingTable]
+//         SET [Updated_Time] = @Updated_Time
+//         WHERE [ITEM NAME] = @ItemName
+//       `);
+
+//     res.status(200).json({
+//       message: "Process confirmed and timestamps updated successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error in confirm-process API:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+
+// Function to format the current date-time into the required format
+const formatDateTime = (date) => {
+  const options = { year: "numeric", month: "2-digit", day: "2-digit" };
+  const timeOptions = { hour: "2-digit", minute: "2-digit", hour12: true };
+
+  const formattedDate = date.toLocaleDateString("en-GB", options); // DD/MM/YYYY
+  const formattedTime = date.toLocaleTimeString("en-US", timeOptions); // hh:mm AM/PM
+
+  return `${formattedDate} : ${formattedTime}`;
+};
+
+// API to confirm and update records
 router.post("/confirm-process", async (req, res) => {
   const { SupervisorName, ItemName } = req.body;
 
   if (!SupervisorName || !ItemName) {
-    return res.status(400).json({ error: "SupervisorName and ItemName are required" });
+    return res
+      .status(400)
+      .json({ error: "SupervisorName and ItemName are required" });
   }
 
   try {
     const pool = await poolPromise;
 
-    // Fetch Updated_Time and convert it to datetime
-    const newProcessTimeResult = await pool
+    // Fetch the Updated_Time from StagingTable
+    const result = await pool
       .request()
       .input("ItemName", sql.NVarChar, ItemName)
       .query(`
-        SELECT 
-          TRY_CONVERT(datetime, REPLACE([Updated_Time], ' :', ''), 131) AS NewProcessTime
+        SELECT [Updated_Time] AS NewProcessTime
         FROM [dbo].[StagingTable]
-        WHERE [ITEM NAME] = @ItemName;
+        WHERE [ITEM NAME] = @ItemName
       `);
 
-    if (newProcessTimeResult.recordset.length === 0) {
-      return res.status(404).json({
-        error: `ItemName not found in StagingTable: ${ItemName}`,
-      });
+    if (result.recordset.length === 0) {
+      return res
+        .status(404)
+        .json({ error: `ItemName not found in StagingTable: ${ItemName}` });
     }
 
-    const newProcessTime = newProcessTimeResult.recordset[0].NewProcessTime;
+    const rawUpdatedTime = result.recordset[0].NewProcessTime;
 
-    if (!newProcessTime) {
-      return res.status(400).json({
-        error: `Invalid Updated_Time format for ItemName: ${ItemName}`,
-      });
+    if (!rawUpdatedTime) {
+      return res
+        .status(400)
+        .json({ error: `Missing Updated_Time for ItemName: ${ItemName}` });
     }
 
-    const confirmTime = new Date();
+    // Get the current time and format it
+    const confirmTime = formatDateTime(new Date());
 
     // Insert into ConfirmTime table
     await pool
       .request()
       .input("SupervisorName", sql.NVarChar, SupervisorName)
-      .input("ConfirmTime", sql.DateTime, confirmTime)
-      .input("NewProcessTime", sql.DateTime, newProcessTime)
+      .input("ConfirmTime", sql.NVarChar, confirmTime) // Current Time in required format
+      .input("NewProcessTime", sql.NVarChar, rawUpdatedTime) // As it is from StagingTable
       .query(`
         INSERT INTO [dbo].[ConfirmTime] ([SupervisorName], [ConfirmTime], [NewProcessTime])
         VALUES (@SupervisorName, @ConfirmTime, @NewProcessTime)
       `);
 
-    // Update Updated_Time in StagingTable
+    // Update the Updated_Time in StagingTable
     await pool
       .request()
-      .input("Updated_Time", sql.DateTime, confirmTime)
+      .input("Updated_Time", sql.NVarChar, confirmTime) // Update to current formatted time
       .input("ItemName", sql.NVarChar, ItemName)
       .query(`
         UPDATE [dbo].[StagingTable]
@@ -1677,10 +1881,59 @@ router.post("/confirm-process", async (req, res) => {
 
 
 
+// Fetch recent user activity
+router.get('/user-activity/recent', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT COUNT(*) AS ChangeCount
+      FROM [dbo].[UserActivity]
+      WHERE 
+        LoginTime > DATEADD(MILLISECOND, -2000, GETDATE()) 
+        OR LogoutTime > DATEADD(MILLISECOND, -2000, GETDATE())
+    `);
 
+    res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
+  } catch (error) {
+    console.error('Error fetching recent user activity:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
+// router.get('/user-activity/recent', async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(`
+//       SELECT COUNT(*) AS ChangeCount
+//       FROM [dbo].[UserActivity]
+//       WHERE 
+//         DATEDIFF(SECOND, LoginTime, GETDATE()) < 10 
+//         OR DATEDIFF(SECOND, LogoutTime, GETDATE()) < 10
+//     `);
 
+//     res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
+//   } catch (error) {
+//     console.error('Error fetching recent user activity:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });
 
+//// Fetch all user activity
+router.get('/user-activity', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT id, EmployeeID, LoginTime, LogoutTime, Department
+      FROM [dbo].[UserActivity]
+      ORDER BY LoginTime DESC
+    `);
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error('Error fetching user activity:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 

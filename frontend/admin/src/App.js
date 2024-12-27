@@ -16,11 +16,13 @@ import RMShortage from './WIP/RMshortage';
 import BoxRMShortage from './WIP/BoxRMshortage';
 import TicketHome from './Tickets/Home';
 import AdminTicketManagement from './pages/Ticketing';
+import { PollingProvider  } from "./PollingContext";
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
 function App() {
     return (
+    <PollingProvider>
         <BrowserRouter>
             <div className="">
                 <Routes>
@@ -98,6 +100,7 @@ function App() {
                 </Routes>
             </div>
         </BrowserRouter>
+        </PollingProvider>
     );
 }
 

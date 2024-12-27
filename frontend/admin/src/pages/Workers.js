@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
 import DataTable from "react-data-table-component";
+import { PollingContext } from "../PollingContext";
 
 function Workers() {
+  const { activityDetected } = useContext(PollingContext); // Access activity detection status
   const [departments, setDepartments] = useState([]); // Department data
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -86,19 +88,74 @@ function Workers() {
     }, [fetchDepartments]); // Dependency: fetchDepartments (memoized)
 
   // Update resources
-  const updateResources = async () => {
-    try {
-      setLoading(true);
-      await axiosInstance.post("/api/departments/update-resources");
-      showAlert("Resources updated successfully!", "success");
-      fetchDepartments(); // Refresh the table data
-    } catch (error) {
-      console.error("Error updating resources:", error);
-      showAlert("Failed to update resources. Please try again.", "danger");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const updateResources = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
+  //     await axiosInstance.post("/api/departments/update-resources");
+  //     showAlert("Resources updated successfully!", "success");
+  //     fetchDepartments(); // Refresh the table data
+  //   } catch (error) {
+  //     console.error("Error updating resources:", error);
+  //     showAlert("Failed to update resources. Please try again.", "danger");
+  //   } finally {
+  //     setLoading(false);  
+  //   }
+  // }, [fetchDepartments]); // Add fetchDepartments as a dependency
+
+  // // const updateResources = async () => {
+  // //   try {
+  // //     setLoading(true);
+  // //     await axiosInstance.post("/api/departments/update-resources");
+  // //     showAlert("Resources updated successfully!", "success");
+  // //     fetchDepartments(); // Refresh the table data
+  // //   } catch (error) {
+  // //     console.error("Error updating resources:", error);
+  // //     showAlert("Failed to update resources. Please try again.", "danger");
+  // //   } finally {
+  // //     setLoading(false);
+  // //   }
+  // // };
+
+
+  // // Poll for recent user activity
+  // const pollUserActivity = useCallback(() => {
+  //   const intervalId = setInterval(async () => {
+  //     try {
+  //       const response = await axiosInstance.get("/api/user-activity/recent");
+  //       if (response.data.activityDetected) {
+  //         console.log("Activity detected, updating resources...");
+  //         updateResources();
+  //       } else {
+  //         console.log("No recent user activity detected.");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error polling for user activity:", error);
+  //     }
+  //   }, 5000); // Poll every 10 seconds
+
+  //   return () => clearInterval(intervalId); // Cleanup on component unmount
+  // }, [updateResources]);
+
+  // Start polling when the component mounts
+// Trigger updateResources when activityDetected is true
+
+  // Fetch data on component load
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+  
+useEffect(() => {
+  if (activityDetected) {
+    console.log("Activity detected, updating resources...");
+    fetchDepartments();
+  }
+}, [activityDetected, fetchDepartments]);
+
+  // // Fetch data on component load
+  // useEffect(() => {
+  //   fetchDepartments();
+  // }, [fetchDepartments]);
+
 
   // Handle form submission for updating lot quantity
   const handleUpdateLotQuantity = async () => {
@@ -135,33 +192,7 @@ function Workers() {
     setFilteredData(filtered);
   }, [searchText, departments]);
   
-  //  useEffect(() => {
-  //   const filtered = departments.filter((item) =>
-  //     item.DepartmentName.toLowerCase().includes(searchText.toLowerCase()),
-      
-  //   );
-  //   setFilteredData(filtered);
-  // }, [searchText, departments]);
-
-  // Define columns for DataTable
-  // const columns = [
-    
-  //   { name: "DEPARTMENT NAME", selector: (row) => row.DepartmentName, sortable: true },
-  //   { name: "LOT QUANTITY", selector: (row) => row.LotQuantity, sortable: true },
-  //   { name: "REQUIRED RESOURCE", selector: (row) => row.RequiredResource, sortable: true },
-  //   { name: "AVAILABLE RESOURCE", selector: (row) => row.AvailableResource, sortable: true },
-  //   {
-  //     name: "To Fill",
-  //     selector: (row) => row.ToFill,
-  //     sortable: true,
-  //     cell: (row) => (
-  //       <span style={{ color: row.ToFill > 0 ? "red" : "green" }}>
-  //         {row.ToFill}
-  //       </span>
-  //     ),
-  //   },
-  // ];
-
+  
   const columns = [
     { name: "DEPARTMENT NAME", selector: (row) => row.DEPARTMENT, sortable: true },
     { name: "QUANTITY", selector: (row) => row.TotalQuantity, sortable: true },
@@ -202,33 +233,6 @@ function Workers() {
     },
   ];
   
-  
-  // const handleSendToDatabase = async () => {
-  //   try {
-  //     setLoading(true);
-  
-  //     // First, trigger updateResources to update the department data
-  //     // await updateResources();
-  
-  //     // Prepare payload for the API
-  //     const payload = departments.map((department) => ({
-  //       departmentName: department.DEPARTMENT,
-  //       availableResource: department.AvailableResource,
-  //       toFill: department.ToFill,
-  //     }));
-  
-  //     // Send data to the backend
-  //     const response = await axiosInstance.post("/api/departments/save-resources", payload);
-  
-  //      showAlert(response.data.message || "Resources saved to the database successfully!", "success");
-  //   } catch (error) {
-  //     console.error("Error saving resources to the database:", error);
-  //     showAlert("Failed to save resources to the database. Please try again.", "danger");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
 
   const handleSendToDatabase = async () => {
     try {
@@ -281,18 +285,19 @@ function Workers() {
               <button
               className="btn btn-success me-2"
               onClick={handleSendToDatabase}
-              disabled={loading}
+              // disabled={loading}
             >
               {loading ? "Processing..." : "Update Quantity & Resources"}
+              {/* {"Update Quantity & Resources"}  */}
             </button>
 
-             <button
+             {/* <button
                 className="btn btn-success me-2"
-                onClick={updateResources}
-                disabled={loading}
+                // onClick={updateResources}
+                // disabled={loading}
               >
-                {loading ? "Updating..." : "Update Table"}
-              </button>
+                { "Update Table"}
+              </button> */}
             </div>
           </div>
           <div className="mb-3">
@@ -309,7 +314,7 @@ function Workers() {
             columns={columns}
             data={filteredData}
             pagination
-            progressPending={loading}
+            // progressPending={loading}
             // selectableRows
             onSelectedRowsChange={(state) => {
               if (state.selectedRows.length > 0) {
