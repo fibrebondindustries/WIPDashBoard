@@ -20,7 +20,7 @@ export const PollingProvider = ({ children }) => {
       try {
         const response = await axiosInstance.get("/api/user-activity/recent");
         if (response.data.activityDetected) {
-          console.log("Activity detected globally!");
+          // console.log("Activity detected globally!");
           setActivityDetected(true);
           updateResources(); // Trigger updateResources globally
         } else {
@@ -29,7 +29,7 @@ export const PollingProvider = ({ children }) => {
       } catch (error) {
         console.error("Error polling for user activity:", error);
       }
-    }, 500); // Poll every 500 milliseconds
+    }, 5000); // Poll every 500 milliseconds
 
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, [updateResources]);

@@ -825,30 +825,37 @@ router.get("/departments/worker-requirements", async (req, res) => {
   ds.[QuantityPerMin], -- Quantity completed per minute
    ds.[Quantity Per Hour], -- Quantity completed per hour
   ds.[LotQuantityPerWorker], -- Worker ratio
-   CASE 
-       WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 2
+   CASE
+       WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] = 0 THEN 0
+       WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 2
        WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 4
        WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 6
-       WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 3
+       WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] = 0 THEN 0
+       WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 3
        WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 6
        WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 9
-       WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+       WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] = 0 THEN 0
+       WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 4
        WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
        WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
-       WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+       WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] = 0 THEN 0
+       WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 4
        WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
        WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
-       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 6
+       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] = 0 THEN 0
+       WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 1 AND 23000 THEN 6
        WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 9
        WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 12
        WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 15
        WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 18
-       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 12
+       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] = 0 THEN 0
+       WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 1 AND 23000 THEN 12
        WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 18
        WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 24
        WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 30
        WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 36
-       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 4
+       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] = 0 THEN 0
+       WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 1 AND 23000 THEN 4
        WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 6
        WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
        WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 10
@@ -862,29 +869,36 @@ router.get("/departments/worker-requirements", async (req, res) => {
           END AS RequiredExtraTime,
           d.[AvailableResource], -- Available workers in the department
 (CASE 
-   WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 2
+   WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] = 0 THEN 0
+   WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 2
    WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 4
    WHEN ds.[DEPARTMENT] = 'FOAM CUTTING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 6
-   WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 3
+   WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] = 0 THEN 0
+   WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 3
    WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 6
    WHEN ds.[DEPARTMENT] = 'GLUING' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 9
-   WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+   WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] = 0 THEN 0
+   WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 4
    WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
    WHEN ds.[DEPARTMENT] = 'BELT CUTTING DEPT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
-   WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 35000 THEN 4
+   WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] = 0 THEN 0
+   WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 1 AND 35000 THEN 4
    WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
    WHEN ds.[DEPARTMENT] = 'SKRWING DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 71000 THEN 12
-   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 6
+   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] = 0 THEN 0
+   WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 1 AND 23000 THEN 6
    WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 9
    WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 12
    WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 15
    WHEN ds.[DEPARTMENT] = 'NOKE' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 18
-   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 12
+   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] = 0 THEN 0
+   WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 1 AND 23000 THEN 12
    WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 18
    WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 24
    WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 30
    WHEN ds.[DEPARTMENT] = 'COLOUR DEPARTMENT' AND ds.[TotalQuantity] BETWEEN 59000 AND 71000 THEN 36
-   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 0 AND 23000 THEN 4
+   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] = 0 THEN 0
+   WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 1 AND 23000 THEN 4
    WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 23000 AND 35000 THEN 6
    WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 35000 AND 47000 THEN 8
    WHEN ds.[DEPARTMENT] = 'BELT CHECKING & CLEANING' AND ds.[TotalQuantity] BETWEEN 47000 AND 59000 THEN 10
@@ -1698,6 +1712,32 @@ router.get("/worker-allocation", async (req, res) => {
 });
 
 // API to get the count of rows with FirstProcess = 'yes'
+// router.get("/first-process-count", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+//     const result = await pool
+//       .request()
+//       .query(`
+//         SELECT 
+//           [PROCESS NAME],
+//           [ITEM NAME],
+//           [QUANTITY],
+//           [Updated_Time],
+//           Supervisor,
+//           Department,
+//           COUNT(*) AS Count
+//         FROM [dbo].[StagingTable]
+//         WHERE [FirstProcess] = 'yes'
+//         GROUP BY [PROCESS NAME], [ITEM NAME], [QUANTITY],[Updated_Time], Supervisor, Department
+//       `);
+
+//     // Send the result as a response
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching count for FirstProcess:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
 router.get("/first-process-count", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -1705,22 +1745,20 @@ router.get("/first-process-count", async (req, res) => {
       .request()
       .query(`
         SELECT 
-          [PROCESS NAME],
-          [ITEM NAME],
-          [QUANTITY],
-          [Updated_Time],
-          Supervisor,
-          Department,
-          COUNT(*) AS Count
-        FROM [dbo].[StagingTable]
-        WHERE [FirstProcess] = 'yes'
-        GROUP BY [PROCESS NAME], [ITEM NAME], [QUANTITY],[Updated_Time], Supervisor, Department
+          [SupervisorName] AS Supervisor,
+          [Process_Name] AS [PROCESS NAME],
+          [LOT_ID] AS [ITEM NAME],
+          [NewProcessTime] AS Updated_Time,
+          [ConfirmTime],
+          [QUANTITY]
+        FROM [dbo].[ConfirmTime]
+        WHERE [ConfirmTime] IS NULL
       `);
 
     // Send the result as a response
     res.status(200).json(result.recordset);
   } catch (error) {
-    console.error("Error fetching count for FirstProcess:", error);
+    console.error("Error fetching process data:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -1728,58 +1766,223 @@ router.get("/first-process-count", async (req, res) => {
 
 
 // API to confirm and update records
-// router.post("/confirm-process", async (req, res) => {
-//   const { SupervisorName, ItemName } = req.body;
+// Function to format date-time in IST
+const formatDateTime = (date) => {
+  const options = { year: "numeric", month: "2-digit", day: "2-digit" };
+  const timeOptions = {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata", // Force IST timezone
+  };
 
-//   if (!SupervisorName || !ItemName) {
-//     return res.status(400).json({ error: "SupervisorName and ItemName are required" });
+  const formattedDate = date.toLocaleDateString("en-GB", options); // DD/MM/YYYY
+  const formattedTime = date.toLocaleTimeString("en-IN", timeOptions); // hh:mm AM/PM
+
+  return `${formattedDate} : ${formattedTime}`;
+};
+
+// API to handle automatic insertion
+router.post("/auto-insert-first-process", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Fetch rows where FirstProcess = 'yes' from StagingTable
+    const stagingData = await pool
+      .request()
+      .query(`
+        SELECT 
+          [Supervisor],
+          [Updated_Time] AS NewProcessTime,
+          [ITEM NAME] AS LOT_ID,
+          [PROCESS NAME] AS ProcessName
+        FROM [dbo].[StagingTable]
+        WHERE [FirstProcess] = 'yes'
+      `);
+
+    const rowsToInsert = stagingData.recordset;
+
+    for (const row of rowsToInsert) {
+      // Check if the row already exists in ConfirmTime
+      const existingRow = await pool
+        .request()
+        .input("LotId", sql.NVarChar, row.LOT_ID)
+        .query(`
+          SELECT COUNT(*) AS RowCount
+          FROM [dbo].[ConfirmTime]
+          WHERE [LOT_ID] = @LotId
+        `);
+
+      if (existingRow.recordset[0].RowCount === 0) {
+        // Insert into ConfirmTime if not already present
+        await pool
+          .request()
+          .input("SupervisorName", sql.NVarChar, row.Supervisor)
+          .input("NewProcessTime", sql.NVarChar, row.NewProcessTime)
+          .input("LotId", sql.NVarChar, row.LOT_ID)
+          .input("ProcessName", sql.NVarChar, row.ProcessName)
+          .query(`
+            INSERT INTO [dbo].[ConfirmTime] (
+              [SupervisorName], [NewProcessTime], [LOT_ID], [Process_Name]
+            )
+            VALUES (
+              @SupervisorName, @NewProcessTime, @LotId, @ProcessName
+            )
+          `);
+      }
+    }
+
+    res.status(200).json({ message: "Automatic insertion completed successfully." });
+  } catch (error) {
+    console.error("Error in auto-insert-first-process API:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// API to handle Confirm button click
+router.post("/confirm-process", async (req, res) => {
+  const { LotId, ConfirmTime, ConfirmBy } = req.body;
+
+  if (!LotId) {
+    return res.status(400).json({
+      error: "LotId is required",
+    });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Use ConfirmTime from frontend if provided; fallback to server time in IST
+    const confirmTime = ConfirmTime || formatDateTime(new Date());
+
+    // Update ConfirmTime for the given LOT_ID
+    await pool
+      .request()
+      .input("ConfirmTime", sql.NVarChar, confirmTime)
+      .input("LotId", sql.NVarChar, LotId)
+      .input("ConfirmBy", sql.NVarChar, ConfirmBy)
+      .query(`
+        UPDATE [dbo].[ConfirmTime]
+        SET [ConfirmTime] = @ConfirmTime,
+         [ConfirmBy] = @ConfirmBy
+        WHERE [LOT_ID] = @LotId
+      `);
+ // Update the Updated_Time in StagingTable
+    await pool
+      .request()
+      .input("Updated_Time", sql.NVarChar, confirmTime) // Update to current IST-confirmed time
+      .input("ItemName", sql.NVarChar, LotId)
+      .query(`
+        UPDATE [dbo].[StagingTable]
+        SET [Updated_Time] = @Updated_Time
+        WHERE [ITEM NAME] = @ItemName
+      `);
+    res.status(200).json({
+      message: "ConfirmTime updated successfully.",
+    });
+  } catch (error) {
+    console.error("Error in confirm-process API:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// API to get delayed processes
+router.get("/delayed-processes", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Query to fetch delayed processes
+    const result = await pool
+      .request()
+      .query(`
+        SELECT 
+          [SupervisorName],
+          [LOT_ID] AS [ITEM NAME],
+          [Process_Name] AS [PROCESS NAME],
+          [NewProcessTime],
+          [ConfirmTime],
+          [ProcessDelay]
+        FROM [dbo].[ConfirmTime]
+        WHERE [ProcessDelay] = 'Yes' AND [ConfirmTime] IS NULL
+      `);
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching delayed processes:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+
+
+// API to confirm and update records
+// router.post("/confirm-process", async (req, res) => {
+//   const { SupervisorName, ItemName, ConfirmTime, ProcessName } = req.body;
+
+//   if (!SupervisorName || !ItemName || !ProcessName) {
+//     return res.status(400).json({
+//       error: "SupervisorName, ProcessName, and ItemName are required",
+//     });
 //   }
 
 //   try {
 //     const pool = await poolPromise;
 
-//     // Fetch Updated_Time and convert it to datetime
-//     const newProcessTimeResult = await pool
+//     // Fetch the Updated_Time from StagingTable
+//     const result = await pool
 //       .request()
 //       .input("ItemName", sql.NVarChar, ItemName)
 //       .query(`
-//         SELECT 
-//         ([Updated_Time]) AS NewProcessTime
+//         SELECT [Updated_Time] AS NewProcessTime
 //         FROM [dbo].[StagingTable]
-//         WHERE [ITEM NAME] = @ItemName;
+//         WHERE [ITEM NAME] = @ItemName
 //       `);
 
-//     if (newProcessTimeResult.recordset.length === 0) {
-//       return res.status(404).json({
-//         error: `ItemName not found in StagingTable: ${ItemName}`,
-//       });
+//     if (result.recordset.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ error: `ItemName not found in StagingTable: ${ItemName}` });
 //     }
 
-//     const newProcessTime = newProcessTimeResult.recordset[0].NewProcessTime;
+//     const rawUpdatedTime = result.recordset[0].NewProcessTime;
 
-//     if (!newProcessTime) {
-//       return res.status(400).json({
-//         error: `Invalid Updated_Time format for ItemName: ${ItemName}`,
-//       });
+//     if (!rawUpdatedTime) {
+//       return res
+//         .status(400)
+//         .json({ error: `Missing Updated_Time for ItemName: ${ItemName}` });
 //     }
 
-//     const confirmTime = new Date();
+//     // Use ConfirmTime from frontend if provided; fallback to server time in IST
+//     const confirmTime = ConfirmTime || formatDateTime(new Date());
 
 //     // Insert into ConfirmTime table
 //     await pool
 //       .request()
 //       .input("SupervisorName", sql.NVarChar, SupervisorName)
-//       .input("ConfirmTime", sql.DateTime, confirmTime)
-//       .input("NewProcessTime", sql.NVarChar, newProcessTime)
+//       .input("ConfirmTime", sql.NVarChar, confirmTime) // IST-confirmed time
+//       .input("NewProcessTime", sql.NVarChar, rawUpdatedTime) // As it is from StagingTable
+//       .input("LotId", sql.NVarChar, ItemName) // Lot ID (Item Name)
+//       .input("ProcessName", sql.NVarChar, ProcessName) // Process Name
 //       .query(`
-//         INSERT INTO [dbo].[ConfirmTime] ([SupervisorName], [ConfirmTime], [NewProcessTime])
-//         VALUES (@SupervisorName, @ConfirmTime, @NewProcessTime)
+//         INSERT INTO [dbo].[ConfirmTime] (
+//           [SupervisorName], [ConfirmTime], [NewProcessTime], [LOT_ID], [Process_Name]
+//         )
+//         VALUES (
+//           @SupervisorName, @ConfirmTime, @NewProcessTime, @LotId, @ProcessName
+//         )
 //       `);
+//       // .query(`
+//       //   INSERT INTO [dbo].[ConfirmTime] ([SupervisorName], [ConfirmTime], [NewProcessTime])
+//       //   VALUES (@SupervisorName, @ConfirmTime, @NewProcessTime)
+//       // `);
 
-//     // Update Updated_Time in StagingTable
+//     // Update the Updated_Time in StagingTable
 //     await pool
 //       .request()
-//       .input("Updated_Time", sql.DateTime, confirmTime)
+//       .input("Updated_Time", sql.NVarChar, confirmTime) // Update to current IST-confirmed time
 //       .input("ItemName", sql.NVarChar, ItemName)
 //       .query(`
 //         UPDATE [dbo].[StagingTable]
@@ -1795,90 +1998,6 @@ router.get("/first-process-count", async (req, res) => {
 //     res.status(500).json({ error: "Internal server error" });
 //   }
 // });
-
-
-// Function to format the current date-time into the required format
-const formatDateTime = (date) => {
-  const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-  const timeOptions = { hour: "2-digit", minute: "2-digit", hour12: true };
-
-  const formattedDate = date.toLocaleDateString("en-GB", options); // DD/MM/YYYY
-  const formattedTime = date.toLocaleTimeString("en-US", timeOptions); // hh:mm AM/PM
-
-  return `${formattedDate} : ${formattedTime}`;
-};
-
-// API to confirm and update records
-router.post("/confirm-process", async (req, res) => {
-  const { SupervisorName, ItemName } = req.body;
-
-  if (!SupervisorName || !ItemName) {
-    return res
-      .status(400)
-      .json({ error: "SupervisorName and ItemName are required" });
-  }
-
-  try {
-    const pool = await poolPromise;
-
-    // Fetch the Updated_Time from StagingTable
-    const result = await pool
-      .request()
-      .input("ItemName", sql.NVarChar, ItemName)
-      .query(`
-        SELECT [Updated_Time] AS NewProcessTime
-        FROM [dbo].[StagingTable]
-        WHERE [ITEM NAME] = @ItemName
-      `);
-
-    if (result.recordset.length === 0) {
-      return res
-        .status(404)
-        .json({ error: `ItemName not found in StagingTable: ${ItemName}` });
-    }
-
-    const rawUpdatedTime = result.recordset[0].NewProcessTime;
-
-    if (!rawUpdatedTime) {
-      return res
-        .status(400)
-        .json({ error: `Missing Updated_Time for ItemName: ${ItemName}` });
-    }
-
-    // Get the current time and format it
-    const confirmTime = formatDateTime(new Date());
-
-    // Insert into ConfirmTime table
-    await pool
-      .request()
-      .input("SupervisorName", sql.NVarChar, SupervisorName)
-      .input("ConfirmTime", sql.NVarChar, confirmTime) // Current Time in required format
-      .input("NewProcessTime", sql.NVarChar, rawUpdatedTime) // As it is from StagingTable
-      .query(`
-        INSERT INTO [dbo].[ConfirmTime] ([SupervisorName], [ConfirmTime], [NewProcessTime])
-        VALUES (@SupervisorName, @ConfirmTime, @NewProcessTime)
-      `);
-
-    // Update the Updated_Time in StagingTable
-    await pool
-      .request()
-      .input("Updated_Time", sql.NVarChar, confirmTime) // Update to current formatted time
-      .input("ItemName", sql.NVarChar, ItemName)
-      .query(`
-        UPDATE [dbo].[StagingTable]
-        SET [Updated_Time] = @Updated_Time
-        WHERE [ITEM NAME] = @ItemName
-      `);
-
-    res.status(200).json({
-      message: "Process confirmed and timestamps updated successfully",
-    });
-  } catch (error) {
-    console.error("Error in confirm-process API:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 
 
 // Fetch recent user activity
@@ -1900,23 +2019,7 @@ router.get('/user-activity/recent', async (req, res) => {
   }
 });
 
-// router.get('/user-activity/recent', async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
-//     const result = await pool.request().query(`
-//       SELECT COUNT(*) AS ChangeCount
-//       FROM [dbo].[UserActivity]
-//       WHERE 
-//         DATEDIFF(SECOND, LoginTime, GETDATE()) < 10 
-//         OR DATEDIFF(SECOND, LogoutTime, GETDATE()) < 10
-//     `);
 
-//     res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
-//   } catch (error) {
-//     console.error('Error fetching recent user activity:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// });
 
 //// Fetch all user activity
 router.get('/user-activity', async (req, res) => {

@@ -6,6 +6,7 @@ import "../assets/CSS/Header.css"; // Import the custom CSS for styling
 import logo from "../assets/Img/Logo-1.png";
 import User from "../assets/Img/User.gif";
 import Bell from "../assets/Img/BellIcon.png";
+import moment from "moment-timezone";
 
 const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const { logout } = useContext(AuthContext);
@@ -14,28 +15,9 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const [processData, setProcessData] = useState([]);
   const [showModal, setShowModal] = useState(false);
-
-  //  useEffect(() => {
-  //   const fetchProcessCount = async () => {
-  //     try {
-  //       const response = await axiosInstance.get("/api/first-process-count");
-  //       const data = response.data;
-
-  //       // Filter data based on the logged-in supervisor's name
-  //       const supervisorData = data.find(
-  //         (item) => item.Supervisor === user?.Name
-  //       );
-
-  //       // Update the process count
-  //       setProcessCount(supervisorData ? supervisorData.Count : 0);
-  //     } catch (error) {
-  //       console.error("Error fetching process count:", error);
-  //       setProcessCount(0); // Set to 0 in case of error
-  //     }
-  //   };
-
-  //   fetchProcessCount();
-  // }, [user?.Name])
+  const [delayedProcesses, setDelayedProcesses] = useState([]); // Delayed processes for admin
+  const [showDelayedModal, setShowDelayedModal] = useState(false); // New modal for delayed processes
+ 
 
   useEffect(() => {
     const fetchProcessData = async () => {
@@ -54,9 +36,25 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       }
     };
 
-    fetchProcessData();
-  }, [user?.Name]);
+    const fetchDelayedProcesses = async () => {
+      try {
+        const response = await axiosInstance.get("/api/delayed-processes");
+        setDelayedProcesses(response.data); // Update state with delayed processes
+      } catch (error) {
+        console.error("Error fetching delayed processes:", error);
+      }
+    };
 
+    fetchProcessData();
+    if (user?.Auth === "Admin") {
+      fetchDelayedProcesses();
+    }
+  }, [user?.Name, user?.Auth]);
+
+  //   fetchProcessData();
+  // }, [user?.Name]);
+
+  ///Confirm Process Modification 30 Dec  
   const handleConfirm = async (processName, itemName) => {
     try {
 
@@ -68,17 +66,21 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
 
     // Proceed only if the user confirms
     if (!isConfirmed) {
-      // showAlert(`${processName} - ${itemName} confirmation canceled.`, "info");
       return;
     }
-
-      // Get the logged-in user's name (Supervisor Name)
-      const supervisorName = user?.Name;
   
+    // Get the current time in IST
+    const currentISTTime = moment().tz("Asia/Kolkata").format("DD/MM/YYYY : hh:mm A");
+    // Get the ConfirmBy value from localStorage
+    const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
       // Make an API call to the confirm-process endpoint
       await axiosInstance.post("/api/confirm-process", {
-        SupervisorName: supervisorName,
-        ItemName: itemName,
+        // SupervisorName: supervisorName,
+        // ItemName: itemName,
+        // ProcessName: processName, // Include Process Name
+        LotId: itemName,
+        ConfirmTime: currentISTTime, // Send IST-confirmed time explicitly
+        ConfirmBy: confirmBy, // Pass ConfirmBy
       });
     
       // Handle successful response
@@ -90,6 +92,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       setProcessData((prevData) =>
         prevData.filter((process) => process["ITEM NAME"] !== itemName)
       );
+      
     } catch (error) {
       console.error("Error confirming process:", error);
       alert(
@@ -124,6 +127,45 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
     showAlert("Process completed successfully!", "success");
   };
 
+
+
+  const handleAdminDone = async (lotId) => {
+    try {
+      const isConfirmed = window.confirm(
+        `Are you sure you want to mark this process as Done for LOT_ID: ${lotId}?`
+      );
+  
+      if (!isConfirmed) return;
+  
+      const currentISTTime = moment()
+        .tz("Asia/Kolkata")
+        .format("DD/MM/YYYY : hh:mm A");
+
+            // Get the ConfirmBy value from localStorage
+      const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
+
+      await axiosInstance.post("/api/confirm-process", {
+        LotId: lotId,
+        ConfirmTime: currentISTTime,
+        ConfirmBy: confirmBy, // Pass ConfirmBy
+      });
+  
+      showAlert(`Process marked as Done for LOT_ID: ${lotId}`, "success");
+  
+      // Refetch delayed processes to update the table
+      const response = await axiosInstance.get("/api/delayed-processes");
+      setDelayedProcesses(response.data); // Update state with the latest data
+    } catch (error) {
+      console.error("Error marking process as Done:", error);
+      alert(
+        error.response?.data?.error ||
+          "Failed to mark process as Done. Please try again."
+      );
+    }
+  };
+
+  
+  
   return (
     <div>
            <div id="alertPlaceholder"></div>
@@ -174,7 +216,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
 
             <span style={{ marginLeft: "-21rem" }}>
               {/* Conditionally Render Bell Icon for Supervisors */}
-              {user?.Auth === "Supervisor" && (
+              {user?.Auth === "Supervisor"  && (
                 <a
                   name="Notification"
                   id="Notification"
@@ -184,6 +226,24 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   onClick={() => setShowModal(true)}
                 >
                  <span style={{ color: "red" }}>{processData.length}</span>
+                  <img
+                    src={Bell}
+                    className="img-fluid rounded-top"
+                    alt="Bell Icon"
+                    style={{ height: "20px", width: "20px" }}
+                  />
+                </a>
+              )}
+                {user?.Auth === "Admin" && (
+                <a
+                  name="AdminNotification"
+                  id="AdminNotification"
+                  className="btn"
+                  href="#"
+                  role="button"
+                  onClick={() => setShowDelayedModal(true)}
+                >
+                  <span style={{ color: "red" }}>{delayedProcesses.length}</span>
                   <img
                     src={Bell}
                     className="img-fluid rounded-top"
@@ -264,6 +324,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                 <table className="table table-bordered">
                   <thead>
                     <tr>
+                      {/* <th>Supervisor</th> */}
                       <th>Process Name</th>
                       <th>Item Name</th>
                       <th>Quantity</th>
@@ -273,6 +334,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   <tbody>
                     {processData.map((process, index) => (
                       <tr key={index}>
+                        {/* <td>{process["Supervisor"]}</td> */}
                         <td>{process["PROCESS NAME"]}</td>
                         <td>{process["ITEM NAME"]}</td>
                         <td>{process["QUANTITY"]}</td>
@@ -287,6 +349,54 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                             }
                           >
                             Confirm
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Admin Modal */}
+      {showDelayedModal && (
+        <div className="modal show" style={{ display: "block" }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Delayed Processes</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDelayedModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Supervisor</th>
+                      <th>Process Name</th>
+                      <th>Item Name</th>
+                      <th>New Process Time</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {delayedProcesses.map((process, index) => (
+                      <tr key={index}>
+                        <td>{process["SupervisorName"]}</td>
+                        <td>{process["PROCESS NAME"]}</td>
+                        <td>{process["ITEM NAME"]}</td>
+                        <td>{process["NewProcessTime"]}</td>
+                        <td>
+                          <button
+                            className="btn btn-outline-success"
+                            onClick={() => handleAdminDone(process["ITEM NAME"])}
+                          >
+                            Done
                           </button>
                         </td>
                       </tr>
