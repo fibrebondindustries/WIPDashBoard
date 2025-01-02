@@ -945,59 +945,59 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 
 
 // // Update /departments/update-resources Endpoint
-// router.post("/departments/update-resources", async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
+// // router.post("/departments/update-resources", async (req, res) => {
+// //   try {
+// //     const pool = await poolPromise;
 
-//     // Query to calculate present workers per department
-//     const presentWorkersQuery = `
-//       SELECT 
-//         Department,
-//         COUNT(EmployeeID) AS PresentWorkers
-//       FROM UserActivity
-//       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
-//       GROUP BY Department;
-//     `;
-//     const presentWorkers = await pool.request().query(presentWorkersQuery);
+// //     // Query to calculate present workers per department
+// //     const presentWorkersQuery = `
+// //       SELECT 
+// //         Department,
+// //         COUNT(EmployeeID) AS PresentWorkers
+// //       FROM UserActivity
+// //       WHERE CAST(LoginTime AS DATE) = CAST(GETDATE() AS DATE) AND LogoutTime IS NULL
+// //       GROUP BY Department;
+// //     `;
+// //     const presentWorkers = await pool.request().query(presentWorkersQuery);
 
-//     // Update all departments' AvailableResource and RequiredResource dynamically
-//     const departments = Object.keys(departmentRatios);
+// //     // Update all departments' AvailableResource and RequiredResource dynamically
+// //     const departments = Object.keys(departmentRatios);
 
-//     for (const department of departments) {
-//       const lotSize = 20000; // Default Lot Quantity
-//       const ratio = departmentRatios[department];
-//       const requiredWorkers = Math.ceil(lotSize / ratio);
+// //     for (const department of departments) {
+// //       const lotSize = 20000; // Default Lot Quantity
+// //       const ratio = departmentRatios[department];
+// //       const requiredWorkers = Math.ceil(lotSize / ratio);
 
-//       // Find available workers for the department
-//       const availableWorkers =
-//         presentWorkers.recordset.find((w) => w.Department === department)?.PresentWorkers || 0;
+// //       // Find available workers for the department
+// //       const availableWorkers =
+// //         presentWorkers.recordset.find((w) => w.Department === department)?.PresentWorkers || 0;
 
-//       await pool
-//         .request()
-//         .input("DepartmentName", sql.NVarChar, department)
-//         .input("LotQuantity", sql.Int, lotSize)
-//         .input("RequiredResource", sql.Int, requiredWorkers)
-//         .input("AvailableResource", sql.Int, availableWorkers)
-//         .query(`
-//           UPDATE Departments
-//           SET LotQuantity = @LotQuantity,
-//               RequiredResource = @RequiredResource,
-//               AvailableResource = @AvailableResource
-//           WHERE DepartmentName = @DepartmentName;
-//         `);
-//     }
+// //       await pool
+// //         .request()
+// //         .input("DepartmentName", sql.NVarChar, department)
+// //         .input("LotQuantity", sql.Int, lotSize)
+// //         .input("RequiredResource", sql.Int, requiredWorkers)
+// //         .input("AvailableResource", sql.Int, availableWorkers)
+// //         .query(`
+// //           UPDATE Departments
+// //           SET LotQuantity = @LotQuantity,
+// //               RequiredResource = @RequiredResource,
+// //               AvailableResource = @AvailableResource
+// //           WHERE DepartmentName = @DepartmentName;
+// //         `);
+// //     }
 
-//     res.status(200).json({ message: "Resources updated successfully!" });
-//   } catch (error) {
-//     console.error("Error updating available resources:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
-
+// //     res.status(200).json({ message: "Resources updated successfully!" });
+// //   } catch (error) {
+// //     console.error("Error updating available resources:", error);
+// //     res.status(500).json({ error: "Internal server error" });
+// //   }
+// // });
 
 
-// Update /departments/update-lot Endpoint /// not in use
+
+
+// // Update /departments/update-lot Endpoint /// not in use
 
 
 // router.post("/departments/update-resources", async (req, res) => {
@@ -1051,6 +1051,8 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 //   }
 // });
 
+
+/// new code 
 router.post("/departments/update-resources", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -2001,23 +2003,54 @@ router.get("/delayed-processes", async (req, res) => {
 
 
 // Fetch recent user activity
+// router.get('/user-activity/recent', async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(`
+//       SELECT COUNT(*) AS ChangeCount
+//       FROM [dbo].[UserActivity]
+//       WHERE 
+//         LoginTime > DATEADD(MILLISECOND, -2000, GETDATE()) 
+//         OR LogoutTime > DATEADD(MILLISECOND, -2000, GETDATE())
+//     `);
+
+//     res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
+//   } catch (error) {
+//     console.error('Error fetching recent user activity:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });
+
+
 router.get('/user-activity/recent', async (req, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query(`
-      SELECT COUNT(*) AS ChangeCount
-      FROM [dbo].[UserActivity]
-      WHERE 
-        LoginTime > DATEADD(MILLISECOND, -2000, GETDATE()) 
-        OR LogoutTime > DATEADD(MILLISECOND, -2000, GETDATE())
-    `);
 
-    res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
-  } catch (error) {
-    console.error('Error fetching recent user activity:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+    // Query to detect changes in LoginTime, LogoutTime, or Department for active employees
+    const result = await pool.request().query(`
+        SELECT COUNT(*) AS ChangeCount
+        FROM [dbo].[UserActivity] UA
+        INNER JOIN [dbo].[Emp_Master] EM ON UA.EmployeeID = EM.EmployeeID
+        WHERE 
+          (
+            UA.LoginTime > DATEADD(MILLISECOND, -2000, GETDATE()) 
+            OR UA.LogoutTime > DATEADD(MILLISECOND, -2000, GETDATE())
+          )
+          OR (
+            UA.LogoutTime IS NULL -- Only check active users
+            AND UA.Department <> EM.[Department] -- Detect department change
+          );
+    `);
+  // Respond with activity detection status
+  res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
+} catch (error) {
+  console.error('Error fetching recent user activity:', error);
+  res.status(500).json({ error: 'Internal server error' });
+}
 });
+
+
+
 
 
 

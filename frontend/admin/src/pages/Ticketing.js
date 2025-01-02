@@ -174,10 +174,53 @@ useEffect(() => {
   // Table Columns
   const columns = [
     { name: "Ticket Number", selector: (row) => row.ID, sortable: true },
-    { name: "Category", selector: (row) => row.Category, sortable: true },
-    { name: "Subject", selector: (row) => row.Subject, sortable: true },
-    { name: "Brief Description", selector: (row) => row.Brief_Description, sortable: true },
-    { name: "Supervisor Name", selector: (row) => row.Supervisor_Name, sortable: true },
+    // { name: "Category", selector: (row) => row.Category, sortable: true },
+    // { name: "Subject", selector: (row) => row.Subject, sortable: true },
+    // { name: "Brief Description", selector: (row) => row.Brief_Description, sortable: true },
+    { name: "Category", selector: (row) => (
+      <span
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title={`${row.Category}`}
+      >
+        {row.Category}
+      </span>
+    ), sortable: true },
+    {
+      name: "Subject",
+      selector: (row) => (
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title={`${row.Subject}`}
+        >
+          {row.Subject}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      name: "Brief Description",
+      selector: (row) => (
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title={`${row.Brief_Description}`}
+        >
+          {row.Brief_Description}
+        </span>
+      ),
+      sortable: true,
+    },
+    { name: "Supervisor Name", selector: (row) =>(
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={`${row.Supervisor_Name}`}
+      >
+        {row.Supervisor_Name}
+      </span>
+    ), sortable: true },
     { name: "Priority", selector: (row) => row.Priority, sortable: true },
     {
       name: "Status",

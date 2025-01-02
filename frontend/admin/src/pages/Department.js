@@ -172,6 +172,17 @@ function Department() {
       // fetchUsers();
       // fetchPresentEmployees();
       fetchTemporaryDepartments(); // Fetch updated temporary department data
+
+        // Add a 5-second delay before triggering the update-resources API
+    setTimeout(async () => {
+      try {
+        await axiosInstance.post("/api/departments/update-resources");
+        console.log("Resources updated successfully after restore!");
+      } catch (error) {
+        console.error("Error updating resources after restore:", error);
+        showAlert("Failed to update resources after restore.", "danger");
+      }
+    }, 2000); // 5000 milliseconds = 5 seconds
     } catch (error) {
       console.error("Error restoring department:", error);
       showAlert("Failed to restore department.", "danger");
