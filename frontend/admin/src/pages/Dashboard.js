@@ -526,13 +526,6 @@ function Dashboard() {
           isSidebarVisible={isSidebarVisible}
         />
         <main className="main-container p-4">
-          {/* <div className="justify-content-start mb-3" style={{display:"grid", fontSize:"12px"}}>
-          <span><strong style={{color:"red"}}>Red: </strong>Over Capacity (Above <strong>23000</strong>)</span>
-          <span><strong style={{color:"green"}}>Green: </strong>All Okay </span>
-          <span><strong style={{color:"orange"}}>Orange: </strong>Under Capacity (Below <strong>19000</strong>)</span>
-          <span><strong style={{color:"blue"}}>Blue: </strong>Process Issue Pending </span>
-          <span><strong style={{color:"#cc66ff"}}>Lavender: </strong>Less Workers </span>
-          </div> */}
           <table
             style={{
               width: "100%",

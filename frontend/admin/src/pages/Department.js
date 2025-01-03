@@ -30,8 +30,6 @@ function Department() {
     const filtered = users.filter(
       (user) =>
         (user.Name && user.Name.toLowerCase().includes(searchText.toLowerCase())) ||
-        // (user.Email && user.Email.toLowerCase().includes(searchText.toLowerCase())) ||
-        // (user.Mobile && user.Mobile.toString().includes(searchText.toLowerCase())) ||
         (user.Auth && user.Auth.toLowerCase().includes(searchText.toLowerCase())) ||
         (user.EmployeeID && user.EmployeeID.toLowerCase().includes(searchText.toLowerCase())) ||
         (user.Department && user.Department.toLowerCase().includes(searchText.toLowerCase()))
@@ -346,29 +344,12 @@ function Department() {
                       Assign a temporary department to <strong>{selectedUser?.Name}</strong> (
                       {selectedUser?.EmployeeID}):
                     </p>
-                    {/* <select
-                      className="form-control"
-                      value={temporaryDepartment}
-                      onChange={(e) => setTemporaryDepartment(e.target.value)}
-                    >
-                      <option value="">Select Department</option>
-                      <option value="FOAM CUTTING">FOAM CUTTING</option>
-                      <option value="GLUING">GLUING</option>
-                      <option value="BELT CUTTING DEPT">BELT CUTTING DEPT</option>
-                      <option value="PRESSING">PRESSING</option>
-                      <option value="SEWING DEPARTMENT">SEWING DEPARTMENT</option>
-              
-                    </select> */}
+                    
                     <select
                     className="form-control"
                     value={temporaryDepartment}
                     onChange={(e) => setTemporaryDepartment(e.target.value)}
                   >
-                    {/* <option value="">Select Department</option>
-                    {departments.map((dept, index) => (
-                      <option key={index} value={dept.DepartmentName}>
-                        {dept.DepartmentName}
-                      </option> */}
                       <option value="">Select Department</option>
                           {departments.map((dept, index) => (
                         <option key={index} value={dept}>

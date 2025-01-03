@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback  } from "react";
 import DataTable from "react-data-table-component";
 import axiosInstance from "../axiosConfig";
@@ -78,18 +77,7 @@ useEffect(() => {
   applyFilters();
 }, [applyFilters]); // use applyFilters as a dependency
 
-  // Update Ticket Status Inline
-  // const handleStatusChange = async (id, newStatus) => {
-  //   try {
-  //     await axiosInstance.patch(`/api/tickets/${id}`, { Status: newStatus });
-     
-  //     fetchTickets();
-      
-  //   } catch (error) {
-  //     console.error("Error updating status:", error);
-  //     alert("Failed to update status");
-  //   }
-  // };
+
   const handleStatusChange = async (id, newStatus) => {
     try {
       await axiosInstance.patch(`/api/tickets/${id}`, { Status: newStatus });
@@ -179,7 +167,7 @@ useEffect(() => {
     // { name: "Brief Description", selector: (row) => row.Brief_Description, sortable: true },
     { name: "Category", selector: (row) => (
       <span
-        data-bs-toggle="tooltip"
+        data-bs-toggle="tooltip" /// add tooltip on  01 jan 2025
         data-bs-placement="top"
         title={`${row.Category}`}
       >

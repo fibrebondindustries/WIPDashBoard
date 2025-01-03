@@ -17,7 +17,9 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const [showModal, setShowModal] = useState(false);
   const [delayedProcesses, setDelayedProcesses] = useState([]); // Delayed processes for admin
   const [showDelayedModal, setShowDelayedModal] = useState(false); // New modal for delayed processes
- 
+  const [delayed24hrProcesses, setDelayed24hrProcesses] = useState([]); // Delayed processes for superadmin
+  const [showDelayed24hrModal, setShowDelayed24hrModal] = useState(false);  // New modal for 24hr delayed processes // 03 Jan 25 yogesh
+  
 
   useEffect(() => {
     const fetchProcessData = async () => {
@@ -155,6 +157,10 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       // Refetch delayed processes to update the table
       const response = await axiosInstance.get("/api/delayed-processes");
       setDelayedProcesses(response.data); // Update state with the latest data
+
+      // Refetch 24hr delayed processes to update the table // 03 Jan 25 yogesh
+      const response24hr = await axiosInstance.get("/api/delayed-24hr-processes");
+      setDelayed24hrProcesses(response24hr.data); // Update state with the latest data
     } catch (error) {
       console.error("Error marking process as Done:", error);
       alert(
@@ -164,7 +170,22 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
     }
   };
 
+  // Show 24hr delayed processes // 03 Jan 25 yogesh
+  const fetchDelayed24hrProcesses = async () => {  
+    try {
+      const response = await axiosInstance.get("/api/delayed-24hr-processes");
+      setDelayed24hrProcesses(response.data);
+    } catch (error) {
+      console.error("Error fetching 24hr delayed processes:", error);
+    }
+  };
   
+  useEffect(() => {
+    if (user?.Auth === "SuperAdmin") {
+      fetchDelayed24hrProcesses();
+    }
+  }, [user?.Auth]);
+
   
   return (
     <div>
@@ -244,6 +265,24 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   onClick={() => setShowDelayedModal(true)}
                 >
                   <span style={{ color: "red" }}>{delayedProcesses.length}</span>
+                  <img
+                    src={Bell}
+                    className="img-fluid rounded-top"
+                    alt="Bell Icon"
+                    style={{ height: "20px", width: "20px" }}
+                  />
+                </a>
+              )}
+              {user?.Auth === "SuperAdmin" && (
+                <a
+                  name="SuperAdminNotification"
+                  id="SuperAdminNotification"
+                  className="btn"
+                  href="#"
+                  role="button"
+                  onClick={() => setShowDelayed24hrModal(true)}
+                >
+                  <span style={{ color: "red" }}>{delayed24hrProcesses.length}</span>
                   <img
                     src={Bell}
                     className="img-fluid rounded-top"
@@ -380,6 +419,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                       <th>Supervisor</th>
                       <th>Process Name</th>
                       <th>Item Name</th>
+                      <th>Quantity</th>
                       <th>New Process Time</th>
                       <th>Action</th>
                     </tr>
@@ -390,6 +430,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                         <td>{process["SupervisorName"]}</td>
                         <td>{process["PROCESS NAME"]}</td>
                         <td>{process["ITEM NAME"]}</td>
+                        <td>{process["Quantity"]}</td>
                         <td>{process["NewProcessTime"]}</td>
                         <td>
                           <button
@@ -408,6 +449,57 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           </div>
         </div>
       )}
+      {/* SuperAdmin Modal */}
+      {showDelayed24hrModal && (
+        <div className="modal show" style={{ display: "block" }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">24-Hour Delayed Processes</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDelayed24hrModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Supervisor</th>
+                      <th>Process Name</th>
+                      <th>Item Name</th>
+                      <th>Quantity</th>
+                      <th>New Process Time</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {delayed24hrProcesses.map((process, index) => (
+                      <tr key={index}>
+                        <td>{process["SupervisorName"]}</td>
+                        <td>{process["PROCESS NAME"]}</td>
+                        <td>{process["ITEM NAME"]}</td>
+                        <td>{process["Quantity"]}</td>
+                        <td>{process["NewProcessTime"]}</td>
+                        <td>
+                          <button
+                            className="btn btn-outline-success"
+                            onClick={() => handleAdminDone(process["ITEM NAME"])}
+                          >
+                            Done
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

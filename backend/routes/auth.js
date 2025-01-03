@@ -3,51 +3,6 @@ const { poolPromise, sql } = require("../config/db");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 
-// Create an API endpoint to retrieve data
-// router.get("/data", async (req, res) => {
-//   try {
-//     const department = req.query.department; // Get department filter from query
-//     const jobOrderNo = req.query.jobOrderNo; // Get jobOrderNo filter from query
-//     const pool = await poolPromise;
-//     const request = pool.request();
-
-    // // Base query to join StagingTable with Description table
-    // let query = `
-    //         SELECT T1.*, T2.[Description]
-    //         FROM [dbo].[StagingTable] T1
-    //         LEFT JOIN [dbo].[Description] T2 ON T1.[JOB ORDER NO] = T2.[JOB ORDER NO]
-    //     `;
-
- 
-//     // Adding conditions based on provided filters
-//     if (department === "null") {
-//       // If department is 'null', filter for rows where DEPARTMENT IS NULL
-//       query += " WHERE T1.DEPARTMENT IS NULL";
-//     } else if (department && jobOrderNo) {
-//       // If both department and jobOrderNo are provided, filter by both
-//       query +=
-//         " WHERE T1.DEPARTMENT = @department AND T1.[JOB ORDER NO] = @jobOrderNo";
-//       request.input("department", sql.NVarChar, department);
-//       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
-//     } else if (department) {
-//       // If only department is provided, filter by department
-//       query += " WHERE T1.DEPARTMENT = @department";
-//       request.input("department", sql.NVarChar, department);
-//     } else if (jobOrderNo) {
-//       // If only jobOrderNo is provided, filter by jobOrderNo
-//       query += " WHERE T1.[JOB ORDER NO] = @jobOrderNo";
-//       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
-//     }
-
-//     const result = await request.query(query);
-//     res.json(result.recordset);
-//   } catch (err) {
-//     console.error("Query failed:", err);
-//     isDatabaseConnected = false; // Mark as disconnected if an error occurs
-//     res.status(500).send("Error fetching data");
-//   }
-// });
-
 
 router.get("/data", async (req, res) => {
   try {
@@ -190,7 +145,7 @@ HAVING
 });
 
 
-////Admin Dashboard 23 nov
+////Admin Dashboard 23 nov // yogesh 
 router.post("/signup", async (req, res) => {
   const { Name, Password, Auth, EmployeeID, Department } = req.body;
 
@@ -602,7 +557,7 @@ router.delete("/users/:employeeID", async (req, res) => {
 });
 
 
-//06 nov
+//06 nov // yogesh 
 router.get("/departments", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -615,7 +570,7 @@ router.get("/departments", async (req, res) => {
 });
 //end
 
-///27 Nov
+///27 Nov // yogesh 
 router.get("/presentEmployees", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -1372,6 +1327,9 @@ router.post("/tickets", async (req, res) => {
 
     const { Name, Department } = supervisor.recordset[0];
 
+
+    // Use formatted time in your query
+    const RaiseDateIST = formatDateTime(new Date()); // Current time in IST
     // Insert the ticket
     await pool
       .request()
@@ -1381,7 +1339,7 @@ router.post("/tickets", async (req, res) => {
       .input("Supervisor_Name", sql.NVarChar, Name)
       .input("Priority", sql.NVarChar, Priority)
       .input("Status", sql.NVarChar, "Open") // Default to "Open" if not provided
-      .input("RaiseDate", sql.DateTime, new Date())
+      .input("RaiseDate", sql.NVarChar, RaiseDateIST)
       .query(`
         INSERT INTO [dbo].[TICKETS] 
         (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, RaiseDate)
@@ -1571,10 +1529,14 @@ router.post("/tickets/confirm/:id", async (req, res) => {
 
     const ticketData = ticket.recordset[0];
 
-    // Ensure the ticket is Resolved before moving
+    // Ensure the ticket is Resolved before moving  // yogesh
     if (ticketData.Status !== "Resolved") {
       return res.status(400).json({ error: "Only resolved tickets can be confirmed" });
     }
+
+    // Format RaiseDate and SolvedDate to IST
+    const solvedDateIST = formatDateTime(new Date());
+    // const raiseDateIST = formatDateTime(new Date(ticketData.RaiseDate));
 
     // Move the ticket to Solved_Tickets table
     await pool
@@ -1586,8 +1548,8 @@ router.post("/tickets/confirm/:id", async (req, res) => {
       .input("Priority", sql.NVarChar, ticketData.Priority)
       .input("Status", sql.NVarChar, ticketData.Status)
       .input("ID", sql.Int, ticketData.ID)
-      .input("RaiseDate", sql.DateTime, ticketData.RaiseDate)
-      .input("SolvedDate", sql.DateTime, new Date())
+      .input("RaiseDate", sql.NVarChar, ticketData.RaiseDate)
+      .input("SolvedDate", sql.NVarChar, solvedDateIST)
       .query(`
         INSERT INTO [dbo].[Solved_Tickets]
         (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate)
@@ -1713,33 +1675,7 @@ router.get("/worker-allocation", async (req, res) => {
   }
 });
 
-// API to get the count of rows with FirstProcess = 'yes'
-// router.get("/first-process-count", async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
-//     const result = await pool
-//       .request()
-//       .query(`
-//         SELECT 
-//           [PROCESS NAME],
-//           [ITEM NAME],
-//           [QUANTITY],
-//           [Updated_Time],
-//           Supervisor,
-//           Department,
-//           COUNT(*) AS Count
-//         FROM [dbo].[StagingTable]
-//         WHERE [FirstProcess] = 'yes'
-//         GROUP BY [PROCESS NAME], [ITEM NAME], [QUANTITY],[Updated_Time], Supervisor, Department
-//       `);
-
-//     // Send the result as a response
-//     res.status(200).json(result.recordset);
-//   } catch (error) {
-//     console.error("Error fetching count for FirstProcess:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
+// API to get the count of rows with FirstProcess = 'yes' in StagingTable // Yogesh 28 Dec 2024
 router.get("/first-process-count", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -1766,8 +1702,6 @@ router.get("/first-process-count", async (req, res) => {
 });
 
 
-
-// API to confirm and update records
 // Function to format date-time in IST
 const formatDateTime = (date) => {
   const options = { year: "numeric", month: "2-digit", day: "2-digit" };
@@ -1904,7 +1838,8 @@ router.get("/delayed-processes", async (req, res) => {
           [Process_Name] AS [PROCESS NAME],
           [NewProcessTime],
           [ConfirmTime],
-          [ProcessDelay]
+          [ProcessDelay],
+          [Quantity]
         FROM [dbo].[ConfirmTime]
         WHERE [ProcessDelay] = 'Yes' AND [ConfirmTime] IS NULL
       `);
@@ -1916,93 +1851,36 @@ router.get("/delayed-processes", async (req, res) => {
   }
 });
 
+router.get("/delayed-24hr-processes", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool
+      .request()
+      .query(`
+        SELECT 
+          [SupervisorName],
+          [LOT_ID] AS [ITEM NAME],
+          [Process_Name] AS [PROCESS NAME],
+          [NewProcessTime],
+          [ConfirmTime],
+          [Pending24],
+          [Quantity]
+        FROM [dbo].[ConfirmTime]
+        WHERE [Pending24] = 'Yes' AND [ConfirmTime] IS NULL
+      `);
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching 24hr delayed processes:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 
 
-// API to confirm and update records
-// router.post("/confirm-process", async (req, res) => {
-//   const { SupervisorName, ItemName, ConfirmTime, ProcessName } = req.body;
-
-//   if (!SupervisorName || !ItemName || !ProcessName) {
-//     return res.status(400).json({
-//       error: "SupervisorName, ProcessName, and ItemName are required",
-//     });
-//   }
-
-//   try {
-//     const pool = await poolPromise;
-
-//     // Fetch the Updated_Time from StagingTable
-//     const result = await pool
-//       .request()
-//       .input("ItemName", sql.NVarChar, ItemName)
-//       .query(`
-//         SELECT [Updated_Time] AS NewProcessTime
-//         FROM [dbo].[StagingTable]
-//         WHERE [ITEM NAME] = @ItemName
-//       `);
-
-//     if (result.recordset.length === 0) {
-//       return res
-//         .status(404)
-//         .json({ error: `ItemName not found in StagingTable: ${ItemName}` });
-//     }
-
-//     const rawUpdatedTime = result.recordset[0].NewProcessTime;
-
-//     if (!rawUpdatedTime) {
-//       return res
-//         .status(400)
-//         .json({ error: `Missing Updated_Time for ItemName: ${ItemName}` });
-//     }
-
-//     // Use ConfirmTime from frontend if provided; fallback to server time in IST
-//     const confirmTime = ConfirmTime || formatDateTime(new Date());
-
-//     // Insert into ConfirmTime table
-//     await pool
-//       .request()
-//       .input("SupervisorName", sql.NVarChar, SupervisorName)
-//       .input("ConfirmTime", sql.NVarChar, confirmTime) // IST-confirmed time
-//       .input("NewProcessTime", sql.NVarChar, rawUpdatedTime) // As it is from StagingTable
-//       .input("LotId", sql.NVarChar, ItemName) // Lot ID (Item Name)
-//       .input("ProcessName", sql.NVarChar, ProcessName) // Process Name
-//       .query(`
-//         INSERT INTO [dbo].[ConfirmTime] (
-//           [SupervisorName], [ConfirmTime], [NewProcessTime], [LOT_ID], [Process_Name]
-//         )
-//         VALUES (
-//           @SupervisorName, @ConfirmTime, @NewProcessTime, @LotId, @ProcessName
-//         )
-//       `);
-//       // .query(`
-//       //   INSERT INTO [dbo].[ConfirmTime] ([SupervisorName], [ConfirmTime], [NewProcessTime])
-//       //   VALUES (@SupervisorName, @ConfirmTime, @NewProcessTime)
-//       // `);
-
-//     // Update the Updated_Time in StagingTable
-//     await pool
-//       .request()
-//       .input("Updated_Time", sql.NVarChar, confirmTime) // Update to current IST-confirmed time
-//       .input("ItemName", sql.NVarChar, ItemName)
-//       .query(`
-//         UPDATE [dbo].[StagingTable]
-//         SET [Updated_Time] = @Updated_Time
-//         WHERE [ITEM NAME] = @ItemName
-//       `);
-
-//     res.status(200).json({
-//       message: "Process confirmed and timestamps updated successfully",
-//     });
-//   } catch (error) {
-//     console.error("Error in confirm-process API:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
-
-// Fetch recent user activity
+// Fetch recent user activity 
 // router.get('/user-activity/recent', async (req, res) => {
 //   try {
 //     const pool = await poolPromise;
@@ -2022,12 +1900,13 @@ router.get("/delayed-processes", async (req, res) => {
 // });
 
 
+// Fetch recent user activity // yogesh 
 router.get('/user-activity/recent', async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // Query to detect changes in LoginTime, LogoutTime, or Department for active employees
-    const result = await pool.request().query(`
+    // Query to detect changes in LoginTime, LogoutTime, or Department for active employees /// Changes in Query // yogesh 01 jan 2025
+    const result = await pool.request().query(`  
         SELECT COUNT(*) AS ChangeCount
         FROM [dbo].[UserActivity] UA
         INNER JOIN [dbo].[Emp_Master] EM ON UA.EmployeeID = EM.EmployeeID

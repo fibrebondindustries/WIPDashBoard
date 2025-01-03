@@ -19,31 +19,7 @@ function UserDashboard() {
     return istTime.toISOString().replace("T", " ").slice(0, 19); // Format as 'YYYY-MM-DD HH:MM:SS'
   };
 
-  // Wrap handleLogout in useCallback to avoid redefinition on every render
-  // const handleLogout = useCallback(async () => {
-  //   const logoutTime = getISTTime(); // Use IST time
-  //   // const loginTime = localStorage.getItem('loginTime');
-
-  //   try {
-  //     // Send login and logout times to the server
-  //     await axiosInstance.post("/api/logout", {
-  //       EmployeeID: user?.EmployeeID,
-  //       //loginTime,
-  //       logoutTime,
-  //       //Department: user?.Department, // Include Department
-  //     });
-
-  //     // Clear local storage and context
-  //     localStorage.removeItem("loginTime");
-  //     localStorage.removeItem("user");
-  //     logout();
-  //     navigate("/"); // Redirect to login page
-  //   } catch (err) {
-  //     console.error("Error logging out:", err);
-  //   }
-  // }, [logout, navigate, user?.EmployeeID]);
-
-  /// 3 Dec
+  /// 3 Dec 24 //  yogesh
   // Fetch user department
   useEffect(() => {
     const fetchUsers = async () => {
@@ -131,29 +107,7 @@ function UserDashboard() {
     }
   };
   
-   // Handle "OUT" Button Click
-  //  const handleMarkOut = async () => {
-  //   const logoutTime = getISTTime();
-  //   if (!window.confirm("Are you sure you want to mark out?")) {
-  //     return;
-  //   }
-  //   try {
-  //     await axiosInstance.post("/api/logout", {
-  //       EmployeeID: user?.EmployeeID,
-  //       logoutTime: logoutTime,
-  //     });
 
-  //     showAlert("Marked Out successfully!" , "success");
-
-  //     // Clear local storage and navigate to login page
-  //     // localStorage.removeItem("user");
-  //     // localStorage.removeItem("loginTime");
-  //     //  navigate("/"); // Redirect to login page
-  //   } catch (err) {
-  //     console.error("Error marking logout time:", err);
-  //     showAlert("Failed to record logout time. Please try again.", "danger");
-  //   }
-  // };
   // Handle "OUT" Button Click
 const handleMarkOut = async () => {
    try {

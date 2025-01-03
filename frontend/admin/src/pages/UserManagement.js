@@ -307,16 +307,7 @@ function UserManagement() {
                         />
                       </div>
 
-                      {/* <div className="mb-3">
-                        <label className="form-label">Employee ID</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="newEmployeeID"
-                          value={formData.newEmployeeID}
-                          onChange={handleInputChange}
-                        />
-                      </div> */}
+                   
                       <div className="mb-3">
                         <label className="form-label">Department</label>
                         <select
