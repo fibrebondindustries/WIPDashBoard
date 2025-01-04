@@ -26,23 +26,28 @@ function UserManagement() {
   const [searchText, setSearchText] = useState(""); // Search text
   const [filteredUsers, setFilteredUsers] = useState([]); // Filtered data for the table
 
+  // Get the user object from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+
   useEffect(() => {
     fetchUsers();
   }, []);
-
 
   useEffect(() => {
     // Filter the users based on search text
     const filtered = users.filter(
       (user) =>
-        (user.Name && user.Name.toLowerCase().includes(searchText.toLowerCase())) ||
-        (user.Auth && user.Auth.toLowerCase().includes(searchText.toLowerCase())) ||
-        (user.EmployeeID && user.EmployeeID.toLowerCase().includes(searchText.toLowerCase())) ||
-        (user.Department && user.Department.toLowerCase().includes(searchText.toLowerCase()))
+        (user.Name &&
+          user.Name.toLowerCase().includes(searchText.toLowerCase())) ||
+        (user.Auth &&
+          user.Auth.toLowerCase().includes(searchText.toLowerCase())) ||
+        (user.EmployeeID &&
+          user.EmployeeID.toLowerCase().includes(searchText.toLowerCase())) ||
+        (user.Department &&
+          user.Department.toLowerCase().includes(searchText.toLowerCase()))
     );
     setFilteredUsers(filtered);
   }, [searchText, users]);
-  
 
   const fetchDepartments = async () => {
     try {
@@ -52,11 +57,11 @@ function UserManagement() {
       console.error("Error fetching departments:", error);
     }
   };
-  
+
   useEffect(() => {
     fetchDepartments();
   }, []);
-  
+
   const fetchUsers = async () => {
     try {
       const response = await axiosInstance.get("/api/AllUsers");
@@ -75,7 +80,9 @@ function UserManagement() {
     const alertPlaceholder = document.getElementById("alertPlaceholder");
     const alertHTML = `
       <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        <strong>${type === "success" ? "Success!" : "Error!"}</strong> ${message}
+        <strong>${
+          type === "success" ? "Success!" : "Error!"
+        }</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>`;
     alertPlaceholder.innerHTML = alertHTML;
@@ -84,12 +91,9 @@ function UserManagement() {
     }, 2000);
   };
 
-
-
-
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-  
+
     const transformedData = {
       Name: formData.name,
       // Email: formData.email,
@@ -101,15 +105,17 @@ function UserManagement() {
       Department: formData.department,
     };
 
-  
-
     try {
       if (selectedUserId) {
         // Update user
         transformedData.EmployeeID = formData.employeeID;
-       transformedData.NewEmployeeID = formData.newEmployeeID || formData.employeeID;
-        const response = await axiosInstance.put(`/api/users/${selectedUserId}`, transformedData);
-  
+        transformedData.NewEmployeeID =
+          formData.newEmployeeID || formData.employeeID;
+        const response = await axiosInstance.put(
+          `/api/users/${selectedUserId}`,
+          transformedData
+        );
+
         // Check for error response from backend
         if (response.data.error) {
           showAlert(response.data.error, "danger");
@@ -121,31 +127,40 @@ function UserManagement() {
         await axiosInstance.post("/api/signup", transformedData);
         showAlert("User added successfully!", "success");
       }
-  
+
       fetchUsers();
       setShowModal(false);
       resetForm();
     } catch (error) {
-      console.error("Error saving user:", error.response?.data || error.message);
-      showAlert(error.response?.data?.error || "An error occurred while saving the user.", "danger");
+      console.error(
+        "Error saving user:",
+        error.response?.data || error.message
+      );
+      showAlert(
+        error.response?.data?.error ||
+          "An error occurred while saving the user.",
+        "danger"
+      );
     }
   };
-  
+
   const handleDeleteUser = async () => {
     if (selectedRows.length === 0) {
       showAlert("Please select a user to delete!", "danger");
       return;
     }
 
-      // Get the name of the user being deleted
-      const userToDelete = selectedRows[0].Name;
+    // Get the name of the user being deleted
+    const userToDelete = selectedRows[0].Name;
 
-      // Show a confirmation dialog
-      const confirmDelete = window.confirm(`Are you sure you want to delete this user: ${userToDelete}?`);
+    // Show a confirmation dialog
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this user: ${userToDelete}?`
+    );
 
-      if (!confirmDelete) {
-        return; // Exit if the user cancels the action
-      }
+    if (!confirmDelete) {
+      return; // Exit if the user cancels the action
+    }
 
     try {
       // Assuming your backend can handle batch deletes; if not, loop through selectedRows
@@ -155,7 +170,10 @@ function UserManagement() {
       setSelectedRows([]);
       setToggleClearSelectedRows(!toggleClearSelectedRows);
     } catch (error) {
-      console.error("Error deleting user:", error.response?.data || error.message);
+      console.error(
+        "Error deleting user:",
+        error.response?.data || error.message
+      );
       showAlert("An error occurred while deleting the user.", "danger");
     }
   };
@@ -166,11 +184,10 @@ function UserManagement() {
       return;
     }
 
-
-  if (selectedRows.length > 1) {
-    showAlert("Select only one user to update!", "danger");
-    return;
-  }
+    if (selectedRows.length > 1) {
+      showAlert("Select only one user to update!", "danger");
+      return;
+    }
 
     const userToEdit = selectedRows[0];
     setSelectedUserId(userToEdit.EmployeeID);
@@ -222,36 +239,57 @@ function UserManagement() {
 
   return (
     <div className="d-flex">
-      <div className={isSidebarVisible ? "sidebar-container" : "sidebar-hidden"}>
+      <div
+        className={isSidebarVisible ? "sidebar-container" : "sidebar-hidden"}
+      >
         <Sidebar />
       </div>
       <div className="flex-grow-1">
-        <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
+        <Header
+          toggleSidebar={toggleSidebar}
+          isSidebarVisible={isSidebarVisible}
+        />
         <main className="main-container p-4">
-        <div id="alertPlaceholder"></div>
+          <div id="alertPlaceholder"></div>
           <div className="d-flex justify-content-between align-items-center">
             <h2 className="mb-5">Manage Users</h2>
             <div className="d-flex gap-2">
-            <button className="btn btn-outline-primary mb-5 " onClick={handleAddUserClick}>
-            Add New User
-          </button>
-          <button className="btn btn-outline-primary mb-5 " onClick={handleUpdateUser}>
-            Update User
-          </button>
-          <button className="btn btn-outline-danger mb-5" onClick={handleDeleteUser}>
-            Delete User
-          </button>
+              <button
+                className="btn btn-outline-primary mb-5 "
+                onClick={handleAddUserClick}
+              >
+                Add New User
+              </button>
+              <button
+                className="btn btn-outline-primary mb-5 "
+                onClick={handleUpdateUser}
+              >
+                Update User
+              </button>
+              <button
+                className="btn btn-outline-danger mb-5"
+                onClick={handleDeleteUser}
+              >
+                Delete User
+              </button>
             </div>
-        </div>
-
+          </div>
 
           {showModal && (
-            <div className="modal d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+            <div
+              className="modal d-block"
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+            >
               <div className="modal-dialog">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <h5 className="modal-title">{selectedUserId ? "Update User" : "Add New User"}</h5>
-                    <button className="btn-close" onClick={() => setShowModal(false)}></button>
+                    <h5 className="modal-title">
+                      {selectedUserId ? "Update User" : "Add New User"}
+                    </h5>
+                    <button
+                      className="btn-close"
+                      onClick={() => setShowModal(false)}
+                    ></button>
                   </div>
                   <form onSubmit={handleFormSubmit}>
                     <div className="modal-body">
@@ -275,7 +313,11 @@ function UserManagement() {
                           name="password"
                           value={formData.password}
                           onChange={handleInputChange}
-                          placeholder={selectedUserId ? "Leave blank to keep the same password" : "Enter a new password"}
+                          placeholder={
+                            selectedUserId
+                              ? "Leave blank to keep the same password"
+                              : "Enter a new password"
+                          }
                         />
                       </div>
                       <div className="mb-3">
@@ -290,24 +332,35 @@ function UserManagement() {
                           <option value="">Select Role</option>
                           <option value="Admin">Admin</option>
                           <option value="Supervisor">Supervisor</option>
-                          <option value="SuperAdmin">SuperAdmin</option>
+                          {user?.Auth === "SuperAdmin" && (
+                            <option value="SuperAdmin">SuperAdmin</option>
+                          )}
                           <option value="User">User</option>
                         </select>
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">{selectedUserId ? "New Employee ID" : "Employee ID"}</label>
+                        <label className="form-label">
+                          {selectedUserId ? "New Employee ID" : "Employee ID"}
+                        </label>
                         <input
                           type="text"
                           className="form-control"
                           name={selectedUserId ? "newEmployeeID" : "employeeID"} // Use newEmployeeID during updates
-                          value={selectedUserId ? formData.newEmployeeID : formData.employeeID} // Conditional value
+                          value={
+                            selectedUserId
+                              ? formData.newEmployeeID
+                              : formData.employeeID
+                          } // Conditional value
                           onChange={handleInputChange}
-                          placeholder={selectedUserId ? "Enter New Employee ID" : "Enter Employee ID"}
+                          placeholder={
+                            selectedUserId
+                              ? "Enter New Employee ID"
+                              : "Enter Employee ID"
+                          }
                           required
                         />
                       </div>
 
-                   
                       <div className="mb-3">
                         <label className="form-label">Department</label>
                         <select
@@ -318,13 +371,12 @@ function UserManagement() {
                           required
                         >
                           <option value="">Select Department</option>
-                          <option value="None">None</option>    
+                          <option value="None">None</option>
                           <option value="Reserve">Reserve worker</option>
                           {departments.map((dept, index) => (
                             <option key={index} value={dept}>
                               {dept}
                             </option>
-                            
                           ))}
                         </select>
                       </div>
@@ -346,14 +398,14 @@ function UserManagement() {
               </div>
             </div>
           )}
-        <div className="mb-3">
+          <div className="mb-3">
             <input
               type="text"
               className="form-control"
               placeholder="Search Users..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              style={{width:"auto"}}
+              style={{ width: "auto" }}
             />
           </div>
           <DataTable
@@ -371,4 +423,3 @@ function UserManagement() {
 }
 
 export default UserManagement;
-

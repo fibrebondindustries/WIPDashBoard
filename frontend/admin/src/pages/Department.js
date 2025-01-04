@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
@@ -16,7 +16,7 @@ function Department() {
   const [searchText, setSearchText] = useState(""); // Search text
   const [filteredUsers, setFilteredUsers] = useState([]); // Filtered data for the table
   const [departments, setDepartments] = useState([]);// load departments 
-
+  const [selectedStatus, setSelectedStatus] = useState(""); // Dropdown filter state
 
   useEffect(() => {
     fetchUsers();
@@ -24,6 +24,8 @@ function Department() {
     fetchTemporaryDepartments(); // Fetch temporary department data
     fetchDepartments(); // Fetch departments when the component mounts
   }, []);
+
+
 
   useEffect(() => {
     // Filter the users based on search text
@@ -90,19 +92,59 @@ function Department() {
     }, 2000);
   };
 
-  // // Check if Employee is Present
-  // const isEmployeePresent = (employeeID) => {
-  //   return presentEmployees.some((employee) => employee.EmployeeID === employeeID);
-  // };
-  const isEmployeePresent = (employeeID) => {
-    // console.log("Checking for EmployeeID:", employeeID);
-    const found = presentEmployees.some((employee) => {
-      // console.log("Checking employee:", employee);
-      return employee.EmployeeID === employeeID && employee.PresentEmployees > 0;
-    });
-    // console.log("Is Employee Present:", found);
-    return found;
-  };
+    // // Check if Employee is Present
+    // const isEmployeePresent = (employeeID) => {
+    //   // console.log("Checking for EmployeeID:", employeeID);
+    //   const found = presentEmployees.some((employee) => {
+    //     // console.log("Checking employee:", employee);
+    //     return employee.EmployeeID === employeeID && employee.PresentEmployees > 0;
+    //   });
+    //   // console.log("Is Employee Present:", found);
+    //   return found;
+    // };
+    const isEmployeePresent = useCallback(
+      (employeeID) => {
+        return presentEmployees.some(
+          (employee) => employee.EmployeeID === employeeID && employee.PresentEmployees > 0
+        );
+      },
+      [presentEmployees] // Dependencies of isEmployeePresent
+    );
+    
+
+    /// Apply Filters
+    const applyFilters = useCallback(() => {
+      const filtered = users.filter((user) => {
+        const matchesSearch =
+          searchText === "" ||
+          (user.Name && user.Name.toLowerCase().includes(searchText.toLowerCase())) ||
+          (user.Auth && user.Auth.toLowerCase().includes(searchText.toLowerCase()))||
+          (user.EmployeeID && user.EmployeeID.toLowerCase().includes(searchText.toLowerCase()))||
+          (user.Department && user.Department.toLowerCase().includes(searchText.toLowerCase()));
+    
+        const matchesStatus =
+          selectedStatus === "" ||
+          (selectedStatus === "Present" && isEmployeePresent(user.EmployeeID)) ||
+          (selectedStatus === "Absent" && !isEmployeePresent(user.EmployeeID));
+    
+        return matchesSearch && matchesStatus;
+      });
+    
+      setFilteredUsers(filtered);
+    }, [users, searchText, selectedStatus, isEmployeePresent]); // Remove presentEmployees
+    
+
+    // Trigger Filters When Data or Filter Changes
+    useEffect(() => {
+      applyFilters();
+    }, [applyFilters]);
+
+
+    // Handle Dropdown Change
+    const handleStatusChange = (e) => {
+      setSelectedStatus(e.target.value);
+    };
+
   
   const handleCloseAssignModal = () => {
     setShowAssignModal(false);
@@ -303,7 +345,7 @@ function Department() {
                 {presentEmployees.reduce((acc, curr) => acc + curr.PresentEmployees, 0)}
               </p>
             </div>
-          <div className="mb-3">
+          <div className="mb-3 d-flex gap-2">
             <input
               type="text"
               className="form-control"
@@ -312,6 +354,16 @@ function Department() {
               onChange={(e) => setSearchText(e.target.value)}
               style={{width:"auto"}}
             />
+             <select
+                className="form-select"
+                value={selectedStatus}
+                onChange={handleStatusChange}
+                style={{ width: "150px" }}
+              >
+                <option value="">All Employees</option>
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+              </select>
           </div>
           <DataTable
             columns={columns}

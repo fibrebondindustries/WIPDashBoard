@@ -399,10 +399,10 @@ useEffect(() => {
                       )}
                       </span>
                       <span>
-                      <strong>Standard Required Workers:</strong> {filteredRequiredResources}
+                      <strong>Quantity Wise Workers:</strong> {filteredRequiredResources}
                       </span>
                       <span>
-                      <strong>Total Required Workers:</strong>{" "}
+                      <strong>Workers To Fill:</strong>{" "}
                       {Math.max(
                         0,
                         filteredRequiredResources - filteredPresentEmployees.reduce(

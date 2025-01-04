@@ -41,12 +41,44 @@ function AdminTicketManagement() {
   }, []);
 
   // Search & Date Range Filtering
+  const parseCustomDate = (dateString) => {
+    if (!dateString || typeof dateString !== "string") {
+      // Return null if dateString is undefined, null, or not a string
+      return null;
+    }
+  
+    try {
+      // Split the date and time parts
+      const [datePart, timePart] = dateString.split(" : ");
+      if (!datePart || !timePart) {
+        // If either part is missing, return null
+        return null;
+      }
+  
+      const [day, month, year] = datePart.split("/").map(Number); // Assuming DD/MM/YYYY format
+      const [time, meridian] = timePart.split(" "); // Split time and AM/PM
+      const [hours, minutes] = time.split(":").map(Number);
+  
+      let normalizedHours = hours;
+      if (meridian === "PM" && hours !== 12) normalizedHours += 12;
+      if (meridian === "AM" && hours === 12) normalizedHours = 0;
+  
+      return new Date(year, month - 1, day, normalizedHours, minutes);
+    } catch (error) {
+      console.error("Error parsing date:", error, "Date String:", dateString);
+      return null; // Return null for invalid formats
+    }
+  };
+  
+  
+  
 // Inside your component
 const applyFilters = useCallback(() => {
   const { fromDate, toDate } = filters;
 
   const filtered = tickets.filter((ticket) => {
-    const ticketDate = new Date(ticket.RaiseDate);
+    const ticketDate = parseCustomDate(ticket.RaiseDate);
+    if (!ticketDate) return false; // Skip tickets with invalid or missing dates
 
     const matchesSearch =
       searchText === "" ||
@@ -65,13 +97,46 @@ const applyFilters = useCallback(() => {
 
     const matchesDate =
       (fromDate === "" || ticketDate >= new Date(fromDate)) &&
-      (toDate === "" || ticketDate <= new Date(toDate));
+      (toDate === "" || ticketDate <= new Date(toDate).setHours(23, 59, 59, 999));
 
     return matchesSearch && matchesDate;
   });
 
   setFilteredTickets(filtered);
-}, [tickets, filters, searchText]); // Add proper dependencies here
+}, [tickets, filters, searchText]);
+
+
+
+// const applyFilters = useCallback(() => {
+//   const { fromDate, toDate } = filters;
+
+//   const filtered = tickets.filter((ticket) => {
+//     const ticketDate = new Date(ticket.RaiseDate);
+
+//     const matchesSearch =
+//       searchText === "" ||
+//       [
+//         ticket.ID,
+//         ticket.Category,
+//         ticket.Subject,
+//         ticket.Brief_Description,
+//         ticket.Supervisor_Name,
+//         ticket.Priority,
+//         ticket.Status,
+//       ]
+//         .join(" ")
+//         .toLowerCase()
+//         .includes(searchText.toLowerCase());
+
+//     const matchesDate =
+//       (fromDate === "" || ticketDate >= new Date(fromDate)) &&
+//       (toDate === "" || ticketDate <= new Date(toDate));
+
+//     return matchesSearch && matchesDate;
+//   });
+
+//   setFilteredTickets(filtered);
+// }, [tickets, filters, searchText]); // Add proper dependencies here
 
 useEffect(() => {
   applyFilters();
@@ -221,13 +286,33 @@ useEffect(() => {
           <option value="Open">Open</option>
           <option value="In Progress">In Progress</option>
           <option value="Resolved">Resolved</option>
-          {/* <option value="Closed">Closed</option> */}
+          {/* <option value="Closed">Closed</option>*/}
         </select>
       ),
     },
-    { name: "Raise Date", selector: (row) => row.RaiseDate.split("T")[0], sortable: true },
+    { name: "Raise Date", selector: (row) =>(
+      <span data-bs-toggle="tooltip" data-bs-placement="top" title={formatDateTime(row.RaiseDate)}>
+        {/* {formatDateTime(row.RaiseDate)} */}
+        {row.RaiseDate}
+      </span>
+    ), sortable: true },
   ];
-
+  const formatDateTime = (date) => {
+    if (!date) return "N/A"; // Handle undefined/null dates gracefully
+    const options = { year: "numeric", month: "2-digit", day: "2-digit" };
+    const timeOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata", // Use IST timezone
+    };
+  
+    const formattedDate = new Date(date).toLocaleDateString("en-GB", options); // DD/MM/YYYY
+    const formattedTime = new Date(date).toLocaleTimeString("en-IN", timeOptions); // hh:mm AM/PM
+  
+    return `${formattedDate} : ${formattedTime}`;
+  };
+  
   return (
     <div className="d-flex dashboard">
       <div className={isSidebarVisible ? "sidebar-container" : "sidebar-hidden"}>
