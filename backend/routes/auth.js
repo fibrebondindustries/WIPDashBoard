@@ -453,10 +453,10 @@ router.get("/users/:employeeID", async (req, res) => {
   }
 });
 
-///update user
+///update user // modified on 07 jan 2025 // yogesh
 router.put("/users/:employeeID", async (req, res) => {
   const { employeeID } = req.params;
-  const { Name, Auth, Department, Password, NewEmployeeID  } = req.body;
+  const { Name, Auth, Department, Password, NewEmployeeID, OldPassword } = req.body;
 
  
   if (!Name) {
@@ -489,6 +489,15 @@ router.put("/users/:employeeID", async (req, res) => {
     let hashedPassword = existingUser.Password; // Default to existing password
 
     if (Password && Password.trim() !== "") {
+
+      if(!OldPassword || OldPassword.trim() === ""){ /// new condition added on 07 jan 2025 // yogesh 
+        return res.status(400).json({ error: "Old password is required to update the password." });
+      }
+      // Check if the old password matches the existing password /// new condition added on 07 jan 2025 // yogesh
+      const isOldPasswordMatch = await bcrypt.compare(OldPassword, existingUser.Password);
+      if (!isOldPasswordMatch) {
+        return res.status(400).json({ error: "Old password is incorrect." });
+      }
       // Check if the new password matches the existing one
       const isSamePassword = await bcrypt.compare(Password, existingUser.Password);
       if (isSamePassword) {
@@ -524,6 +533,8 @@ router.put("/users/:employeeID", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+///update user
+
 
 
 

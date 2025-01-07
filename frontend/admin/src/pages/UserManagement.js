@@ -10,9 +10,8 @@ function UserManagement() {
   const [users, setUsers] = useState([]); // User data
   const [formData, setFormData] = useState({
     name: "",
-    // email: "",
-    // mobile: "",
-    password: "",
+    password: "", 
+    oldPassword: "", // New field for old password
     auth: "",
     employeeID: "",
     newEmployeeID: "",
@@ -96,9 +95,9 @@ function UserManagement() {
 
     const transformedData = {
       Name: formData.name,
-      // Email: formData.email,
-      // Mobile: formData.mobile,
+      // Email: formData.email,     
       Password: formData.password, // Include password (may be empty)
+      OldPassword: formData.oldPassword, // Include old password
       Auth: formData.auth,
       EmployeeID: formData.employeeID,
       NewEmployeeID: selectedUserId ? formData.newEmployeeID : undefined, // Only include newEmployeeID during updates
@@ -193,9 +192,8 @@ function UserManagement() {
     setSelectedUserId(userToEdit.EmployeeID);
     setFormData({
       name: userToEdit.Name,
-      // email: userToEdit.Email,
-      // mobile: userToEdit.Mobile,
       password: "",
+      oldPassword:"", 
       auth: userToEdit.Auth,
       employeeID: userToEdit.EmployeeID,
       newEmployeeID: userToEdit.EmployeeID,
@@ -212,6 +210,7 @@ function UserManagement() {
     setFormData({
       name: "",
       password: "",
+      oldPassword: "",
       auth: "",
       employeeID: "",
       department: "",
@@ -305,6 +304,21 @@ function UserManagement() {
                           placeholder="Enter Name"
                         />
                       </div>
+                      {/* 07 jan 2025 -------- yogesh  */}
+                      {selectedUserId && (
+                        <div className="mb-3">
+                          <label className="form-label">Old Password</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="oldPassword"
+                            value={formData.oldPassword}
+                            onChange={handleInputChange}
+                            placeholder="Enter Old Password"
+                          />
+                        </div>
+                      )}
+
                       <div className="mb-3">
                         <label className="form-label">Password</label>
                         <input
