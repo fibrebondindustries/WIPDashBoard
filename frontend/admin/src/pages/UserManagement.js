@@ -344,10 +344,13 @@ function UserManagement() {
                           required
                         >
                           <option value="">Select Role</option>
-                          <option value="Admin">Admin</option>
+                        
                           <option value="Supervisor">Supervisor</option>
                           {user?.Auth === "SuperAdmin" && (
-                            <option value="SuperAdmin">SuperAdmin</option>
+                            <>
+                          <option value="Admin">Admin</option>                    
+                          <option value="SuperAdmin">SuperAdmin</option>
+                            </>
                           )}
                           <option value="User">User</option>
                         </select>

@@ -17,6 +17,7 @@ import BoxRMShortage from './WIP/BoxRMshortage';
 import TicketHome from './Tickets/Home';
 import AdminTicketManagement from './pages/Ticketing';
 import { PollingProvider  } from "./PollingContext";
+import Remarks from './pages/Remarks';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -93,6 +94,14 @@ function App() {
                         element={
                             <ProtectedRoute>
                                 <AdminTicketManagement />
+                            </ProtectedRoute>
+                        }
+                    />
+                     <Route
+                        path="/remarks"
+                        element={
+                            <ProtectedRoute>
+                                <Remarks />
                             </ProtectedRoute>
                         }
                     />

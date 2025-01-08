@@ -141,6 +141,18 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
+         {(user?.Auth === "Supervisor" || user?.Auth === "SuperAdmin") && (
+          <li className="nav-item">
+            <NavLink
+              to="/remarks"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Remarks
+            </NavLink>
+          </li>
+        )}
       </ul>
     </div>
   );

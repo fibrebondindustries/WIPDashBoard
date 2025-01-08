@@ -1457,7 +1457,7 @@ router.put("/tickets/:id", async (req, res) => {
 });
 
 
-// PATCH API to partially update a ticket
+// PATCH API to partially update a ticket // modificate on 08 jan 2025, store sovle date and confirm time // yogesh
 router.patch("/tickets/:id", async (req, res) => {
   const { id } = req.params;
   const fields = req.body; // Fields to update dynamically
@@ -1467,6 +1467,11 @@ router.patch("/tickets/:id", async (req, res) => {
       return res.status(400).json({ message: "No fields to update" });
     }
 
+    // Check if the status is being updated to 'Resolved'
+    const IsResolved = fields.Status && fields.Status.toLowerCase() === "resolved";
+    if(IsResolved){
+      fields.SolvedDate = formatDateTime(new Date()); // Set SolvedDate to current time in IST
+    }
     let setQuery = Object.keys(fields)
       .map((key) => `${key} = @${key}`)
       .join(", ");
@@ -1529,7 +1534,7 @@ router.post("/tickets/confirm/:id", async (req, res) => {
       .input("ID", sql.Int, id)
       .query(`
         SELECT 
-          Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate
+          Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate
         FROM [dbo].[TICKETS]
         WHERE ID = @ID
       `);
@@ -1546,7 +1551,7 @@ router.post("/tickets/confirm/:id", async (req, res) => {
     }
 
     // Format RaiseDate and SolvedDate to IST
-    const solvedDateIST = formatDateTime(new Date());
+    const confirmTimeIST  = formatDateTime(new Date());
     // const raiseDateIST = formatDateTime(new Date(ticketData.RaiseDate));
 
     // Move the ticket to Solved_Tickets table
@@ -1560,11 +1565,13 @@ router.post("/tickets/confirm/:id", async (req, res) => {
       .input("Status", sql.NVarChar, ticketData.Status)
       .input("ID", sql.Int, ticketData.ID)
       .input("RaiseDate", sql.NVarChar, ticketData.RaiseDate)
-      .input("SolvedDate", sql.NVarChar, solvedDateIST)
+      .input("SolvedDate", sql.NVarChar, ticketData.SolvedDate)
+      .input("ConfirmTime", sql.NVarChar, confirmTimeIST )
+      
       .query(`
         INSERT INTO [dbo].[Solved_Tickets]
-        (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate)
-        VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate)
+        (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, ConfirmTime)
+        VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate, @ConfirmTime)
       `);
 
     // Delete the ticket from TICKETS table
@@ -1962,9 +1969,130 @@ router.get('/user-activity', async (req, res) => {
 });
 
 
+// New POST API: Add a new remark
+router.post("/remarks", async (req, res) => {
+  const { SupervisorName, Department, Quantity, Remark } = req.body;
 
+  try {
+    if (!SupervisorName || !Department || !Quantity || !Remark) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
 
+    const RemarkDate = formatDateTime(new Date()); // Set the current date for RemarkDate
 
+    const query = `
+      INSERT INTO [dbo].[Remarks] (SupervisorName, Department, Quantity, Remark, RemarkDate)
+      VALUES (@SupervisorName, @Department, @Quantity, @Remark, @RemarkDate)
+    `;
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input("SupervisorName", sql.NVarChar, SupervisorName)
+      .input("Department", sql.NVarChar, Department)
+      .input("Quantity", sql.Int, Quantity)
+      .input("Remark", sql.NVarChar, Remark)
+      .input("RemarkDate", sql.NVarChar, RemarkDate)
+      .query(query);
+
+    res.status(201).json({ message: "Remark added successfully" });
+  } catch (error) {
+    console.error("Error adding remark:", error);
+    res.status(500).json({ error: "Failed to add remark" });
+  }
+});
+
+// PUT API: Update an existing remark
+router.put("/remarks/:id", async (req, res) => {
+  const { id } = req.params;
+  const { SupervisorName, Department, Quantity, Remark } = req.body;
+
+  try {
+    if (!SupervisorName || !Department || !Quantity || !Remark) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const RemarkDate = formatDateTime(new Date()); // Update the RemarkDate to current date
+
+    const query = `
+      UPDATE [dbo].[Remarks]
+      SET SupervisorName = @SupervisorName,
+          Department = @Department,
+          Quantity = @Quantity,
+          Remark = @Remark,
+          RemarkDate = @RemarkDate
+      WHERE ID = @ID
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input("ID", sql.Int, id)
+      .input("SupervisorName", sql.NVarChar, SupervisorName)
+      .input("Department", sql.NVarChar, Department)
+      .input("Quantity", sql.Int, Quantity)
+      .input("Remark", sql.NVarChar, Remark)
+      .input("RemarkDate", sql.NVarChar, RemarkDate)
+      .query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Remark not found" });
+    }
+
+    res.status(200).json({ message: "Remark updated successfully" });
+  } catch (error) {
+    console.error("Error updating remark:", error);
+    res.status(500).json({ error: "Failed to update remark" });
+  }
+});
+
+// DELETE API: Delete a remark
+router.delete("/remarks/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = `
+     UPDATE [dbo].[Remarks]
+     SET IsDeleted = 'Yes' 
+     WHERE ID = @ID
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input("ID", sql.Int, id)
+      .query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Remark not found" });
+    }
+
+    res.status(200).json({ message: "Remark deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting remark:", error);
+    res.status(500).json({ error: "Failed to delete remark" });
+  }
+});
+
+// GET API: Fetch all remarks
+router.get("/remarks", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        ID, SupervisorName, Department, Quantity, Remark, RemarkDate
+      FROM [dbo].[Remarks] WHERE IsDeleted = 'No'
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "No remarks found" });
+    }
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching remarks:", error);
+    res.status(500).json({ error: "Failed to fetch remarks" });
+  }
+});
 
 
 
