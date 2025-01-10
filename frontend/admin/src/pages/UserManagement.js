@@ -390,6 +390,7 @@ function UserManagement() {
                           <option value="">Select Department</option>
                           <option value="None">None</option>
                           <option value="Reserve">Reserve worker</option>
+                          <option value="Store">STORE</option>
                           {departments.map((dept, index) => (
                             <option key={index} value={dept}>
                               {dept}

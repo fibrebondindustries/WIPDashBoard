@@ -71,14 +71,6 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
-        {/* <li className="nav-item">
-          <NavLink
-            to="/department"
-            className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-          >
-            <i className="bi bi-calendar-check"></i> Department
-          </NavLink>
-        </li> */}
         {(user?.Auth === "Admin" || user?.Auth === "SuperAdmin") && (
           <li className="nav-item">
             <NavLink
@@ -91,13 +83,6 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
-        {/* <li className="nav-item">
-          <NavLink to="/workers"
-          className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-           >
-            <i className="bi bi-calendar-check"></i> Workers
-          </NavLink>
-        </li> */}
          {(user?.Auth === "Admin" || user?.Auth === "SuperAdmin") && (
           <li className="nav-item">
             <NavLink
@@ -153,6 +138,33 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
+        {/* New Module added on 10 jan 25 */}
+        {/* {user?.Auth === "Supervisor" && user?.Department === "Store" && (
+          <li className="nav-item">
+            <NavLink
+              to="/add-inventory"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-box-arrow-in"></i> Add Inventory
+            </NavLink>
+          </li>
+        )}
+
+        {user?.Auth === "Supervisor" && user?.Department === "NOKE" && (
+          <li className="nav-item">
+            <NavLink
+              to="/view-inventory"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-box-arrow-out"></i> View Inventory
+            </NavLink>
+          </li>
+        )} */}
+        {/* end */}
       </ul>
     </div>
   );

@@ -24,6 +24,7 @@ function Remarks() {
     Department: "",
     Quantity: "",
     Remark: "",
+    Category: "",
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -121,19 +122,13 @@ function Remarks() {
   // Submit New Remark
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
+    const dataToSend = { ...formData, Category: "Under Capacity" };
     try {
-      await axiosInstance.post("/api/remarks", formData);
+      await axiosInstance.post("/api/remarks", dataToSend);
       showAlert("Remark added successfully!", "success");
       resetFormAndCloseModal(() => setShowModal(false));
       fetchRemarks(); // Refresh remarks after creation
-    //   setShowModal(false);
-    //   fetchRemarks(); // Refresh remarks after creation
-    //   setFormData({
-    //     SupervisorName: user?.Name || "",
-    //     Department: "",
-    //     Quantity: "",
-    //     Remark: "",
-    //   });
     } catch (error) {
       console.error("Error creating remark:", error);
       showAlert("Failed to create remark.", "danger");
@@ -148,6 +143,7 @@ function Remarks() {
       return;
     }
 
+    // const dataToSend = { ...formData, Category: "Under Capacity" };
     try {
       await axiosInstance.put(`/api/remarks/${selectedRow.ID}`, formData); // Update the remark
       showAlert("Remark updated successfully!", "success");
@@ -192,6 +188,11 @@ function Remarks() {
     {
       name: "Department",
       selector: (row) => row.Department,
+      sortable: true,
+    },
+    {
+      name: "Category",
+      selector: (row) => row.Category,
       sortable: true,
     },
     {
@@ -336,6 +337,17 @@ function Remarks() {
                     />
                   </div>
                   <div className="mb-3">
+                    <label className="form-label">Category</label>
+                    <input
+                      type="text"
+                      name="Category"
+                      value={"Under Capacity"}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      readOnly
+                    />
+                  </div>
+                  <div className="mb-3">
                     <label className="form-label">Quantity</label>
                     <input
                       type="number"
@@ -414,6 +426,17 @@ function Remarks() {
                       className="form-control"
                       placeholder="Enter Department"
                       required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Category</label>
+                    <input
+                      type="text"
+                      name="Category"
+                      value={"Under Capacity"}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      readOnly
                     />
                   </div>
                   <div className="mb-3">

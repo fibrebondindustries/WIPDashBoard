@@ -1969,20 +1969,20 @@ router.get('/user-activity', async (req, res) => {
 });
 
 
-// New POST API: Add a new remark
+// New POST API: Add a new remark // 8 Jan 2025 // yogesh
 router.post("/remarks", async (req, res) => {
-  const { SupervisorName, Department, Quantity, Remark } = req.body;
+  const { SupervisorName, Department, Quantity, Remark, Category } = req.body;
 
   try {
-    if (!SupervisorName || !Department || !Quantity || !Remark) {
+    if (!SupervisorName || !Department || !Quantity || !Remark || !Category) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
     const RemarkDate = formatDateTime(new Date()); // Set the current date for RemarkDate
 
     const query = `
-      INSERT INTO [dbo].[Remarks] (SupervisorName, Department, Quantity, Remark, RemarkDate)
-      VALUES (@SupervisorName, @Department, @Quantity, @Remark, @RemarkDate)
+      INSERT INTO [dbo].[Remarks] (SupervisorName, Department, Quantity, Remark, RemarkDate, Category)
+      VALUES (@SupervisorName, @Department, @Quantity, @Remark, @RemarkDate, @Category)
     `;
 
     const pool = await poolPromise;
@@ -1992,6 +1992,7 @@ router.post("/remarks", async (req, res) => {
       .input("Quantity", sql.Int, Quantity)
       .input("Remark", sql.NVarChar, Remark)
       .input("RemarkDate", sql.NVarChar, RemarkDate)
+      .input("Category", sql.NVarChar, Category)
       .query(query);
 
     res.status(201).json({ message: "Remark added successfully" });
@@ -2011,7 +2012,7 @@ router.put("/remarks/:id", async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const RemarkDate = formatDateTime(new Date()); // Update the RemarkDate to current date
+    const UpdatedDate = formatDateTime(new Date()); // Update the RemarkDate to current date
 
     const query = `
       UPDATE [dbo].[Remarks]
@@ -2019,7 +2020,7 @@ router.put("/remarks/:id", async (req, res) => {
           Department = @Department,
           Quantity = @Quantity,
           Remark = @Remark,
-          RemarkDate = @RemarkDate
+          UpdatedDate = @UpdatedDate
       WHERE ID = @ID
     `;
 
@@ -2030,7 +2031,7 @@ router.put("/remarks/:id", async (req, res) => {
       .input("Department", sql.NVarChar, Department)
       .input("Quantity", sql.Int, Quantity)
       .input("Remark", sql.NVarChar, Remark)
-      .input("RemarkDate", sql.NVarChar, RemarkDate)
+      .input("UpdatedDate", sql.NVarChar, UpdatedDate)
       .query(query);
 
     if (result.rowsAffected[0] === 0) {
@@ -2076,7 +2077,7 @@ router.get("/remarks", async (req, res) => {
   try {
     const query = `
       SELECT 
-        ID, SupervisorName, Department, Quantity, Remark, RemarkDate
+        ID, SupervisorName, Department, Quantity, Remark, RemarkDate, Category
       FROM [dbo].[Remarks] WHERE IsDeleted = 'No'
     `;
 
