@@ -95,7 +95,7 @@ function Dashboard() {
         // Create filter buttons for each department "Yogesh"
         Object.keys(departmentGroups).forEach((department) => {
           const rows = departmentGroups[department];
-
+          const isRM = rows.some((row) => row.RawMaterial === "RmRequired"); // Check if RawMaterial is "RmRequired" //11 jan 25 yogesh
           // Check if any row in this department has PendingProcess: "Yes"
           const hasPendingProcess = rows.some(
             (row) => row["PendingProcess"] === "Yes"
@@ -111,7 +111,13 @@ function Dashboard() {
             <div class="button-content">
                 <span class="button-text" style="${
                   hasPendingProcess ? "color: #0033cc;" : ""
-                }">${department}</span>
+                }">${department} 
+                ${
+                  isRM
+                    ? '<sup style="font-size: 9px; color: rgb(10 183 0); font-weight: bold;">RM</sup>'
+                    : ""
+                }
+                </span>
               <span class="button-lights">
                 <label class="radio-wrapper">
                   <input type="radio" name="${department}-light" disabled ${

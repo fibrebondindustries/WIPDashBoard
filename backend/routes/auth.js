@@ -23,6 +23,8 @@ router.get("/data", async (req, res) => {
         T1.[DEPARTMENT],
         T1.[Updated_Time],
         T1.[PendingProcess],
+        T1.[Sequance],
+        T1.[RawMaterial],
         T2.[Description],
         WIP.[WorkerStatus],
         WIP.[Result],
@@ -47,6 +49,7 @@ router.get("/data", async (req, res) => {
       query += " WHERE T1.[JOB ORDER NO] = @jobOrderNo";
       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
     }
+      query += " ORDER BY T1.[Sequance] ASC"; // Order by sequence
 
     const result = await request.query(query);
     res.json(result.recordset);
