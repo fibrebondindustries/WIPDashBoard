@@ -769,7 +769,7 @@ router.get("/departments/worker-requirements", async (req, res) => {
               ('COLOUR DEPARTMENT', 1666),
               ('DESIGN DEPARTMENT', 2222),
               ('LOOPI DEPARTMENT', 2857),
-              ('PUCTURE DEPARTMENT', 2857),
+              ('PUCTURE DEPARTMENT', 10000), ---2857  old value
               ('BUCKLE STITCHING', 5000),
               ('BUCKLE BURNING', 10000),
               ('BELT CHECKING & CLEANING', 5000),
@@ -1696,33 +1696,6 @@ router.get("/worker-allocation", async (req, res) => {
   }
 });
 
-// API to get the count of rows with FirstProcess = 'yes' in StagingTable // Yogesh 28 Dec 2024
-router.get("/first-process-count", async (req, res) => {
-  try {
-    const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .query(`
-        SELECT 
-          [SupervisorName] AS Supervisor,
-          [Process_Name] AS [PROCESS NAME],
-          [LOT_ID] AS [ITEM NAME],
-          [NewProcessTime] AS Updated_Time,
-          [ConfirmTime],
-          [QUANTITY]
-        FROM [dbo].[ConfirmTime]
-        WHERE [ConfirmTime] IS NULL
-      `);
-
-    // Send the result as a response
-    res.status(200).json(result.recordset);
-  } catch (error) {
-    console.error("Error fetching process data:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
 // Function to format date-time in IST
 const formatDateTime = (date) => {
   const options = { year: "numeric", month: "2-digit", day: "2-digit" };
@@ -1797,7 +1770,120 @@ router.post("/auto-insert-first-process", async (req, res) => {
 });
 
 
-// API to handle Confirm button click
+// // API to get the count of rows with FirstProcess = 'yes' in StagingTable // Yogesh 28 Dec 2024
+// router.get("/first-process-count", async (req, res) => {
+//   try {
+//     const pool = await poolPromise;
+//     const result = await pool
+//       .request()
+//       .query(`
+//         SELECT 
+//           [SupervisorName] AS Supervisor,
+//           [Process_Name] AS [PROCESS NAME],
+//           [LOT_ID] AS [ITEM NAME],
+//           [NewProcessTime] AS Updated_Time,
+//           [ConfirmTime],
+//           [CompletedTime],
+//           [QUANTITY]
+//         FROM [dbo].[ConfirmTime]
+//         WHERE [CompletedTime] IS NULL
+//       `);
+
+      
+//     // Send the result as a response
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching process data:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+// API to get the count of rows with FirstProcess = 'yes' in StagingTable // Yogesh 28 Dec 2024
+router.get("/first-process-count", async (req, res) => {
+  const supervisorName = req.query.supervisorName; // Get SupervisorName from query parameters
+  try {
+    const pool = await poolPromise;
+    const request = pool.request(); // Initialize request object
+
+    // Base query
+    let query = `
+      SELECT 
+        [SupervisorName] AS Supervisor,
+        [Process_Name] AS [PROCESS NAME],
+        [LOT_ID] AS [ITEM NAME],
+        [NewProcessTime] AS Updated_Time,
+        [ConfirmTime],
+        [CompletedTime],
+        [QUANTITY]
+      FROM [dbo].[ConfirmTime]
+      WHERE [CompletedTime] IS NULL
+    `;
+
+    // Add condition if SupervisorName is provided
+    if (supervisorName) {
+      query += " AND [SupervisorName] = @SupervisorName";
+      request.input("SupervisorName", sql.NVarChar, supervisorName);
+    }
+
+    // Execute the query
+    const result = await request.query(query);
+
+    // Send the result as a response
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching process data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// API to handle done button click
+router.post("/completedTime-process", async (req, res) => {
+  const { LotId, CompletedTime, ConfirmBy } = req.body;
+
+  if (!LotId) {
+    return res.status(400).json({
+      error: "LotId is required",
+    });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Use ConfirmTime from frontend if provided; fallback to server time in IST
+    const completedTime = CompletedTime || formatDateTime(new Date());
+
+    // Update ConfirmTime for the given LOT_ID
+    await pool
+      .request()
+      .input("CompletedTime", sql.NVarChar, completedTime)
+      .input("LotId", sql.NVarChar, LotId)
+      .input("ConfirmBy", sql.NVarChar, ConfirmBy)
+      .query(`
+        UPDATE [dbo].[ConfirmTime]
+        SET [CompletedTime] = @CompletedTime,
+         [ConfirmBy] = @ConfirmBy
+        WHERE [LOT_ID] = @LotId
+      `);
+ // Update the Updated_Time in StagingTable
+    await pool
+      .request()
+      .input("Updated_Time", sql.NVarChar, completedTime) // Update to current IST-confirmed time
+      .input("ItemName", sql.NVarChar, LotId)
+      .query(`
+        UPDATE [dbo].[StagingTable]
+        SET [Updated_Time] = @Updated_Time
+        WHERE [ITEM NAME] = @ItemName
+      `);
+    res.status(200).json({
+      message: "Completed updated successfully.",
+    });
+  } catch (error) {
+    console.error("Error in CompletedTime-process API:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// API to handle confirm button click
 router.post("/confirm-process", async (req, res) => {
   const { LotId, ConfirmTime, ConfirmBy } = req.body;
 
@@ -1825,16 +1911,6 @@ router.post("/confirm-process", async (req, res) => {
          [ConfirmBy] = @ConfirmBy
         WHERE [LOT_ID] = @LotId
       `);
- // Update the Updated_Time in StagingTable
-    await pool
-      .request()
-      .input("Updated_Time", sql.NVarChar, confirmTime) // Update to current IST-confirmed time
-      .input("ItemName", sql.NVarChar, LotId)
-      .query(`
-        UPDATE [dbo].[StagingTable]
-        SET [Updated_Time] = @Updated_Time
-        WHERE [ITEM NAME] = @ItemName
-      `);
     res.status(200).json({
       message: "ConfirmTime updated successfully.",
     });
@@ -1843,6 +1919,7 @@ router.post("/confirm-process", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // API to get delayed processes
 router.get("/delayed-processes", async (req, res) => {
@@ -1859,10 +1936,11 @@ router.get("/delayed-processes", async (req, res) => {
           [Process_Name] AS [PROCESS NAME],
           [NewProcessTime],
           [ConfirmTime],
+           [CompletedTime],
           [ProcessDelay],
           [Quantity]
         FROM [dbo].[ConfirmTime]
-        WHERE [ProcessDelay] = 'Yes' AND [ConfirmTime] IS NULL
+        WHERE [ProcessDelay] = 'Yes' AND [CompletedTime] IS NULL
       `);
 
     res.status(200).json(result.recordset);
@@ -1885,10 +1963,11 @@ router.get("/delayed-24hr-processes", async (req, res) => {
           [Process_Name] AS [PROCESS NAME],
           [NewProcessTime],
           [ConfirmTime],
+          [CompletedTime],
           [Pending24],
           [Quantity]
         FROM [dbo].[ConfirmTime]
-        WHERE [Pending24] = 'Yes' AND [ConfirmTime] IS NULL
+        WHERE [Pending24] = 'Yes' AND [CompletedTime] IS NULL
       `);
 
     res.status(200).json(result.recordset);
@@ -1898,27 +1977,37 @@ router.get("/delayed-24hr-processes", async (req, res) => {
   }
 });
 
+router.get("/All-processes", async (req, res) => {
+  try {
+    const pool = await poolPromise;
 
+    // Query to fetch delayed processes
+    const result = await pool
+      .request()
+      .query(`
+        SELECT 
+          [SupervisorName],
+          [LOT_ID] AS [ITEM NAME],
+          [Process_Name] AS [PROCESS NAME],
+          [NewProcessTime],
+          [ConfirmTime],
+           [CompletedTime],
+          [ProcessDelay],
+          [Quantity]
+        FROM [dbo].[ConfirmTime]        
+      `);
 
+    // Add filtering for SupervisorName 
+    if (supervisorName) {
+      query += " WHERE [SupervisorName] = @SupervisorName";
+    }
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching delayed processes:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
-// Fetch recent user activity 
-// router.get('/user-activity/recent', async (req, res) => {
-//   try {
-//     const pool = await poolPromise;
-//     const result = await pool.request().query(`
-//       SELECT COUNT(*) AS ChangeCount
-//       FROM [dbo].[UserActivity]
-//       WHERE 
-//         LoginTime > DATEADD(MILLISECOND, -2000, GETDATE()) 
-//         OR LogoutTime > DATEADD(MILLISECOND, -2000, GETDATE())
-//     `);
-
-//     res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
-//   } catch (error) {
-//     console.error('Error fetching recent user activity:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// });
 
 
 // Fetch recent user activity // yogesh 
