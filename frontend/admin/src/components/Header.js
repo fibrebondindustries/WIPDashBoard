@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback} from "react";
 import { useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import axiosInstance from "../axiosConfig";
@@ -57,7 +57,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   ///Confirm Process Modification 30 Dec 24 // modificaton 13 Jan 25 yogesh
   
   // Fetch process data function - moved outside useEffect
-  const fetchProcessData = async () => {
+  const fetchProcessData = useCallback(async () => {
     try {
       const supervisorName = user?.Name; // Get the logged-in user's name
       const response = await axiosInstance.get("/api/first-process-count", {
@@ -68,7 +68,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
     } catch (error) {
       console.error("Error fetching process data:", error);
     }
-  };
+  }, [user?.Name]);
   
 
   useEffect(() => {
@@ -86,9 +86,9 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
     if (user?.Auth === "Admin") {
       fetchDelayedProcesses();
     }
-  }, [user?.Name, user?.Auth]);
+  }, [user?.Name, user?.Auth, fetchProcessData]);
   
-  const handleConfirm = async (processName, itemName) => {
+  const handleConfirm = async (processName, id) => {
     try {
 
        // Display a confirmation dialog
@@ -108,7 +108,8 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
     const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
       // Make an API call to the confirm-process endpoint
       await axiosInstance.post("/api/confirm-process", {
-        LotId: itemName,
+        ID: id,
+        // LotId: itemName,
         ConfirmTime: currentISTTime, // Send IST-confirmed time explicitly
         ConfirmBy: confirmBy, // Pass ConfirmBy
       });
@@ -117,13 +118,15 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       showAlert(`Process ${processName} confirmed successfully!`, "success");
       
       // Update only the relevant row in the processData state
-    setProcessData((prevData) =>
-      prevData.map((process) =>
-        process["ITEM NAME"] === itemName
-          ? { ...process, ConfirmTime: currentISTTime, ConfirmBy: confirmBy }
-          : process
-      )
-    );
+    // setProcessData((prevData) =>
+    //   prevData.map((process) =>
+    //     process["ITEM NAME"] === itemName
+    //       ? { ...process, ConfirmTime: currentISTTime, ConfirmBy: confirmBy }
+    //       : process
+    //   )
+    // )
+    // // Fetch the updated data
+    fetchProcessData();;
     // setProcessData(response.data);
       
     } catch (error) {
@@ -135,7 +138,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   };
   
  // Done button handler
- const handleDone = async (processName, itemName) => {
+ const handleDone = async (processName, id) => {
   try {
     const isConfirmed = window.confirm(
       `Are you sure you want to mark this process as done: ${processName}?`
@@ -147,12 +150,13 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
 
     // Trigger completedTime-process API
     await axiosInstance.post("/api/completedTime-process", {
-      LotId: itemName,
+      // LotId: itemName,
+      ID: id,
       CompletedTime: currentISTTime,
       ConfirmBy: confirmBy,
     });
 
-    showAlert(`Process ${processName} marked as done!`, "success");
+    showAlert(`Process marked as done!`, "success");
 
     // Fetch the updated data after marking as done
     fetchProcessData();
@@ -189,10 +193,10 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
 
 
 
-  const handleAdminDone = async (lotId) => {
+  const handleAdminDone = async (id) => {
     try {
       const isConfirmed = window.confirm(
-        `Are you sure you want to mark this process as Done for LOT_ID: ${lotId}?`
+        `Are you sure you want to mark this process as Done?`
       );
   
       if (!isConfirmed) return;
@@ -205,12 +209,13 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
 
       await axiosInstance.post("/api/completedTime-process", {
-        LotId: lotId,
+        ID: id,
+        // LotId: lotId,
         ConfirmTime: currentISTTime,
         ConfirmBy: confirmBy, // Pass ConfirmBy
       });
   
-      showAlert(`Process marked as Done for LOT_ID: ${lotId}`, "success");
+      showAlert(`Process marked as Done`, "success");
   
       // Refetch delayed processes to update the table
       const response = await axiosInstance.get("/api/delayed-processes");
@@ -430,10 +435,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                             <button
                               className="btn btn-outline-success"
                               onClick={() =>
-                                handleConfirm(
-                                  process["PROCESS NAME"],
-                                  process["ITEM NAME"]
-                                )
+                                handleConfirm(process["PROCESS NAME"],process.ID)
                               }
                             >
                               Confirm
@@ -443,9 +445,8 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                               className="btn btn-outline-primary"
                               onClick={() =>
                                 handleDone(
-                                  process["PROCESS NAME"],
-                                  process["ITEM NAME"]
-                                )
+                                  process["PROCESS NAME"],process.ID)
+                                
                               }
                             >
                               Done
@@ -499,7 +500,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                         <td>
                           <button
                             className="btn btn-outline-success"
-                            onClick={() => handleAdminDone(process["ITEM NAME"])}
+                            onClick={() => handleAdminDone(process["ID"])}
                           >
                             Done
                           </button>
@@ -549,7 +550,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                         <td>
                           <button
                             className="btn btn-outline-success"
-                            onClick={() => handleAdminDone(process["ITEM NAME"])}
+                            onClick={() => handleAdminDone(process["ID"])}
                           >
                             Done
                           </button>

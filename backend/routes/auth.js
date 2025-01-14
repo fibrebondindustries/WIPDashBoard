@@ -1809,6 +1809,7 @@ router.get("/first-process-count", async (req, res) => {
     let query = `
       SELECT 
         [SupervisorName] AS Supervisor,
+        [ID],
         [Process_Name] AS [PROCESS NAME],
         [LOT_ID] AS [ITEM NAME],
         [NewProcessTime] AS Updated_Time,
@@ -1838,11 +1839,11 @@ router.get("/first-process-count", async (req, res) => {
 
 // API to handle done button click
 router.post("/completedTime-process", async (req, res) => {
-  const { LotId, CompletedTime, ConfirmBy } = req.body;
+  const { ID, CompletedTime, ConfirmBy } = req.body;
 
-  if (!LotId) {
+  if (!ID) {
     return res.status(400).json({
-      error: "LotId is required",
+      error: "ID is required",
     });
   }
 
@@ -1856,24 +1857,31 @@ router.post("/completedTime-process", async (req, res) => {
     await pool
       .request()
       .input("CompletedTime", sql.NVarChar, completedTime)
-      .input("LotId", sql.NVarChar, LotId)
+      .input("ID", sql.Int, ID)
       .input("ConfirmBy", sql.NVarChar, ConfirmBy)
       .query(`
         UPDATE [dbo].[ConfirmTime]
         SET [CompletedTime] = @CompletedTime,
          [ConfirmBy] = @ConfirmBy
-        WHERE [LOT_ID] = @LotId
+        WHERE [ID] = @ID
       `);
- // Update the Updated_Time in StagingTable
-    await pool
-      .request()
-      .input("Updated_Time", sql.NVarChar, completedTime) // Update to current IST-confirmed time
-      .input("ItemName", sql.NVarChar, LotId)
-      .query(`
-        UPDATE [dbo].[StagingTable]
-        SET [Updated_Time] = @Updated_Time
-        WHERE [ITEM NAME] = @ItemName
-      `);
+//  // Update the Updated_Time in StagingTable
+//  const lotIdQuery = `
+//  SELECT [LOT_ID] FROM [dbo].[ConfirmTime] WHERE [ID] = @ID
+// `;
+// const lotIdResult = await pool.request().input("ID", sql.Int, ID).query(lotIdQuery);
+// const lotId = lotIdResult.recordset[0]?.LOT_ID;
+// if (lotId) {
+//     await pool
+//       .request()
+//       .input("Updated_Time", sql.NVarChar, completedTime) // Update to current IST-confirmed time
+//       .input("ItemName", sql.NVarChar, lotId)
+//       .query(`
+//         UPDATE [dbo].[StagingTable]
+//         SET [Updated_Time] = @Updated_Time
+//         WHERE [ITEM NAME] = @ItemName
+//       `);
+// }
     res.status(200).json({
       message: "Completed updated successfully.",
     });
@@ -1885,11 +1893,11 @@ router.post("/completedTime-process", async (req, res) => {
 
 // API to handle confirm button click
 router.post("/confirm-process", async (req, res) => {
-  const { LotId, ConfirmTime, ConfirmBy } = req.body;
+  const { ID, ConfirmTime, ConfirmBy } = req.body;
 
-  if (!LotId) {
+  if (!ID) {
     return res.status(400).json({
-      error: "LotId is required",
+      error: "ID is required",
     });
   }
 
@@ -1903,13 +1911,13 @@ router.post("/confirm-process", async (req, res) => {
     await pool
       .request()
       .input("ConfirmTime", sql.NVarChar, confirmTime)
-      .input("LotId", sql.NVarChar, LotId)
+      .input("ID", sql.Int, ID)
       .input("ConfirmBy", sql.NVarChar, ConfirmBy)
       .query(`
         UPDATE [dbo].[ConfirmTime]
         SET [ConfirmTime] = @ConfirmTime,
          [ConfirmBy] = @ConfirmBy
-        WHERE [LOT_ID] = @LotId
+        WHERE [ID] = @ID
       `);
     res.status(200).json({
       message: "ConfirmTime updated successfully.",
@@ -1932,6 +1940,7 @@ router.get("/delayed-processes", async (req, res) => {
       .query(`
         SELECT 
           [SupervisorName],
+          [ID],
           [LOT_ID] AS [ITEM NAME],
           [Process_Name] AS [PROCESS NAME],
           [NewProcessTime],
@@ -1959,6 +1968,7 @@ router.get("/delayed-24hr-processes", async (req, res) => {
       .query(`
         SELECT 
           [SupervisorName],
+          [ID],
           [LOT_ID] AS [ITEM NAME],
           [Process_Name] AS [PROCESS NAME],
           [NewProcessTime],
