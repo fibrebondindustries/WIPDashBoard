@@ -2182,20 +2182,35 @@ router.get("/remarks", async (req, res) => {
         ID, SupervisorName, Department, Quantity, Remark, RemarkDate, Category
       FROM [dbo].[Remarks] WHERE IsDeleted = 'No'
     `;
-
     const pool = await poolPromise;
     const result = await pool.request().query(query);
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ message: "No remarks found" });
     }
-
     res.status(200).json(result.recordset);
   } catch (error) {
     console.error("Error fetching remarks:", error);
     res.status(500).json({ error: "Failed to fetch remarks" });
   }
 });
+
+// New Api for Supervisor Performance // 17 Jan 2025 // yogesh
+router.get("/performance", async (req, res) =>{
+  try{
+    const query = `
+    SELECT  [SupervisorName],[Score],[Performance]
+    FROM [dbo].[SupervisorPerformance]
+  `;
+  const pool = await poolPromise;
+  const result = await pool.request().query(query);
+  res.status(200).json(result.recordset);
+  }
+  catch (error) {
+    console.error("Error fetching performance:", error);
+    res.status(500).json({ error: "Failed to fetch performance" });
+  }
+})
 
 
 

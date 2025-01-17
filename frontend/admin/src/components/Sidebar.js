@@ -8,6 +8,8 @@ import axiosInstance from "../axiosConfig";
 const Sidebar = () => {
   const { user } = useContext(AuthContext); // Get the user's role from AuthContext
   const [ticketCount, setTicketCount] = useState(0); // State to store ticket count
+  const [score, setScore] = useState(null); // State for performance score //// 17 Jan 25 Yogesh
+  const [performance, setPerformance] = useState(null); // State for performance percentage //// 17 Jan 25 Yogesh
 
   useEffect(() => {
     // Fetch the ticket count when the component mounts
@@ -20,8 +22,34 @@ const Sidebar = () => {
       }
     };
 
+    //new code 17 Jan 25 Yogesh
+    // Fetch performance data for the logged-in supervisor
+    const fetchPerformanceData = async () => {
+      try {
+        const response = await axiosInstance.get("/api/performance"); // API call for performance
+        const data = response.data;
+
+        // Filter performance data for the logged-in supervisor
+        const supervisorData = data.find(
+          (item) => item.SupervisorName === user?.Name
+        );
+
+        // Update state with score and performance
+        if (supervisorData) {
+          setScore(supervisorData.Score);
+          setPerformance(supervisorData.Performance);
+        }
+      } catch (error) {
+        console.error("Error fetching performance data:", error);
+      }
+    };
+
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
+    }
+    //performace data
+    if (user?.Auth === "Supervisor") {
+      fetchPerformanceData();
     }
   }, [user]);
 
@@ -138,21 +166,42 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
-        {/* New Module added on 10 jan 25 */}
-        {/* {user?.Auth === "Supervisor" && user?.Department === "Store" && (
+        {/* added on 17 jan 25 */}
+        {user?.Auth === "Supervisor" && (
           <li className="nav-item">
-            <NavLink
-              to="/add-inventory"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
-              <i className="bi bi-box-arrow-in"></i> Add Inventory
-            </NavLink>
+            <div className="nav-link">
+              <i className="bi bi-box-arrow-in"></i>Performance:{" "}
+              {performance !== null ? (
+                <>
+                  <strong style={{
+                color:
+                performance >= 80
+                  ? "green"
+                  : performance >= 50
+                  ? "orange"
+                  : "red", // Color conditions
+            }}>{performance}%</strong> (Score:{score})
+                </>
+              ) : (
+                "Loading..."
+              )}
+            </div>
           </li>
         )}
+         {/*  {user?.Auth === "Supervisor" && (
+          <li className="nav-item">
+            <NavLink
+              to="#"
+              className={({ isActive }) =>
+                isActive ? "nav-link " : "nav-link"
+              }
+            >
+              <i className="bi bi-box-arrow-in"></i> Performance
+            </NavLink>
+          </li>
+        )} */}
 
-        {user?.Auth === "Supervisor" && user?.Department === "NOKE" && (
+       {/* {user?.Auth === "Supervisor" && user?.Department === "NOKE" && (
           <li className="nav-item">
             <NavLink
               to="/view-inventory"
