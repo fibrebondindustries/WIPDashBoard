@@ -467,7 +467,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       {/* Admin Modal */}
       {showDelayedModal && (
         <div className="modal show" style={{ display: "block" }}>
-          <div className="modal-dialog modal-lg">
+          <div className="modal-dialog modal-xl">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Delayed Processes</h5>
@@ -486,10 +486,11 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                       <th>Item Name</th>
                       <th>Quantity</th>
                       <th>New Process Time</th>
+                      <th>Status</th>
                       <th>Action</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  {/* <tbody>
                     {delayedProcesses.map((process, index) => (
                       <tr key={index}>
                         <td>{process["SupervisorName"]}</td>
@@ -497,6 +498,32 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                         <td>{process["ITEM NAME"]}</td>
                         <td>{process["Quantity"]}</td>
                         <td>{process["NewProcessTime"]}</td>
+                        <td>
+                          <button
+                            className="btn btn-outline-success"
+                            onClick={() => handleAdminDone(process["ID"])}
+                          >
+                            Done
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody> */}
+                <tbody>
+                    {delayedProcesses.map((process, index) => (
+                      <tr key={index}>
+                        <td>{process["SupervisorName"]}</td>
+                        <td>{process["PROCESS NAME"]}</td>
+                        <td>{process["ITEM NAME"]}</td>
+                        <td>{process["Quantity"]}</td>
+                        <td>{process["NewProcessTime"]}</td>
+                        <td>
+                          {process["ProcessIncomplete"] === "Yes"
+                            ? "Process Incomplete" // Show ProcessIncomplete if true
+                            : process["ConfirmDelay"] === "Yes"
+                            ? "Confirm Incomplete" // Show ConfirmIncomplete if true
+                            : ""} {/* Leave blank otherwise */}
+                        </td>
                         <td>
                           <button
                             className="btn btn-outline-success"

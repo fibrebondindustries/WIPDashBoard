@@ -154,7 +154,7 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
-         {(user?.Auth === "Supervisor" || user?.Auth === "SuperAdmin") && (
+         {(user?.Auth === "Admin") && (
           <li className="nav-item">
             <NavLink
               to="/remarks"

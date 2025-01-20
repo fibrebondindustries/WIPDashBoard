@@ -1945,11 +1945,12 @@ router.get("/delayed-processes", async (req, res) => {
           [Process_Name] AS [PROCESS NAME],
           [NewProcessTime],
           [ConfirmTime],
-           [CompletedTime],
-          [ProcessDelay],
+          [CompletedTime],
+          [ConfirmDelay],
+          [ProcessIncomplete],
           [Quantity]
         FROM [dbo].[ConfirmTime]
-        WHERE [ProcessDelay] = 'Yes' AND [CompletedTime] IS NULL
+        WHERE  [ProcessIncomplete] = 'Yes' OR [ConfirmDelay] = 'Yes'
       `);
 
     res.status(200).json(result.recordset);
@@ -2073,28 +2074,29 @@ router.get('/user-activity', async (req, res) => {
 
 // New POST API: Add a new remark // 8 Jan 2025 // yogesh
 router.post("/remarks", async (req, res) => {
-  const { SupervisorName, Department, Quantity, Remark, Category } = req.body;
+  const { SupervisorName, Department, DetailedIssue, Parameters, LOT_ID, ProcessName } = req.body;
 
   try {
-    if (!SupervisorName || !Department || !Quantity || !Remark || !Category) {
+    if (!SupervisorName || !Department  || !DetailedIssue || !Parameters || !ProcessName) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
     const RemarkDate = formatDateTime(new Date()); // Set the current date for RemarkDate
 
     const query = `
-      INSERT INTO [dbo].[Remarks] (SupervisorName, Department, Quantity, Remark, RemarkDate, Category)
-      VALUES (@SupervisorName, @Department, @Quantity, @Remark, @RemarkDate, @Category)
+      INSERT INTO [dbo].[Remarks] (SupervisorName, Department, DetailedIssue, RemarkDate, Parameters, LOT_ID, ProcessName)
+      VALUES (@SupervisorName, @Department, @DetailedIssue, @RemarkDate, @Parameters, @LOT_ID, @ProcessName)
     `;
 
     const pool = await poolPromise;
     await pool.request()
       .input("SupervisorName", sql.NVarChar, SupervisorName)
       .input("Department", sql.NVarChar, Department)
-      .input("Quantity", sql.Int, Quantity)
-      .input("Remark", sql.NVarChar, Remark)
+      .input("DetailedIssue", sql.NVarChar, DetailedIssue)
       .input("RemarkDate", sql.NVarChar, RemarkDate)
-      .input("Category", sql.NVarChar, Category)
+      .input("Parameters", sql.NVarChar, Parameters)
+      .input("ProcessName", sql.NVarChar, ProcessName)
+      .input("LOT_ID", sql.NVarChar, LOT_ID)
       .query(query);
 
     res.status(201).json({ message: "Remark added successfully" });
@@ -2107,10 +2109,10 @@ router.post("/remarks", async (req, res) => {
 // PUT API: Update an existing remark
 router.put("/remarks/:id", async (req, res) => {
   const { id } = req.params;
-  const { SupervisorName, Department, Quantity, Remark } = req.body;
+  const { SupervisorName, Department, DetailedIssue, Parameters, LOT_ID, ProcessName  } = req.body;
 
   try {
-    if (!SupervisorName || !Department || !Quantity || !Remark) {
+    if (!SupervisorName || !Department || !DetailedIssue || !Parameters || !ProcessName) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -2120,8 +2122,10 @@ router.put("/remarks/:id", async (req, res) => {
       UPDATE [dbo].[Remarks]
       SET SupervisorName = @SupervisorName,
           Department = @Department,
-          Quantity = @Quantity,
-          Remark = @Remark,
+          DetailedIssue = @DetailedIssue,
+          LOT_ID = @LOT_ID,
+          ProcessName = @ProcessName,
+          Parameters = @Parameters,
           UpdatedDate = @UpdatedDate
       WHERE ID = @ID
     `;
@@ -2131,9 +2135,11 @@ router.put("/remarks/:id", async (req, res) => {
       .input("ID", sql.Int, id)
       .input("SupervisorName", sql.NVarChar, SupervisorName)
       .input("Department", sql.NVarChar, Department)
-      .input("Quantity", sql.Int, Quantity)
-      .input("Remark", sql.NVarChar, Remark)
+      .input("DetailedIssue", sql.NVarChar, DetailedIssue)
+      .input("ProcessName", sql.NVarChar, ProcessName)
+      .input("Parameters", sql.NVarChar, Parameters)
       .input("UpdatedDate", sql.NVarChar, UpdatedDate)
+      .input("LOT_ID", sql.NVarChar, LOT_ID)
       .query(query);
 
     if (result.rowsAffected[0] === 0) {
@@ -2179,7 +2185,7 @@ router.get("/remarks", async (req, res) => {
   try {
     const query = `
       SELECT 
-        ID, SupervisorName, Department, Quantity, Remark, RemarkDate, Category
+        ID, SupervisorName, Department, ProcessName, Parameters, RemarkDate, DetailedIssue, LOT_ID
       FROM [dbo].[Remarks] WHERE IsDeleted = 'No'
     `;
     const pool = await poolPromise;
@@ -2211,6 +2217,21 @@ router.get("/performance", async (req, res) =>{
     res.status(500).json({ error: "Failed to fetch performance" });
   }
 })
+
+
+router.get("/AllSupervisorName", async (req, res) => {
+  try {
+    const query = `
+      SELECT [Name] as SupervisorName FROM [dbo].[Emp_Master] WHERE [Auth] = 'Supervisor'
+      `;
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+    } catch (error) {
+      console.error("Error fetching SupervisorName:", error);
+      res.status(500).json({ error: "Failed to fetch SupervisorName" });
+    }
+  })
 
 
 

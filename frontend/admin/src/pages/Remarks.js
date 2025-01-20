@@ -6,13 +6,15 @@ import Sidebar from "../components/Sidebar";
 import DataTable from "react-data-table-component";
 
 function Remarks() {
-  const user = JSON.parse(localStorage.getItem("user")); // Get logged-in user data
+  // const user = JSON.parse(localStorage.getItem("user")); // Get logged-in user data
   const [remarks, setRemarks] = useState([]); // All remarks
   const [filteredRemarks, setFilteredRemarks] = useState([]); // Filtered remarks
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [showModal, setShowModal] = useState(false); // Modal state
   const [showUpdateModal, setShowUpdateModal] = useState(false); // Update modal state
   const [selectedRow, setSelectedRow] = useState(null); // Selected row for update
+  const [supervisorNames, setSupervisorNames] = useState([]);  // Supervisor names for dropdown
+  const [departments, setDepartments] = useState([]); // Departments for dropdown
   const [filters, setFilters] = useState({
     searchQuery: "",
     fromDate: "",
@@ -20,11 +22,11 @@ function Remarks() {
   });
 
   const initialFormData = {
-    SupervisorName: user?.Name || "", // Pre-fill Supervisor Name from local storage
+    SupervisorName: "", // Pre-fill Supervisor Name from local storage
     Department: "",
     Quantity: "",
     Remark: "",
-    Category: "",
+    Subject: "",
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -37,20 +39,46 @@ function Remarks() {
   const fetchRemarks = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/api/remarks");
-      const userRemarks = response.data.filter(
-        (remark) => remark.SupervisorName === user?.Name // Filter by logged-in user's name
-      );
-      setRemarks(userRemarks);
-      setFilteredRemarks(userRemarks); // Initialize filtered remarks
+      // const userRemarks = response.data.filter(
+      //   (remark) => remark.SupervisorName === user?.Name // Filter by logged-in user's name
+      // );
+      // setRemarks(userRemarks);
+      // setFilteredRemarks(userRemarks);
+      setRemarks(response.data); // Set all remarks
+      // setFilteredRemarks(userRemarks); // Initialize filtered remarks
     } catch (error) {
     //   console.error("Error fetching remarks:", error);
     //   alert("Failed to fetch remarks.");
     }
-  }, [user?.Name]);
+  }, []); // user?.Name
+
+    // Fetch supervisor names
+    const fetchSupervisorNames = useCallback(async () => {
+      try {
+        const response = await axiosInstance.get("/api/AllSupervisorName");
+        setSupervisorNames(response.data);
+      } catch (error) {
+        console.error("Error fetching supervisor names:", error);
+        alert("Failed to fetch supervisor names.");
+      }
+    }, []);
+
+    // Fetch departments
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/api/departments");
+      setDepartments(response.data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      alert("Failed to fetch departments.");
+    }
+  }, []);
 
   useEffect(() => {
     fetchRemarks();
-  }, [fetchRemarks]);
+    fetchSupervisorNames();
+    fetchDepartments();
+  }, [fetchRemarks, fetchSupervisorNames, fetchDepartments]);
 
   // Handle input changes for filters
   const handleFilterChange = (e) => {
@@ -123,9 +151,9 @@ function Remarks() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    const dataToSend = { ...formData, Category: "Under Capacity" };
+    // const dataToSend = { ...formData, Subject: "Under Capacity" };
     try {
-      await axiosInstance.post("/api/remarks", dataToSend);
+      await axiosInstance.post("/api/remarks", formData);
       showAlert("Remark added successfully!", "success");
       resetFormAndCloseModal(() => setShowModal(false));
       fetchRemarks(); // Refresh remarks after creation
@@ -143,20 +171,14 @@ function Remarks() {
       return;
     }
 
-    // const dataToSend = { ...formData, Category: "Under Capacity" };
+    // const dataToSend = { ...formData, Subject: "Under Capacity" };
     try {
       await axiosInstance.put(`/api/remarks/${selectedRow.ID}`, formData); // Update the remark
       showAlert("Remark updated successfully!", "success");
       setShowUpdateModal(false); // Close the modal
       resetFormAndCloseModal(() => setShowUpdateModal(false));
       fetchRemarks(); // Refresh remarks after update
-    //   setSelectedRow(null); // Clear selected row
-    //   setFormData({
-    //     SupervisorName: user?.Name || "",
-    //     Department: "",
-    //     Quantity: "",
-    //     Remark: "",
-    //   }); // Clear form data
+
     } catch (error) {
     //   console.error("Error updating remark:", error);
       showAlert("Failed to update remark.", "danger");
@@ -182,7 +204,15 @@ function Remarks() {
   const columns = [
     {
       name: "Supervisor Name",
-      selector: (row) => row.SupervisorName,
+      selector: (row) => (
+        <span data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title={row.SupervisorName}>
+
+        {row.SupervisorName}
+        </span>
+      ),
+    
       sortable: true,
     },
     {
@@ -191,23 +221,28 @@ function Remarks() {
       sortable: true,
     },
     {
-      name: "Category",
-      selector: (row) => row.Category,
+      name: "LOT ID",
+      selector: (row) => row.LOT_ID,
       sortable: true,
     },
     {
-      name: "Quantity",
-      selector: (row) => row.Quantity,
+      name: "ProcessName",
+      selector: (row) => row.ProcessName,
       sortable: true,
     },
     {
-      name: "Remark",
+      name: "Parameters",
+      selector: (row) => row.Parameters,
+      sortable: true,
+    },
+    {
+      name: "DetailedIssue",
       selector: (row) => (
         <span data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title={row.Remark}>
+        title={row.DetailedIssue}>
 
-        {row.Remark}
+        {row.DetailedIssue}
         </span>
       ),
     //   row.Remark,
@@ -215,12 +250,13 @@ function Remarks() {
     },
     {
       name: "Remark Date",
-      selector: (row) =>
-        new Date(row.RemarkDate).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
+      selector: (row) => row.RemarkDate,
+      // selector: (row) =>
+      //   new Date(row.RemarkDate).toLocaleDateString("en-GB", {
+      //     day: "2-digit",
+      //     month: "2-digit",
+      //     year: "numeric",
+      //   }), // Format date
       sortable: true,
     },
     {
@@ -313,18 +349,36 @@ function Remarks() {
               </div>
               <form onSubmit={handleFormSubmit}>
                 <div className="modal-body">
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <label className="form-label">Supervisor Name</label>
                     <input
                       type="text"
                       name="SupervisorName"
+                      placeholder="Enter Supervisor Name"
                       value={formData.SupervisorName}
                       onChange={handleFormChange}
                       className="form-control"
-                      readOnly
+                      
                     />
-                  </div>
+                  </div> */}
                   <div className="mb-3">
+                    <label className="form-label">Supervisor Name</label>
+                    <select
+                      name="SupervisorName"
+                      value={formData.SupervisorName}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select Supervisor</option>
+                      {supervisorNames.map((supervisor, index) => (
+                        <option key={index} value={supervisor.SupervisorName}>
+                          {supervisor.SupervisorName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* <div className="mb-3">
                     <label className="form-label">Department</label>
                     <input
                       type="text"
@@ -335,38 +389,71 @@ function Remarks() {
                       placeholder="Enter Department"
                       required
                     />
+                  </div> */}
+                  <div className="mb-3">
+                    <label className="form-label">Department</label>
+                    <select
+                      name="Department"
+                      value={formData.Department}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map((dept, index) => (
+                            <option key={index} value={dept}>
+                              {dept}
+                            </option>
+                      ))}
+                    </select>
+                  </div>
+                   <div className="mb-3">
+                    <label className="form-label">Parameters</label>
+                    <select
+                      name="Parameters"
+                      value={formData.Parameters}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select Subject</option>
+                      <option value="No Raw Material">No Raw Material</option>
+                      <option value="Quality">Quality</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Category</label>
+                    <label className="form-label">LOT_ID</label>
                     <input
                       type="text"
-                      name="Category"
-                      value={"Under Capacity"}
+                      name="LOT_ID"
+                      value={formData.LOT_ID}
                       onChange={handleFormChange}
                       className="form-control"
-                      readOnly
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Quantity</label>
-                    <input
-                      type="number"
-                      name="Quantity"
-                      value={formData.Quantity}
-                      onChange={handleFormChange}
-                      className="form-control"
-                      placeholder="Enter Quantity"
+                      placeholder="Enter LOT_ID"
                       required
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Remark</label>
-                    <textarea
-                      name="Remark"
-                      value={formData.Remark}
+                    <label className="form-label">ProcessName</label>
+                    <input
+                      type="text"
+                      name="ProcessName"
+                      value={formData.ProcessName}
                       onChange={handleFormChange}
                       className="form-control"
-                      placeholder="Enter Remark"
+                      placeholder="Enter Process Name"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Detailed Issue</label>
+                    <textarea
+                      name="DetailedIssue"
+                      value={formData.DetailedIssue}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      placeholder="Enter Detailed Issue"
                       rows="3"
                       required
                     ></textarea>
@@ -404,61 +491,100 @@ function Remarks() {
                 ></button>
               </div>
               <form onSubmit={handleUpdateSubmit}>
-                <div className="modal-body">
-                  <div className="mb-3">
+              <div className="modal-body">
+                  {/* <div className="mb-3">
                     <label className="form-label">Supervisor Name</label>
                     <input
                       type="text"
                       name="SupervisorName"
+                      placeholder="Enter Supervisor Name"
                       value={formData.SupervisorName}
                       onChange={handleFormChange}
                       className="form-control"
-                      readOnly
+                      
                     />
+                  </div> */}
+                  <div className="mb-3">
+                    <label className="form-label">Supervisor Name</label>
+                    <select
+                      name="SupervisorName"
+                      value={formData.SupervisorName}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select Supervisor</option>
+                      {supervisorNames.map((supervisor, index) => (
+                        <option key={index} value={supervisor.SupervisorName}>
+                          {supervisor.SupervisorName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Department</label>
-                    <input
-                      type="text"
+                    <select
                       name="Department"
                       value={formData.Department}
                       onChange={handleFormChange}
                       className="form-control"
-                      placeholder="Enter Department"
                       required
-                    />
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map((dept, index) => (
+                            <option key={index} value={dept}>
+                              {dept}
+                            </option>
+                      ))}
+                    </select>
+                  </div>
+                   <div className="mb-3">
+                    <label className="form-label">Parameters</label>
+                    <select
+                      name="Parameters"
+                      value={formData.Parameters}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select Subject</option>
+                      <option value="No Raw Material">No Raw Material</option>
+                      <option value="Quality">Quality</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Category</label>
+                    <label className="form-label">LOT_ID</label>
                     <input
                       type="text"
-                      name="Category"
-                      value={"Under Capacity"}
+                      name="LOT_ID"
+                      value={formData.LOT_ID}
                       onChange={handleFormChange}
                       className="form-control"
-                      readOnly
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Quantity</label>
-                    <input
-                      type="number"
-                      name="Quantity"
-                      value={formData.Quantity}
-                      onChange={handleFormChange}
-                      className="form-control"
-                      placeholder="Enter Quantity"
+                      placeholder="Enter LOT_ID"
                       required
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Remark</label>
-                    <textarea
-                      name="Remark"
-                      value={formData.Remark}
+                    <label className="form-label">ProcessName</label>
+                    <input
+                      type="text"
+                      name="ProcessName"
+                      value={formData.ProcessName}
                       onChange={handleFormChange}
                       className="form-control"
-                      placeholder="Enter Remark"
+                      placeholder="Enter Process Name"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Detailed Issue</label>
+                    <textarea
+                      name="DetailedIssue"
+                      value={formData.DetailedIssue}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      placeholder="Enter Detailed Issue"
                       rows="3"
                       required
                     ></textarea>
