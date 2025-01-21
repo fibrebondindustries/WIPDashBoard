@@ -1839,7 +1839,7 @@ router.get("/first-process-count", async (req, res) => {
 
 // API to handle done button click
 router.post("/completedTime-process", async (req, res) => {
-  const { ID, CompletedTime, ConfirmBy } = req.body;
+  const { ID, CompletedTime, ConfirmBy, ConfirmTime } = req.body; // Get data from request body
 
   if (!ID) {
     return res.status(400).json({
@@ -1852,6 +1852,7 @@ router.post("/completedTime-process", async (req, res) => {
 
     // Use ConfirmTime from frontend if provided; fallback to server time in IST
     const completedTime = CompletedTime || formatDateTime(new Date());
+    const confirmTime = ConfirmTime || formatDateTime(new Date());
 
     // Update ConfirmTime for the given LOT_ID
     await pool
@@ -1859,10 +1860,12 @@ router.post("/completedTime-process", async (req, res) => {
       .input("CompletedTime", sql.NVarChar, completedTime)
       .input("ID", sql.Int, ID)
       .input("ConfirmBy", sql.NVarChar, ConfirmBy)
+      .input("ConfirmTime", sql.NVarChar, confirmTime)
       .query(`
         UPDATE [dbo].[ConfirmTime]
         SET [CompletedTime] = @CompletedTime,
-         [ConfirmBy] = @ConfirmBy
+        [ConfirmBy] = @ConfirmBy,
+         [ConfirmTime] = @ConfirmTime
         WHERE [ID] = @ID
       `);
 //  // Update the Updated_Time in StagingTable

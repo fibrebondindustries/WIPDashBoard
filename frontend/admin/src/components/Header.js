@@ -153,6 +153,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       // LotId: itemName,
       ID: id,
       CompletedTime: currentISTTime,
+      ConfirmTime: currentISTTime,
       ConfirmBy: confirmBy,
     });
 
@@ -211,7 +212,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       await axiosInstance.post("/api/completedTime-process", {
         ID: id,
         // LotId: lotId,
-        ConfirmTime: currentISTTime,
+        CompletedTime: currentISTTime,
         ConfirmBy: confirmBy, // Pass ConfirmBy
       });
   
