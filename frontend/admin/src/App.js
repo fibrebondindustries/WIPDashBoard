@@ -18,6 +18,8 @@ import TicketHome from './Tickets/Home';
 import AdminTicketManagement from './pages/Ticketing';
 import { PollingProvider  } from "./PollingContext";
 import Remarks from './pages/Remarks';
+import AddInventory from './pages/AddInventory';
+import ViewInventory from './pages/ViewInventory';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -102,6 +104,22 @@ function App() {
                         element={
                             <ProtectedRoute>
                                 <Remarks />
+                            </ProtectedRoute>
+                        }
+                    />
+                     <Route
+                        path="/add-inventory"
+                        element={
+                            <ProtectedRoute>
+                                <AddInventory />
+                            </ProtectedRoute>
+                        }
+                    />
+                     <Route
+                        path="/view-inventory"
+                        element={
+                            <ProtectedRoute>
+                                <ViewInventory />
                             </ProtectedRoute>
                         }
                     />

@@ -2236,7 +2236,112 @@ router.get("/AllSupervisorName", async (req, res) => {
     }
   })
 
+/// New Api for NOKE RAW MATERIAL  // 28 Jan 2025 // yogesh
+// GET API: Fetch all records from the table
+router.get("/noke-inventory", async (req, res) => {
+  try {
+    const query = `
+      SELECT [ID], [JOB ORDER NO], [JOB ORDER DATE], [SUPERVISOR], [RAW MATERIAL], [STATUS]
+      FROM [dbo].[noke_inventory]
+    `;
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
 
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "No records found in inventory." });
+    }
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching inventory records:", error);
+    res.status(500).json({ error: "Failed to fetch inventory records." });
+  }
+});
+
+// POST API: Add a new record to the table
+router.post("/noke-inventory", async (req, res) => {
+  const { jobOrderNo, jobOrderDate, supervisor, rawMaterial, status } = req.body;
+
+  if (!jobOrderNo || !jobOrderDate || !supervisor || !rawMaterial || !status) {
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
+  try {
+    const query = `
+      INSERT INTO [dbo].[noke_inventory] ([JOB ORDER NO], [JOB ORDER DATE], [SUPERVISOR], [RAW MATERIAL], [STATUS])
+      VALUES (@jobOrderNo, @jobOrderDate, @supervisor, @rawMaterial, @status)
+    `;
+    const pool = await poolPromise;
+    await pool.request()
+      .input("jobOrderNo", sql.NVarChar, jobOrderNo)
+      .input("jobOrderDate", sql.NVarChar, jobOrderDate)
+      .input("supervisor", sql.NVarChar, supervisor)
+      .input("rawMaterial", sql.NVarChar, rawMaterial)
+      .input("status", sql.NVarChar, status)
+      .query(query);
+
+    res.status(201).json({ message: "Record added successfully to inventory." });
+  } catch (error) {
+    console.error("Error adding record to inventory:", error);
+    res.status(500).json({ error: "Failed to add record to inventory." });
+  }
+});
+
+// PATCH API: Update a specific record in the table
+router.patch("/noke-inventory/:id", async (req, res) => {
+  const { id } = req.params;
+  const { STATUS } = req.body; // Destructure STATUS from the request body
+
+  if (!id || !STATUS) {
+    return res.status(400).json({ error: "ID and STATUS are required" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .input("STATUS", sql.NVarChar, STATUS)
+      .query(`
+        UPDATE [dbo].[noke_inventory]
+        SET [STATUS] = @STATUS
+        WHERE [ID] = @ID
+      `);
+
+    res.status(200).json({ message: "Status updated successfully" });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+});
+
+
+// DELETE API: Delete a specific record from the table
+router.delete("/noke-inventory/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "ID is required" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const query = `
+      DELETE FROM [dbo].[noke_inventory]
+      WHERE [ID] = @ID
+    `;
+
+    const result = await pool.request().input("ID", sql.Int, id).query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+
+    res.status(200).json({ message: "Record deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 module.exports = router;

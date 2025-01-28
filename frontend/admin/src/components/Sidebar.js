@@ -10,7 +10,7 @@ const Sidebar = () => {
   const [ticketCount, setTicketCount] = useState(0); // State to store ticket count
   const [score, setScore] = useState(null); // State for performance score //// 17 Jan 25 Yogesh
   const [performance, setPerformance] = useState(null); // State for performance percentage //// 17 Jan 25 Yogesh
-
+  const [RMCount, setRMCount] = useState(0); // State for inventory count
   useEffect(() => {
     // Fetch the ticket count when the component mounts
     const fetchTicketCount = async () => {
@@ -43,6 +43,19 @@ const Sidebar = () => {
         console.error("Error fetching performance data:", error);
       }
     };
+///new code end 28 Jan 25
+  // Fetch inventory count for the logged-in supervisor
+  const fetchInventoryCount = async () => {
+    try {
+      const response = await axiosInstance.get("/api/noke-inventory"); // API to fetch inventory
+      const filteredInventory = response.data.filter(
+        (item) => item["SUPERVISOR"] === user?.Name
+      ); // Filter by logged-in supervisor's name
+      setRMCount(filteredInventory.length); // Set the count of inventory records
+    } catch (error) {
+      console.error("Error fetching inventory count:", error);
+    }
+  };
 
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
@@ -50,9 +63,12 @@ const Sidebar = () => {
     //performace data
     if (user?.Auth === "Supervisor") {
       fetchPerformanceData();
+      fetchInventoryCount();
     }
   }, [user]);
 
+
+  
   return (
     <div className="d-flex flex-column vh-100 bg-light sidebar">
       <div className=" text-center">
@@ -166,6 +182,39 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
+        
+       {/* new module created 28 jan 25 */}
+       {user?.Auth === "Supervisor" && user?.Name ==="MONU" && (
+          <li className="nav-item">
+            <NavLink
+              to="/add-inventory"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-box-arrow-out"></i> Add Inventory
+            </NavLink>
+          </li>
+          )}
+
+       {user?.Auth === "Supervisor" && user?.Name !== "MONU" && (
+          <li className="nav-item">
+            <NavLink
+              to="/view-inventory"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-box-arrow-out"></i> View Inventory {" "}
+              {RMCount > 0 && (
+                 <span className="badge bg-danger">{RMCount}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
+        {/* end */}
+
+
         {/* added on 17 jan 25 */}
         {user?.Auth === "Supervisor" && (
           <li className="nav-item">
@@ -188,32 +237,8 @@ const Sidebar = () => {
             </div>
           </li>
         )}
-         {/*  {user?.Auth === "Supervisor" && (
-          <li className="nav-item">
-            <NavLink
-              to="#"
-              className={({ isActive }) =>
-                isActive ? "nav-link " : "nav-link"
-              }
-            >
-              <i className="bi bi-box-arrow-in"></i> Performance
-            </NavLink>
-          </li>
-        )} */}
-
-       {/* {user?.Auth === "Supervisor" && user?.Department === "NOKE" && (
-          <li className="nav-item">
-            <NavLink
-              to="/view-inventory"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
-              <i className="bi bi-box-arrow-out"></i> View Inventory
-            </NavLink>
-          </li>
-        )} */}
-        {/* end */}
+         
+       
       </ul>
     </div>
   );
