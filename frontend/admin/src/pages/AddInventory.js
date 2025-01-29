@@ -9,11 +9,12 @@ const AddInventory = () => {
   const [inventory, setInventory] = useState([]); // All records
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [supervisorNames, setSupervisorNames] = useState([]);  // Supervisor names for dropdown
+  const [nokeData, setNokeData] = useState([]); // NOKE data
   const [formData, setFormData] = useState({
-    jobOrderNo: "",
-    jobOrderDate: "",
+    LOT_ID: "",
+    // jobOrderDate: "",
     supervisor: "",
-    rawMaterial: "",
+    LOCATION: "",
     status: "",
   }); // Form data for add/update
   const [isEditing, setIsEditing] = useState(false); // Toggle between add and edit
@@ -34,6 +35,16 @@ const AddInventory = () => {
     }
   };
 
+    // Fetch NOKE data
+    const fetchNokeData = async () => {
+      try {
+        const response = await axiosInstance.get("/api/noke-data");
+        setNokeData(response.data);
+      } catch (error) {
+        console.error("Error fetching NOKE data:", error);
+      }
+    };
+
    // Fetch supervisor names
    const fetchSupervisorNames = useCallback(async () => {
     try {
@@ -48,6 +59,7 @@ const AddInventory = () => {
   useEffect(() => {
     fetchInventory();
     fetchSupervisorNames();
+    fetchNokeData();
   }, [fetchSupervisorNames]);
 
    
@@ -78,17 +90,22 @@ const AddInventory = () => {
 
       setShowModal(false);
       setFormData({
-        jobOrderNo: "",
-        jobOrderDate: "",
+        LOT_ID: "",
+        // jobOrderDate: "",
         supervisor: "",
-        rawMaterial: "",
+        LOCATION: "",
         status: "Not Use",
       });
       setIsEditing(false);
       fetchInventory();
     } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Failed to submit form.");
+      // Check for duplicate LOT_ID error
+      if (error.response && error.response.status === 400 && error.response.data.error === "This LOT ID is already issued.") {
+        alert("This LOT ID is already issued.");
+      } else {
+        console.error("Error submitting form:", error);
+        alert("Failed to submit form.");
+      }
     }
   };
 
@@ -109,10 +126,10 @@ const AddInventory = () => {
   // Open modal for editing
   const handleEdit = (record) => {
     setFormData({
-      jobOrderNo: record["JOB ORDER NO"],
-      jobOrderDate: record["JOB ORDER DATE"],
+      LOT_ID: record["LOT_ID"],
+      // jobOrderDate: record["JOB ORDER DATE"],
       supervisor: record["SUPERVISOR"],
-      rawMaterial: record["RAW MATERIAL"],
+      LOCATION: record["LOCATION"],
     //   status: record["STATUS"],
     });
     setEditingId(record.ID);
@@ -123,10 +140,10 @@ const AddInventory = () => {
   // Open modal for adding
   const handleAdd = () => {
     setFormData({
-      jobOrderNo: "",
-      jobOrderDate: "",
+      LOT_ID: "",
+      // jobOrderDate: "",
       supervisor: "",
-      rawMaterial: "",
+      LOCATION: "",
       status: "Not Use",
     });
     setIsEditing(false);
@@ -136,27 +153,38 @@ const AddInventory = () => {
   // DataTable columns
   const columns = [
     {
-      name: "Job Order No",
-      selector: (row) => row["JOB ORDER NO"],
+      name: "LOT ID",
+      selector: (row) => row["LOT_ID"],
       sortable: true,
     },
+    // {
+    //   name: "DATE",
+    //   selector: (row) => row["DATE"],
+    //   sortable: true,
+    // },
     {
-      name: "Job Order Date",
-      selector: (row) => row["JOB ORDER DATE"],
+      name: "DATE",
+      selector: (row) =>
+        new Date(row["DATE"]).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }), // Format: DD/MM/YYYY
       sortable: true,
     },
+    
     {
-      name: "Supervisor",
+      name: "SUPERVISOR",
       selector: (row) => row["SUPERVISOR"],
       sortable: true,
     },
     {
-      name: "Raw Material",
-      selector: (row) => row["RAW MATERIAL"],
+      name: "LOCATION",
+      selector: (row) => row["LOCATION"],
       sortable: true,
     },
     {
-      name: "Status",
+      name: "STATUS",
       selector: (row) => row["STATUS"],
       sortable: true,
     },
@@ -189,6 +217,44 @@ const AddInventory = () => {
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
         <main className="main-container p-4" style={{ height: "-webkit-fill-available" }}>
+        <div className="container table-responsive ">
+          <table className="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>JOB ORDER NO</th>
+                <th>JOB ORDER DATE</th>
+                <th>ITEM NAME</th>
+                <th>PROCESS NAME</th>
+                <th>QUANTITY</th>
+                <th>DEPARTMENT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nokeData.length > 0 ? (
+                nokeData.map((item, index) => (
+                  <tr key={index}>
+                    <td>{item["JOB ORDER NO"] || "N/A"}</td>
+                    <td>
+                      {item["JOB ORDER DATE"]
+                        ? new Date(item["JOB ORDER DATE"]).toLocaleDateString("en-GB")
+                        : "N/A"}
+                    </td>
+                    <td>{item["ITEM NAME"] || "N/A"}</td>
+                    <td>{item["PROCESS NAME"] || "N/A"}</td>
+                    <td>{item["QUANTITY"] || "N/A"}</td>
+                    <td>{item["DEPARTMENT"] || "N/A"}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center">
+                    No data available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+       </div>
        <div class="d-flex justify-content-end mb-3">          
       <button className="btn btn-outline-success mb-3" onClick={handleAdd}>
         Add New Record
@@ -215,33 +281,23 @@ const AddInventory = () => {
               <form onSubmit={handleFormSubmit}>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label">Job Order No</label>
+                    <label className="form-label">LOT ID</label>
                     <input
                       type="text"
-                      name="jobOrderNo"
-                      value={formData.jobOrderNo}
+                      name="LOT_ID"
+                      value={formData.LOT_ID}
                       onChange={handleInputChange}
                       className="form-control"
                       required
+                      placeholder="Enter LOT ID"  
                     />
                   </div>
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <label className="form-label">Job Order Date</label>
                     <input
                       type="date"
                       name="jobOrderDate"
                       value={formData.jobOrderDate}
-                      onChange={handleInputChange}
-                      className="form-control"
-                      required
-                    />
-                  </div>
-                  {/* <div className="mb-3">
-                    <label className="form-label">Supervisor</label>
-                    <input
-                      type="text"
-                      name="supervisor"
-                      value={formData.supervisor}
                       onChange={handleInputChange}
                       className="form-control"
                       required
@@ -264,20 +320,41 @@ const AddInventory = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Raw Material</label>
+                  {/* <div className="mb-3">
+                    <label className="form-label">Location</label>
                     <input
                       type="text"
-                      name="rawMaterial"
-                      value={formData.rawMaterial}
+                      name="LOCATION"
+                      value={formData.LOCATION}
                       onChange={handleInputChange}
                       className="form-control"
                       required
                     />
+                  </div> */}
+                  <div className="mb-3">
+                    <label className="form-label">Location</label>
+                    <select
+                      name="LOCATION"
+                      value={formData.LOCATION}
+                      onChange={handleInputChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Select Location</option>
+                      <option value="BKB 8">BKB 8</option>
+                      <option value="BKB 9">BKB 9</option>
+                      <option value="BKB 10">BKB 10</option>
+                      <option value="BKB 11">BKB 11</option>
+                      <option value="BKB 12">BKB 12</option>
+                      <option value="BKB C7">BKB C7</option>
+                      <option value="BKB C8">BKB C8</option>
+                      <option value="BKB C9">BKB C9</option>
+                      <option value="BKB C10">BKB C10</option>
+                    </select>
                   </div>
                    {/* Hide status field when editing */}
                    {!isEditing && (
-                  <div className="mb-3">
+                  <div className="mb-3" style={{display: "none"}}>
                     <label className="form-label">Status</label>
                     <input
                       type="text"

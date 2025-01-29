@@ -184,7 +184,7 @@ const Sidebar = () => {
         )}
         
        {/* new module created 28 jan 25 */}
-       {user?.Auth === "Supervisor" && user?.Name ==="MONU" && (
+       {user?.Auth === "Supervisor" && (user?.Name === "MONU" || user?.Name === "SIDDHU") && (
           <li className="nav-item">
             <NavLink
               to="/add-inventory"
@@ -197,7 +197,7 @@ const Sidebar = () => {
           </li>
           )}
 
-       {user?.Auth === "Supervisor" && user?.Name !== "MONU" && (
+       {user?.Auth === "Supervisor" && user?.Name !== "MONU" && user?.Name !== "SIDDHU" && (
           <li className="nav-item">
             <NavLink
               to="/view-inventory"

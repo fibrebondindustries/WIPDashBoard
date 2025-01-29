@@ -2241,7 +2241,7 @@ router.get("/AllSupervisorName", async (req, res) => {
 router.get("/noke-inventory", async (req, res) => {
   try {
     const query = `
-      SELECT [ID], [JOB ORDER NO], [JOB ORDER DATE], [SUPERVISOR], [RAW MATERIAL], [STATUS]
+      SELECT [ID], [LOT_ID], [DATE], [SUPERVISOR], [LOCATION], [STATUS]
       FROM [dbo].[noke_inventory]
     `;
     const pool = await poolPromise;
@@ -2258,26 +2258,74 @@ router.get("/noke-inventory", async (req, res) => {
 });
 
 // POST API: Add a new record to the table
-router.post("/noke-inventory", async (req, res) => {
-  const { jobOrderNo, jobOrderDate, supervisor, rawMaterial, status } = req.body;
+// router.post("/noke-inventory", async (req, res) => {
+//   const { LOT_ID, supervisor, LOCATION, status } = req.body;
 
-  if (!jobOrderNo || !jobOrderDate || !supervisor || !rawMaterial || !status) {
+//   if (!LOT_ID  || !supervisor || !LOCATION || !status) {
+//     return res.status(400).json({ error: "All fields are required." });
+//   }
+
+//   try {
+//     const query = `
+//       INSERT INTO [dbo].[noke_inventory] ([LOT_ID], [SUPERVISOR], [LOCATION], [STATUS])
+//       VALUES (@LOT_ID, @supervisor, @LOCATION, @status)
+//     `;
+//     const pool = await poolPromise;
+//     await pool.request()
+//       .input("LOT_ID", sql.NVarChar, LOT_ID)
+//       .input("supervisor", sql.NVarChar, supervisor)
+//       .input("LOCATION", sql.NVarChar, LOCATION)
+//       .input("status", sql.NVarChar, status)
+//       .query(query);
+
+//     res.status(201).json({ message: "Record added successfully to inventory." });
+//   } catch (error) {
+//     console.error("Error adding record to inventory:", error);
+//     res.status(500).json({ error: "Failed to add record to inventory." });
+//   }
+// });
+
+
+// POST API: Add a new record to the table
+router.post("/noke-inventory", async (req, res) => {
+  const { LOT_ID, supervisor, LOCATION, status } = req.body;
+
+  if (!LOT_ID || !supervisor || !LOCATION || !status) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
   try {
-    const query = `
-      INSERT INTO [dbo].[noke_inventory] ([JOB ORDER NO], [JOB ORDER DATE], [SUPERVISOR], [RAW MATERIAL], [STATUS])
-      VALUES (@jobOrderNo, @jobOrderDate, @supervisor, @rawMaterial, @status)
-    `;
     const pool = await poolPromise;
-    await pool.request()
-      .input("jobOrderNo", sql.NVarChar, jobOrderNo)
-      .input("jobOrderDate", sql.NVarChar, jobOrderDate)
+
+    // Check if LOT_ID already exists
+    const checkQuery = `
+      SELECT COUNT(*) AS count
+      FROM [dbo].[noke_inventory]
+      WHERE [LOT_ID] = @LOT_ID
+    `;
+
+    const checkResult = await pool
+      .request()
+      .input("LOT_ID", sql.NVarChar, LOT_ID)
+      .query(checkQuery);
+
+    if (checkResult.recordset[0].count > 0) {
+      return res.status(400).json({ error: "This LOT ID is already issued." });
+    }
+
+    // If LOT_ID is unique, proceed with the insert
+    const insertQuery = `
+      INSERT INTO [dbo].[noke_inventory] ([LOT_ID], [SUPERVISOR], [LOCATION], [STATUS])
+      VALUES (@LOT_ID, @supervisor, @LOCATION, @status)
+    `;
+
+    await pool
+      .request()
+      .input("LOT_ID", sql.NVarChar, LOT_ID)
       .input("supervisor", sql.NVarChar, supervisor)
-      .input("rawMaterial", sql.NVarChar, rawMaterial)
+      .input("LOCATION", sql.NVarChar, LOCATION)
       .input("status", sql.NVarChar, status)
-      .query(query);
+      .query(insertQuery);
 
     res.status(201).json({ message: "Record added successfully to inventory." });
   } catch (error) {
@@ -2285,6 +2333,7 @@ router.post("/noke-inventory", async (req, res) => {
     res.status(500).json({ error: "Failed to add record to inventory." });
   }
 });
+
 
 // PATCH API: Update a specific record in the table
 router.patch("/noke-inventory/:id", async (req, res) => {
@@ -2343,5 +2392,24 @@ router.delete("/noke-inventory/:id", async (req, res) => {
   }
 });
 
+
+router.get("/noke-data", async (req, res) => {
+  try {
+    const query = `
+        select [JOB ORDER NO], [JOB ORDER DATE], [ITEM NAME], [PROCESS NAME], [PROCESS GROUP], 
+         [QUANTITY], [DEPARTMENT]  FROM [dbo].[StagingTable] where DEPARTMENT = 'NOKE'
+       `;
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "No records found in inventory." });
+    }
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching inventory records:", error);
+    res.status(500).json({ error: "Failed to fetch inventory records." });
+  }
+});
 
 module.exports = router;

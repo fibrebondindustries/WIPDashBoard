@@ -16,31 +16,7 @@ const ViewInventory = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
-  // Fetch inventory data from API
-//   const fetchInventory = async () => {
-//     try {
-//       const response = await axiosInstance.get("/api/noke-inventory");
-//       console.log("Fetched Inventory:", response.data); // Debug inventory data
-//       setInventory(response.data);
-//     } catch (error) {
-//       console.error("Error fetching inventory:", error);
-//     }
-//   };
-//   // Fetch inventory data from API
-//   const fetchInventory = async () => {
-//     try {
-//       const response = await axiosInstance.get("/api/noke-inventory");
-//       console.log("Fetched Inventory:", response.data); // Debug inventory data
 
-//       // Filter inventory by logged-in supervisor name
-//       const filteredData = response.data.filter(
-//         (item) => item["SUPERVISOR"] === loggedInUser?.Name
-//       );
-//       setInventory(filteredData);
-//     } catch (error) {
-//       console.error("Error fetching inventory:", error);
-//     }
-//   };
 
  // Fetch inventory data from API
  const fetchInventory = useCallback(async () => {
@@ -83,23 +59,34 @@ const ViewInventory = () => {
   // DataTable columns
   const columns = [
     {
-      name: "Job Order No",
-      selector: (row) => row["JOB ORDER NO"],
+      name: "LOT ID",
+      selector: (row) => row["LOT_ID"],
       sortable: true,
     },
+    // {
+    //   name: "DATE",
+    //   selector: (row) => row["DATE"],
+    //   sortable: true,
+    // },
     {
-      name: "Job Order Date",
-      selector: (row) => row["JOB ORDER DATE"],
+      name: "DATE",
+      selector: (row) =>
+        new Date(row["DATE"]).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }), // Format: DD/MM/YYYY
       sortable: true,
     },
+    
     {
-      name: "Supervisor",
+      name: "SUPERVISOR",
       selector: (row) => row["SUPERVISOR"],
       sortable: true,
     },
     {
-      name: "Raw Material",
-      selector: (row) => row["RAW MATERIAL"],
+      name: "LOCATION",
+      selector: (row) => row["LOCATION"],
       sortable: true,
     },
     {
