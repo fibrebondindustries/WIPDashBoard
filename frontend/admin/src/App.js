@@ -20,6 +20,7 @@ import { PollingProvider  } from "./PollingContext";
 import Remarks from './pages/Remarks';
 import AddInventory from './pages/AddInventory';
 import ViewInventory from './pages/ViewInventory';
+import OrderDispatch from './pages/OrderDispatch';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -120,6 +121,14 @@ function App() {
                         element={
                             <ProtectedRoute>
                                 <ViewInventory />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/order-dispatch"
+                        element={
+                            <ProtectedRoute>
+                                <OrderDispatch />
                             </ProtectedRoute>
                         }
                     />

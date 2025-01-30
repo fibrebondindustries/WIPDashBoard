@@ -3,7 +3,6 @@ const { poolPromise, sql } = require("../config/db");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 
-
 router.get("/data", async (req, res) => {
   try {
     const department = req.query.department; // Get department filter from query
@@ -49,7 +48,7 @@ router.get("/data", async (req, res) => {
       query += " WHERE T1.[JOB ORDER NO] = @jobOrderNo";
       request.input("jobOrderNo", sql.NVarChar, jobOrderNo);
     }
-      query += " ORDER BY T1.[Sequance] ASC"; // Order by sequence
+    query += " ORDER BY T1.[Sequance] ASC"; // Order by sequence
 
     const result = await request.query(query);
     res.json(result.recordset);
@@ -58,7 +57,6 @@ router.get("/data", async (req, res) => {
     res.status(500).send("Error fetching data");
   }
 });
-
 
 // Listen for SQL connection errors
 sql.on("error", (err) => {
@@ -147,19 +145,18 @@ HAVING
   }
 });
 
-
-////Admin Dashboard 23 nov // yogesh 
+////Admin Dashboard 23 nov // yogesh
 router.post("/signup", async (req, res) => {
   const { Name, Password, Auth, EmployeeID, Department } = req.body;
 
-  // Validate all required fields !Name || !Email || !Mobile || 
-  if (!Password ) {
+  // Validate all required fields !Name || !Email || !Mobile ||
+  if (!Password) {
     return res.status(400).json({ error: "Password is required" });
   }
-  if (!EmployeeID ) {
+  if (!EmployeeID) {
     return res.status(400).json({ error: "EmployeeID is required" });
   }
-  if (!Department ) {
+  if (!Department) {
     return res.status(400).json({ error: "Department is required" });
   }
   try {
@@ -200,7 +197,6 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-
 // Login API
 
 router.post("/login", async (req, res) => {
@@ -216,8 +212,7 @@ router.post("/login", async (req, res) => {
     // Query the database to find a user by Email or EmployeeID
     const user = await pool
       .request()
-      .input("identifier", sql.NVarChar, identifier)
-      .query(`
+      .input("identifier", sql.NVarChar, identifier).query(`
         SELECT 
         Name, Password, Auth, EmployeeID, Department
         FROM [dbo].[Emp_Master]
@@ -239,8 +234,7 @@ router.post("/login", async (req, res) => {
     const departmentHistory = await pool
       .request()
       .input("EmployeeID", sql.NVarChar, user.recordset[0].EmployeeID)
-      .input("CurrentTime", sql.DateTime, currentTime)
-      .query(`
+      .input("CurrentTime", sql.DateTime, currentTime).query(`
         SELECT 
           TemporaryDepartment 
         FROM [dbo].[DepartmentHistory]
@@ -269,8 +263,11 @@ router.post("/login", async (req, res) => {
     //     `);
     // }
 
-    // Handle Supervisor and SuperAdmin roles // 19 Dec 
-    if (user.recordset[0].Auth === "Supervisor" || user.recordset[0].Auth === "SuperAdmin") {
+    // Handle Supervisor and SuperAdmin roles // 19 Dec
+    if (
+      user.recordset[0].Auth === "Supervisor" ||
+      user.recordset[0].Auth === "SuperAdmin"
+    ) {
       // console.log(`${user.recordset[0].Auth} logged in successfully`);
     }
 
@@ -289,13 +286,14 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 ////Marke Attendance
 router.post("/mark-in", async (req, res) => {
   const { EmployeeID, Department } = req.body;
 
   if (!EmployeeID || !Department) {
-    return res.status(400).json({ error: "EmployeeID and Department are required" });
+    return res
+      .status(400)
+      .json({ error: "EmployeeID and Department are required" });
   }
 
   try {
@@ -306,8 +304,7 @@ router.post("/mark-in", async (req, res) => {
       .request()
       .input("EmployeeID", sql.NVarChar, EmployeeID)
       .input("LoginTime", sql.DateTime, loginTime)
-      .input("Department", sql.NVarChar, Department)
-      .query(`
+      .input("Department", sql.NVarChar, Department).query(`
         INSERT INTO UserActivity (EmployeeID, LoginTime, Department)
         VALUES (@EmployeeID, @LoginTime, @Department)
       `);
@@ -322,9 +319,6 @@ router.post("/mark-in", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-
 
 // router.post("/logout", async (req, res) => {
 //   const { EmployeeID, logoutTime } = req.body;
@@ -358,11 +352,7 @@ router.post("/mark-in", async (req, res) => {
 //   }
 // });
 
-
-
-
 ///26 nov
-
 
 router.post("/logout", async (req, res) => {
   const { EmployeeID } = req.body;
@@ -380,8 +370,7 @@ router.post("/logout", async (req, res) => {
     // Check if there is an active session for the EmployeeID
     const activeSessionResult = await pool
       .request()
-      .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .query(`
+      .input("EmployeeID", sql.NVarChar, EmployeeID).query(`
         SELECT TOP 1 ID
         FROM UserActivity
         WHERE EmployeeID = @EmployeeID
@@ -399,8 +388,7 @@ router.post("/logout", async (req, res) => {
     await pool
       .request()
       .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .input("LogoutTime", sql.DateTime, logoutTime)
-      .query(`
+      .input("LogoutTime", sql.DateTime, logoutTime).query(`
         UPDATE UserActivity
         SET LogoutTime = @LogoutTime
         WHERE EmployeeID = @EmployeeID
@@ -418,9 +406,6 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-
-
-
 router.get("/AllUsers", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -435,7 +420,7 @@ router.get("/AllUsers", async (req, res) => {
 
 //get user by id
 router.get("/users/:employeeID", async (req, res) => {
-  const { employeeID  } = req.params;
+  const { employeeID } = req.params;
 
   try {
     const pool = await poolPromise;
@@ -459,14 +444,14 @@ router.get("/users/:employeeID", async (req, res) => {
 ///update user // modified on 07 jan 2025 // yogesh
 router.put("/users/:employeeID", async (req, res) => {
   const { employeeID } = req.params;
-  const { Name, Auth, Department, Password, NewEmployeeID, OldPassword } = req.body;
+  const { Name, Auth, Department, Password, NewEmployeeID, OldPassword } =
+    req.body;
 
- 
   if (!Name) {
     return res.status(400).json({ error: "Name is required" });
   }
-  
-  if (!Department ) {
+
+  if (!Department) {
     return res.status(400).json({ error: "Department is required" });
   }
   if (!Auth) {
@@ -492,19 +477,31 @@ router.put("/users/:employeeID", async (req, res) => {
     let hashedPassword = existingUser.Password; // Default to existing password
 
     if (Password && Password.trim() !== "") {
-
-      if(!OldPassword || OldPassword.trim() === ""){ /// new condition added on 07 jan 2025 // yogesh 
-        return res.status(400).json({ error: "Old password is required to update the password." });
+      if (!OldPassword || OldPassword.trim() === "") {
+        /// new condition added on 07 jan 2025 // yogesh
+        return res
+          .status(400)
+          .json({ error: "Old password is required to update the password." });
       }
       // Check if the old password matches the existing password /// new condition added on 07 jan 2025 // yogesh
-      const isOldPasswordMatch = await bcrypt.compare(OldPassword, existingUser.Password);
+      const isOldPasswordMatch = await bcrypt.compare(
+        OldPassword,
+        existingUser.Password
+      );
       if (!isOldPasswordMatch) {
         return res.status(400).json({ error: "Old password is incorrect." });
       }
       // Check if the new password matches the existing one
-      const isSamePassword = await bcrypt.compare(Password, existingUser.Password);
+      const isSamePassword = await bcrypt.compare(
+        Password,
+        existingUser.Password
+      );
       if (isSamePassword) {
-        return res.status(400).json({ error: "New password cannot be the same as the old password." });
+        return res
+          .status(400)
+          .json({
+            error: "New password cannot be the same as the old password.",
+          });
       }
 
       // Hash the new password
@@ -538,9 +535,6 @@ router.put("/users/:employeeID", async (req, res) => {
 });
 ///update user
 
-
-
-
 router.delete("/users/:employeeID", async (req, res) => {
   const { employeeID } = req.params;
 
@@ -570,12 +564,13 @@ router.delete("/users/:employeeID", async (req, res) => {
   }
 });
 
-
-//06 nov // yogesh 
+//06 nov // yogesh
 router.get("/departments", async (req, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query("SELECT DepartmentName FROM Departments");
+    const result = await pool
+      .request()
+      .query("SELECT DepartmentName FROM Departments");
     res.status(200).json(result.recordset.map((row) => row.DepartmentName));
   } catch (error) {
     console.error("Error fetching departments:", error);
@@ -584,7 +579,7 @@ router.get("/departments", async (req, res) => {
 });
 //end
 
-///27 Nov // yogesh 
+///27 Nov // yogesh
 router.get("/presentEmployees", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -614,8 +609,7 @@ router.post("/assignTemporaryDepartment", async (req, res) => {
     // Check if the employee is present today and not logged out
     const employeeCheckResult = await pool
       .request()
-      .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .query(`
+      .input("EmployeeID", sql.NVarChar, EmployeeID).query(`
         SELECT * 
         FROM UserActivity
         WHERE EmployeeID = @EmployeeID 
@@ -638,8 +632,7 @@ router.post("/assignTemporaryDepartment", async (req, res) => {
       .input("EmployeeID", sql.NVarChar, EmployeeID)
       .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment)
       .input("FromTime", sql.DateTime, fromTime)
-      .input("AssignedBy", sql.NVarChar, AssignedBy)
-      .query(`
+      .input("AssignedBy", sql.NVarChar, AssignedBy).query(`
         INSERT INTO DepartmentHistory (EmployeeID, OriginalDepartment, TemporaryDepartment, FromTime, AssignedBy)
         SELECT EmployeeID, Department, @TemporaryDepartment, @FromTime, @AssignedBy
         FROM UserActivity
@@ -650,20 +643,20 @@ router.post("/assignTemporaryDepartment", async (req, res) => {
     await pool
       .request()
       .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment)
-      .query(`
+      .input("TemporaryDepartment", sql.NVarChar, TemporaryDepartment).query(`
         UPDATE UserActivity
         SET Department = @TemporaryDepartment
         WHERE EmployeeID = @EmployeeID AND LogoutTime IS NULL
       `);
 
-    res.status(200).json({ message: "Employee assigned to temporary department" });
+    res
+      .status(200)
+      .json({ message: "Employee assigned to temporary department" });
   } catch (err) {
     console.error("Error assigning temporary department:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 router.post("/restoreDepartment", async (req, res) => {
   const { EmployeeID } = req.body;
@@ -680,8 +673,7 @@ router.post("/restoreDepartment", async (req, res) => {
     const updateHistory = await pool
       .request()
       .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .input("ToTime", sql.DateTime, toTime)
-      .query(`
+      .input("ToTime", sql.DateTime, toTime).query(`
         UPDATE DepartmentHistory
         SET ToTime = @ToTime
         WHERE EmployeeID = @EmployeeID AND ToTime IS NULL
@@ -690,14 +682,13 @@ router.post("/restoreDepartment", async (req, res) => {
     if (updateHistory.rowsAffected[0] === 0) {
       return res
         .status(404)
-        .json({ error: "No active temporary assignment found for this employee." });
+        .json({
+          error: "No active temporary assignment found for this employee.",
+        });
     }
 
     // Restore the original department in UserActivity
-    await pool
-      .request()
-      .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .query(`
+    await pool.request().input("EmployeeID", sql.NVarChar, EmployeeID).query(`
         UPDATE UserActivity
         SET Department = (
           SELECT TOP 1 OriginalDepartment
@@ -708,7 +699,9 @@ router.post("/restoreDepartment", async (req, res) => {
         WHERE EmployeeID = @EmployeeID AND LogoutTime IS NULL
       `);
 
-    res.status(200).json({ message: "Employee restored to original department" });
+    res
+      .status(200)
+      .json({ message: "Employee restored to original department" });
   } catch (err) {
     console.error("Error restoring department:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -739,8 +732,7 @@ router.get("/temporaryDepartments", async (req, res) => {
   }
 });
 
-
-///////////// worker module 
+///////////// worker module
 
 router.get("/departments/worker-requirements", async (req, res) => {
   try {
@@ -887,7 +879,6 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
   }
 });
 
-
 // const departmentRatios = {
 //   "FOAM CUTTING": 10000,
 //   "GLUING": 6666,
@@ -912,7 +903,6 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 //   "PVC": 1666,
 // };
 
-
 // // Update /departments/update-resources Endpoint
 // // router.post("/departments/update-resources", async (req, res) => {
 // //   try {
@@ -920,7 +910,7 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 
 // //     // Query to calculate present workers per department
 // //     const presentWorkersQuery = `
-// //       SELECT 
+// //       SELECT
 // //         Department,
 // //         COUNT(EmployeeID) AS PresentWorkers
 // //       FROM UserActivity
@@ -963,11 +953,7 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 // //   }
 // // });
 
-
-
-
 // // Update /departments/update-lot Endpoint /// not in use
-
 
 // router.post("/departments/update-resources", async (req, res) => {
 //   try {
@@ -975,7 +961,7 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 
 //     // Query to calculate present workers per department
 //     const presentWorkersQuery = `
-//       SELECT 
+//       SELECT
 //         Department,
 //         COUNT(EmployeeID) AS PresentWorkers
 //       FROM UserActivity
@@ -986,9 +972,9 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 
 //     // Query to fetch current department data for calculations
 //     const departmentDataQuery = `
-//       SELECT 
-//         DepartmentName, 
-//         AvailableResource 
+//       SELECT
+//         DepartmentName,
+//         AvailableResource
 //       FROM Departments;
 //     `;
 //     const departmentData = await pool.request().query(departmentDataQuery);
@@ -1020,8 +1006,7 @@ END - d.[AvailableResource]) AS ToFill-- Workers to fill
 //   }
 // });
 
-
-/// new code 
+/// new code
 router.post("/departments/update-resources", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -1052,14 +1037,14 @@ router.post("/departments/update-resources", async (req, res) => {
 
       // Get the number of present workers for the department
       const availableWorkers =
-        presentWorkers.recordset.find((w) => w.Department === departmentName)?.PresentWorkers || 0;
+        presentWorkers.recordset.find((w) => w.Department === departmentName)
+          ?.PresentWorkers || 0;
 
       // Update the Departments table
       await pool
         .request()
         .input("DepartmentName", sql.NVarChar, departmentName)
-        .input("AvailableResource", sql.Int, availableWorkers)
-        .query(`
+        .input("AvailableResource", sql.Int, availableWorkers).query(`
           UPDATE Departments
           SET AvailableResource = @AvailableResource
           WHERE DepartmentName = @DepartmentName;
@@ -1069,8 +1054,7 @@ router.post("/departments/update-resources", async (req, res) => {
       await pool
         .request()
         .input("Department", sql.NVarChar, departmentName)
-        .input("Worker_in_Factory", sql.Int, availableWorkers)
-        .query(`
+        .input("Worker_in_Factory", sql.Int, availableWorkers).query(`
           UPDATE WIP
           SET Worker_in_Factory = @Worker_in_Factory
           WHERE Department = @Department;
@@ -1080,19 +1064,22 @@ router.post("/departments/update-resources", async (req, res) => {
     // Execute the stored procedure to calculate and update the 'ToFill' column in WIP
     await pool.request().query(`EXEC UpdateWIPTest`);
 
-    res.status(200).json({ message: "Resources updated successfully in both tables!" });
+    res
+      .status(200)
+      .json({ message: "Resources updated successfully in both tables!" });
   } catch (error) {
     console.error("Error updating resources:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-
 router.put("/departments/update-lot", async (req, res) => {
   const { DepartmentName, LotQuantity } = req.body;
 
   if (!DepartmentName || !LotQuantity) {
-    return res.status(400).json({ error: "DepartmentName and LotQuantity are required." });
+    return res
+      .status(400)
+      .json({ error: "DepartmentName and LotQuantity are required." });
   }
 
   try {
@@ -1101,7 +1088,9 @@ router.put("/departments/update-lot", async (req, res) => {
     // Get the ratio for the specified department
     const ratio = departmentRatios[DepartmentName];
     if (!ratio) {
-      return res.status(400).json({ error: `No ratio defined for department: ${DepartmentName}` });
+      return res
+        .status(400)
+        .json({ error: `No ratio defined for department: ${DepartmentName}` });
     }
 
     const requiredWorkers = Math.ceil(LotQuantity / ratio);
@@ -1111,15 +1100,18 @@ router.put("/departments/update-lot", async (req, res) => {
       .request()
       .input("LotQuantity", sql.Int, LotQuantity)
       .input("RequiredResource", sql.Int, requiredWorkers)
-      .input("DepartmentName", sql.NVarChar, DepartmentName)
-      .query(`
+      .input("DepartmentName", sql.NVarChar, DepartmentName).query(`
         UPDATE Departments
         SET LotQuantity = @LotQuantity,
             RequiredResource = @RequiredResource
         WHERE DepartmentName = @DepartmentName;
       `);
 
-    res.status(200).json({ message: "Lot quantity and required workers updated successfully." });
+    res
+      .status(200)
+      .json({
+        message: "Lot quantity and required workers updated successfully.",
+      });
   } catch (error) {
     console.error("Error updating lot quantity:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -1132,9 +1124,9 @@ router.get("/departments/:name", async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    const result = await pool.request()
-      .input("DepartmentName", sql.NVarChar, name)
-      .query(`
+    const result = await pool
+      .request()
+      .input("DepartmentName", sql.NVarChar, name).query(`
         SELECT 
           DepartmentName,
           LotQuantity,
@@ -1156,13 +1148,13 @@ router.get("/departments/:name", async (req, res) => {
   }
 });
 
-
-
 router.post("/departments/approve-extra-time", async (req, res) => {
   const { departmentName, extraTime } = req.body;
 
   if (!departmentName || !extraTime) {
-    return res.status(400).json({ error: "Department name and extra time are required." });
+    return res
+      .status(400)
+      .json({ error: "Department name and extra time are required." });
   }
 
   try {
@@ -1171,15 +1163,16 @@ router.post("/departments/approve-extra-time", async (req, res) => {
     // Fetch QuantityPerMin for the department from WorkingHours
     const quantityPerMinResult = await pool
       .request()
-      .input("DepartmentName", sql.NVarChar, departmentName)
-      .query(`
+      .input("DepartmentName", sql.NVarChar, departmentName).query(`
         SELECT [Quantity] AS QuantityPerMin
         FROM [dbo].[WorkingHours]
         WHERE [Departments] = @DepartmentName
       `);
 
     if (quantityPerMinResult.recordset.length === 0) {
-      return res.status(404).json({ error: "Department not found in WorkingHours." });
+      return res
+        .status(404)
+        .json({ error: "Department not found in WorkingHours." });
     }
 
     const quantityPerMin = quantityPerMinResult.recordset[0].QuantityPerMin;
@@ -1200,7 +1193,11 @@ router.post("/departments/approve-extra-time", async (req, res) => {
       .query(updateQuery);
 
     if (updateResult.rowsAffected[0] === 0) {
-      return res.status(404).json({ error: "No rows updated. Ensure department exists in StagingTable." });
+      return res
+        .status(404)
+        .json({
+          error: "No rows updated. Ensure department exists in StagingTable.",
+        });
     }
 
     res.status(200).json({
@@ -1211,7 +1208,6 @@ router.post("/departments/approve-extra-time", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 router.post("/departments/save-resources", async (req, res) => {
   try {
@@ -1278,12 +1274,6 @@ router.post("/departments/save-resources", async (req, res) => {
   }
 });
 
-
-
-
-
-
-
 // GET API to fetch all WIP data
 router.get("/wip", async (req, res) => {
   try {
@@ -1317,10 +1307,10 @@ router.get("/wip", async (req, res) => {
 
 ///// Ticketing API /////
 
-
 // POST API to create a ticket
 router.post("/tickets", async (req, res) => {
-  const { Category, Subject, Brief_Description, Priority, EmployeeID } = req.body; // Extract EmployeeID from body
+  const { Category, Subject, Brief_Description, Priority, EmployeeID } =
+    req.body; // Extract EmployeeID from body
 
   try {
     const pool = await poolPromise;
@@ -1328,8 +1318,7 @@ router.post("/tickets", async (req, res) => {
     // Get Supervisor Name and Department
     const supervisor = await pool
       .request()
-      .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .query(`
+      .input("EmployeeID", sql.NVarChar, EmployeeID).query(`
         SELECT Name, Department 
         FROM [dbo].[Emp_Master] 
         WHERE EmployeeID = @EmployeeID
@@ -1340,7 +1329,6 @@ router.post("/tickets", async (req, res) => {
     }
 
     const { Name, Department } = supervisor.recordset[0];
-
 
     // Use formatted time in your query
     const RaiseDateIST = formatDateTime(new Date()); // Current time in IST
@@ -1353,8 +1341,7 @@ router.post("/tickets", async (req, res) => {
       .input("Supervisor_Name", sql.NVarChar, Name)
       .input("Priority", sql.NVarChar, Priority)
       .input("Status", sql.NVarChar, "Open") // Default to "Open" if not provided
-      .input("RaiseDate", sql.NVarChar, RaiseDateIST)
-      .query(`
+      .input("RaiseDate", sql.NVarChar, RaiseDateIST).query(`
         INSERT INTO [dbo].[TICKETS] 
         (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, RaiseDate)
         VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @RaiseDate)
@@ -1366,10 +1353,6 @@ router.post("/tickets", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-
-
 
 // GET API to fetch all tickets ADMIN
 router.get("/ticketsAdmin", async (req, res) => {
@@ -1392,8 +1375,7 @@ router.get("/tickets", async (req, res) => {
     // Fetch tickets only for the logged-in supervisor
     const tickets = await pool
       .request()
-      .input("EmployeeID", sql.NVarChar, EmployeeID)
-      .query(`
+      .input("EmployeeID", sql.NVarChar, EmployeeID).query(`
         SELECT * 
         FROM [dbo].[TICKETS]
         WHERE Supervisor_Name IN (
@@ -1409,8 +1391,6 @@ router.get("/tickets", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
 
 // PUT API to update a ticket
 router.put("/tickets/:id", async (req, res) => {
@@ -1459,7 +1439,6 @@ router.put("/tickets/:id", async (req, res) => {
   }
 });
 
-
 // PATCH API to partially update a ticket // modificate on 08 jan 2025, store sovle date and confirm time // yogesh
 router.patch("/tickets/:id", async (req, res) => {
   const { id } = req.params;
@@ -1471,8 +1450,9 @@ router.patch("/tickets/:id", async (req, res) => {
     }
 
     // Check if the status is being updated to 'Resolved'
-    const IsResolved = fields.Status && fields.Status.toLowerCase() === "resolved";
-    if(IsResolved){
+    const IsResolved =
+      fields.Status && fields.Status.toLowerCase() === "resolved";
+    if (IsResolved) {
       fields.SolvedDate = formatDateTime(new Date()); // Set SolvedDate to current time in IST
     }
     let setQuery = Object.keys(fields)
@@ -1502,7 +1482,6 @@ router.patch("/tickets/:id", async (req, res) => {
   }
 });
 
-
 // DELETE API to delete a ticket
 router.delete("/tickets/:id", async (req, res) => {
   const { id } = req.params;
@@ -1523,7 +1502,6 @@ router.delete("/tickets/:id", async (req, res) => {
   }
 });
 
-
 // Confirm Ticket API: Move resolved ticket to Solved_Tickets table
 router.post("/tickets/confirm/:id", async (req, res) => {
   const { id } = req.params;
@@ -1532,10 +1510,7 @@ router.post("/tickets/confirm/:id", async (req, res) => {
     const pool = await poolPromise;
 
     // Fetch the ticket from the TICKETS table
-    const ticket = await pool
-      .request()
-      .input("ID", sql.Int, id)
-      .query(`
+    const ticket = await pool.request().input("ID", sql.Int, id).query(`
         SELECT 
           Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate
         FROM [dbo].[TICKETS]
@@ -1550,11 +1525,13 @@ router.post("/tickets/confirm/:id", async (req, res) => {
 
     // Ensure the ticket is Resolved before moving  // yogesh
     if (ticketData.Status !== "Resolved") {
-      return res.status(400).json({ error: "Only resolved tickets can be confirmed" });
+      return res
+        .status(400)
+        .json({ error: "Only resolved tickets can be confirmed" });
     }
 
     // Format RaiseDate and SolvedDate to IST
-    const confirmTimeIST  = formatDateTime(new Date());
+    const confirmTimeIST = formatDateTime(new Date());
     // const raiseDateIST = formatDateTime(new Date(ticketData.RaiseDate));
 
     // Move the ticket to Solved_Tickets table
@@ -1569,32 +1546,28 @@ router.post("/tickets/confirm/:id", async (req, res) => {
       .input("ID", sql.Int, ticketData.ID)
       .input("RaiseDate", sql.NVarChar, ticketData.RaiseDate)
       .input("SolvedDate", sql.NVarChar, ticketData.SolvedDate)
-      .input("ConfirmTime", sql.NVarChar, confirmTimeIST )
-      
-      .query(`
+      .input("ConfirmTime", sql.NVarChar, confirmTimeIST).query(`
         INSERT INTO [dbo].[Solved_Tickets]
         (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, ConfirmTime)
         VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate, @ConfirmTime)
       `);
 
     // Delete the ticket from TICKETS table
-    await pool
-      .request()
-      .input("ID", sql.Int, id)
-      .query(`
+    await pool.request().input("ID", sql.Int, id).query(`
         DELETE FROM [dbo].[TICKETS]
         WHERE ID = @ID
       `);
 
-    res.status(200).json({ message: "Ticket confirmed and moved to solved tickets" });
+    res
+      .status(200)
+      .json({ message: "Ticket confirmed and moved to solved tickets" });
   } catch (error) {
     console.error("Error confirming ticket:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-
-/// new api for WIP Dashboard Design table in model 
+/// new api for WIP Dashboard Design table in model
 router.get("/matched-data", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -1623,7 +1596,6 @@ router.get("/matched-data", async (req, res) => {
   }
 });
 
-
 // POST API for Worker Allocation
 router.post("/worker-allocation", async (req, res) => {
   const { From_Dep, Worker_Name, To_Department } = req.body;
@@ -1634,11 +1606,11 @@ router.post("/worker-allocation", async (req, res) => {
 
   try {
     const pool = await poolPromise;
-    await pool.request()
+    await pool
+      .request()
       .input("From_Dep", From_Dep)
       .input("Worker_Name", Worker_Name)
-      .input("To_Department", To_Department)
-      .query(`
+      .input("To_Department", To_Department).query(`
         INSERT INTO [dbo].[WorkerAllocation] ([From_Dep], [Worker_Name], [To_Department])
         VALUES (@From_Dep, @Worker_Name, @To_Department)
       `);
@@ -1650,7 +1622,6 @@ router.post("/worker-allocation", async (req, res) => {
   }
 });
 
-
 // DELETE API for Worker Allocation
 router.delete("/worker-allocation/:id", async (req, res) => {
   const { id } = req.params;
@@ -1661,9 +1632,7 @@ router.delete("/worker-allocation/:id", async (req, res) => {
 
   try {
     const pool = await poolPromise;
-    const result = await pool.request()
-      .input("ID", id)
-      .query(`
+    const result = await pool.request().input("ID", id).query(`
         DELETE FROM [dbo].[WorkerAllocation]
         WHERE [ID] = @ID
       `);
@@ -1718,9 +1687,7 @@ router.post("/auto-insert-first-process", async (req, res) => {
     const pool = await poolPromise;
 
     // Fetch rows where FirstProcess = 'yes' from StagingTable
-    const stagingData = await pool
-      .request()
-      .query(`
+    const stagingData = await pool.request().query(`
         SELECT 
           [Supervisor],
           [Updated_Time] AS NewProcessTime,
@@ -1736,8 +1703,7 @@ router.post("/auto-insert-first-process", async (req, res) => {
       // Check if the row already exists in ConfirmTime
       const existingRow = await pool
         .request()
-        .input("LotId", sql.NVarChar, row.LOT_ID)
-        .query(`
+        .input("LotId", sql.NVarChar, row.LOT_ID).query(`
           SELECT COUNT(*) AS RowCount
           FROM [dbo].[ConfirmTime]
           WHERE [LOT_ID] = @LotId
@@ -1750,8 +1716,7 @@ router.post("/auto-insert-first-process", async (req, res) => {
           .input("SupervisorName", sql.NVarChar, row.Supervisor)
           .input("NewProcessTime", sql.NVarChar, row.NewProcessTime)
           .input("LotId", sql.NVarChar, row.LOT_ID)
-          .input("ProcessName", sql.NVarChar, row.ProcessName)
-          .query(`
+          .input("ProcessName", sql.NVarChar, row.ProcessName).query(`
             INSERT INTO [dbo].[ConfirmTime] (
               [SupervisorName], [NewProcessTime], [LOT_ID], [Process_Name]
             )
@@ -1762,13 +1727,14 @@ router.post("/auto-insert-first-process", async (req, res) => {
       }
     }
 
-    res.status(200).json({ message: "Automatic insertion completed successfully." });
+    res
+      .status(200)
+      .json({ message: "Automatic insertion completed successfully." });
   } catch (error) {
     console.error("Error in auto-insert-first-process API:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // // API to get the count of rows with FirstProcess = 'yes' in StagingTable // Yogesh 28 Dec 2024
 // router.get("/first-process-count", async (req, res) => {
@@ -1777,7 +1743,7 @@ router.post("/auto-insert-first-process", async (req, res) => {
 //     const result = await pool
 //       .request()
 //       .query(`
-//         SELECT 
+//         SELECT
 //           [SupervisorName] AS Supervisor,
 //           [Process_Name] AS [PROCESS NAME],
 //           [LOT_ID] AS [ITEM NAME],
@@ -1789,7 +1755,6 @@ router.post("/auto-insert-first-process", async (req, res) => {
 //         WHERE [CompletedTime] IS NULL
 //       `);
 
-      
 //     // Send the result as a response
 //     res.status(200).json(result.recordset);
 //   } catch (error) {
@@ -1860,31 +1825,30 @@ router.post("/completedTime-process", async (req, res) => {
       .input("CompletedTime", sql.NVarChar, completedTime)
       .input("ID", sql.Int, ID)
       .input("ConfirmBy", sql.NVarChar, ConfirmBy)
-      .input("ConfirmTime", sql.NVarChar, confirmTime)
-      .query(`
+      .input("ConfirmTime", sql.NVarChar, confirmTime).query(`
         UPDATE [dbo].[ConfirmTime]
         SET [CompletedTime] = @CompletedTime,
         [ConfirmBy] = @ConfirmBy,
          [ConfirmTime] = @ConfirmTime
         WHERE [ID] = @ID
       `);
-//  // Update the Updated_Time in StagingTable
-//  const lotIdQuery = `
-//  SELECT [LOT_ID] FROM [dbo].[ConfirmTime] WHERE [ID] = @ID
-// `;
-// const lotIdResult = await pool.request().input("ID", sql.Int, ID).query(lotIdQuery);
-// const lotId = lotIdResult.recordset[0]?.LOT_ID;
-// if (lotId) {
-//     await pool
-//       .request()
-//       .input("Updated_Time", sql.NVarChar, completedTime) // Update to current IST-confirmed time
-//       .input("ItemName", sql.NVarChar, lotId)
-//       .query(`
-//         UPDATE [dbo].[StagingTable]
-//         SET [Updated_Time] = @Updated_Time
-//         WHERE [ITEM NAME] = @ItemName
-//       `);
-// }
+    //  // Update the Updated_Time in StagingTable
+    //  const lotIdQuery = `
+    //  SELECT [LOT_ID] FROM [dbo].[ConfirmTime] WHERE [ID] = @ID
+    // `;
+    // const lotIdResult = await pool.request().input("ID", sql.Int, ID).query(lotIdQuery);
+    // const lotId = lotIdResult.recordset[0]?.LOT_ID;
+    // if (lotId) {
+    //     await pool
+    //       .request()
+    //       .input("Updated_Time", sql.NVarChar, completedTime) // Update to current IST-confirmed time
+    //       .input("ItemName", sql.NVarChar, lotId)
+    //       .query(`
+    //         UPDATE [dbo].[StagingTable]
+    //         SET [Updated_Time] = @Updated_Time
+    //         WHERE [ITEM NAME] = @ItemName
+    //       `);
+    // }
     res.status(200).json({
       message: "Completed updated successfully.",
     });
@@ -1915,8 +1879,7 @@ router.post("/confirm-process", async (req, res) => {
       .request()
       .input("ConfirmTime", sql.NVarChar, confirmTime)
       .input("ID", sql.Int, ID)
-      .input("ConfirmBy", sql.NVarChar, ConfirmBy)
-      .query(`
+      .input("ConfirmBy", sql.NVarChar, ConfirmBy).query(`
         UPDATE [dbo].[ConfirmTime]
         SET [ConfirmTime] = @ConfirmTime,
          [ConfirmBy] = @ConfirmBy
@@ -1931,16 +1894,13 @@ router.post("/confirm-process", async (req, res) => {
   }
 });
 
-
 // API to get delayed processes
 router.get("/delayed-processes", async (req, res) => {
   try {
     const pool = await poolPromise;
 
     // Query to fetch delayed processes
-    const result = await pool
-      .request()
-      .query(`
+    const result = await pool.request().query(`
         SELECT 
           [SupervisorName],
           [ID],
@@ -1967,9 +1927,7 @@ router.get("/delayed-24hr-processes", async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    const result = await pool
-      .request()
-      .query(`
+    const result = await pool.request().query(`
         SELECT 
           [SupervisorName],
           [ID],
@@ -1996,9 +1954,7 @@ router.get("/All-processes", async (req, res) => {
     const pool = await poolPromise;
 
     // Query to fetch delayed processes
-    const result = await pool
-      .request()
-      .query(`
+    const result = await pool.request().query(`
         SELECT 
           [SupervisorName],
           [LOT_ID] AS [ITEM NAME],
@@ -2011,7 +1967,7 @@ router.get("/All-processes", async (req, res) => {
         FROM [dbo].[ConfirmTime]        
       `);
 
-    // Add filtering for SupervisorName 
+    // Add filtering for SupervisorName
     if (supervisorName) {
       query += " WHERE [SupervisorName] = @SupervisorName";
     }
@@ -2022,10 +1978,8 @@ router.get("/All-processes", async (req, res) => {
   }
 });
 
-
-
-// Fetch recent user activity // yogesh 
-router.get('/user-activity/recent', async (req, res) => {
+// Fetch recent user activity // yogesh
+router.get("/user-activity/recent", async (req, res) => {
   try {
     const pool = await poolPromise;
 
@@ -2044,21 +1998,18 @@ router.get('/user-activity/recent', async (req, res) => {
             AND UA.Department <> EM.[Department] -- Detect department change
           );
     `);
-  // Respond with activity detection status
-  res.status(200).json({ activityDetected: result.recordset[0].ChangeCount > 0 });
-} catch (error) {
-  console.error('Error fetching recent user activity:', error);
-  res.status(500).json({ error: 'Internal server error' });
-}
+    // Respond with activity detection status
+    res
+      .status(200)
+      .json({ activityDetected: result.recordset[0].ChangeCount > 0 });
+  } catch (error) {
+    console.error("Error fetching recent user activity:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-
-
-
-
-
 //// Fetch all user activity
-router.get('/user-activity', async (req, res) => {
+router.get("/user-activity", async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
@@ -2069,18 +2020,30 @@ router.get('/user-activity', async (req, res) => {
 
     res.status(200).json(result.recordset);
   } catch (error) {
-    console.error('Error fetching user activity:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching user activity:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-
 // New POST API: Add a new remark // 8 Jan 2025 // yogesh
 router.post("/remarks", async (req, res) => {
-  const { SupervisorName, Department, DetailedIssue, Parameters, LOT_ID, ProcessName } = req.body;
+  const {
+    SupervisorName,
+    Department,
+    DetailedIssue,
+    Parameters,
+    LOT_ID,
+    ProcessName,
+  } = req.body;
 
   try {
-    if (!SupervisorName || !Department  || !DetailedIssue || !Parameters || !ProcessName) {
+    if (
+      !SupervisorName ||
+      !Department ||
+      !DetailedIssue ||
+      !Parameters ||
+      !ProcessName
+    ) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -2092,7 +2055,8 @@ router.post("/remarks", async (req, res) => {
     `;
 
     const pool = await poolPromise;
-    await pool.request()
+    await pool
+      .request()
       .input("SupervisorName", sql.NVarChar, SupervisorName)
       .input("Department", sql.NVarChar, Department)
       .input("DetailedIssue", sql.NVarChar, DetailedIssue)
@@ -2112,10 +2076,23 @@ router.post("/remarks", async (req, res) => {
 // PUT API: Update an existing remark
 router.put("/remarks/:id", async (req, res) => {
   const { id } = req.params;
-  const { SupervisorName, Department, DetailedIssue, Parameters, LOT_ID, ProcessName  } = req.body;
+  const {
+    SupervisorName,
+    Department,
+    DetailedIssue,
+    Parameters,
+    LOT_ID,
+    ProcessName,
+  } = req.body;
 
   try {
-    if (!SupervisorName || !Department || !DetailedIssue || !Parameters || !ProcessName) {
+    if (
+      !SupervisorName ||
+      !Department ||
+      !DetailedIssue ||
+      !Parameters ||
+      !ProcessName
+    ) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -2134,7 +2111,8 @@ router.put("/remarks/:id", async (req, res) => {
     `;
 
     const pool = await poolPromise;
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("ID", sql.Int, id)
       .input("SupervisorName", sql.NVarChar, SupervisorName)
       .input("Department", sql.NVarChar, Department)
@@ -2168,9 +2146,7 @@ router.delete("/remarks/:id", async (req, res) => {
     `;
 
     const pool = await poolPromise;
-    const result = await pool.request()
-      .input("ID", sql.Int, id)
-      .query(query);
+    const result = await pool.request().input("ID", sql.Int, id).query(query);
 
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Remark not found" });
@@ -2205,22 +2181,20 @@ router.get("/remarks", async (req, res) => {
 });
 
 // New Api for Supervisor Performance // 17 Jan 2025 // yogesh
-router.get("/performance", async (req, res) =>{
-  try{
+router.get("/performance", async (req, res) => {
+  try {
     const query = `
     SELECT  [SupervisorName],[Score],[Performance]
     FROM [dbo].[SupervisorPerformance]
   `;
-  const pool = await poolPromise;
-  const result = await pool.request().query(query);
-  res.status(200).json(result.recordset);
-  }
-  catch (error) {
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
     console.error("Error fetching performance:", error);
     res.status(500).json({ error: "Failed to fetch performance" });
   }
-})
-
+});
 
 router.get("/AllSupervisorName", async (req, res) => {
   try {
@@ -2230,11 +2204,11 @@ router.get("/AllSupervisorName", async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request().query(query);
     res.status(200).json(result.recordset);
-    } catch (error) {
-      console.error("Error fetching SupervisorName:", error);
-      res.status(500).json({ error: "Failed to fetch SupervisorName" });
-    }
-  })
+  } catch (error) {
+    console.error("Error fetching SupervisorName:", error);
+    res.status(500).json({ error: "Failed to fetch SupervisorName" });
+  }
+});
 
 /// New Api for NOKE RAW MATERIAL  // 28 Jan 2025 // yogesh
 // GET API: Fetch all records from the table
@@ -2248,7 +2222,9 @@ router.get("/noke-inventory", async (req, res) => {
     const result = await pool.request().query(query);
 
     if (result.recordset.length === 0) {
-      return res.status(404).json({ message: "No records found in inventory." });
+      return res
+        .status(404)
+        .json({ message: "No records found in inventory." });
     }
     res.status(200).json(result.recordset);
   } catch (error) {
@@ -2258,74 +2234,25 @@ router.get("/noke-inventory", async (req, res) => {
 });
 
 // POST API: Add a new record to the table
-// router.post("/noke-inventory", async (req, res) => {
-//   const { LOT_ID, supervisor, LOCATION, status } = req.body;
-
-//   if (!LOT_ID  || !supervisor || !LOCATION || !status) {
-//     return res.status(400).json({ error: "All fields are required." });
-//   }
-
-//   try {
-//     const query = `
-//       INSERT INTO [dbo].[noke_inventory] ([LOT_ID], [SUPERVISOR], [LOCATION], [STATUS])
-//       VALUES (@LOT_ID, @supervisor, @LOCATION, @status)
-//     `;
-//     const pool = await poolPromise;
-//     await pool.request()
-//       .input("LOT_ID", sql.NVarChar, LOT_ID)
-//       .input("supervisor", sql.NVarChar, supervisor)
-//       .input("LOCATION", sql.NVarChar, LOCATION)
-//       .input("status", sql.NVarChar, status)
-//       .query(query);
-
-//     res.status(201).json({ message: "Record added successfully to inventory." });
-//   } catch (error) {
-//     console.error("Error adding record to inventory:", error);
-//     res.status(500).json({ error: "Failed to add record to inventory." });
-//   }
-// });
-
-
-// POST API: Add a new record to the table
 router.post("/noke-inventory", async (req, res) => {
   const { LOT_ID, supervisor, LOCATION, status } = req.body;
 
-  if (!LOT_ID || !supervisor || !LOCATION || !status) {
+  if (!LOT_ID  || !supervisor || !LOCATION || !status) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
   try {
-    const pool = await poolPromise;
-
-    // Check if LOT_ID already exists
-    const checkQuery = `
-      SELECT COUNT(*) AS count
-      FROM [dbo].[noke_inventory]
-      WHERE [LOT_ID] = @LOT_ID
-    `;
-
-    const checkResult = await pool
-      .request()
-      .input("LOT_ID", sql.NVarChar, LOT_ID)
-      .query(checkQuery);
-
-    if (checkResult.recordset[0].count > 0) {
-      return res.status(400).json({ error: "This LOT ID is already issued." });
-    }
-
-    // If LOT_ID is unique, proceed with the insert
-    const insertQuery = `
+    const query = `
       INSERT INTO [dbo].[noke_inventory] ([LOT_ID], [SUPERVISOR], [LOCATION], [STATUS])
       VALUES (@LOT_ID, @supervisor, @LOCATION, @status)
     `;
-
-    await pool
-      .request()
+    const pool = await poolPromise;
+    await pool.request()
       .input("LOT_ID", sql.NVarChar, LOT_ID)
       .input("supervisor", sql.NVarChar, supervisor)
       .input("LOCATION", sql.NVarChar, LOCATION)
       .input("status", sql.NVarChar, status)
-      .query(insertQuery);
+      .query(query);
 
     res.status(201).json({ message: "Record added successfully to inventory." });
   } catch (error) {
@@ -2334,6 +2261,55 @@ router.post("/noke-inventory", async (req, res) => {
   }
 });
 
+// POST API: Add a new record to the table
+// router.post("/noke-inventory", async (req, res) => {
+//   const { LOT_ID, supervisor, LOCATION, status } = req.body;
+
+//   if (!LOT_ID || !supervisor || !LOCATION || !status) {
+//     return res.status(400).json({ error: "All fields are required." });
+//   }
+
+//   try {
+//     const pool = await poolPromise;
+
+//     // Check if LOT_ID already exists
+//     const checkQuery = `
+//       SELECT COUNT(*) AS count
+//       FROM [dbo].[noke_inventory]
+//       WHERE [LOT_ID] = @LOT_ID
+//     `;
+
+//     const checkResult = await pool
+//       .request()
+//       .input("LOT_ID", sql.NVarChar, LOT_ID)
+//       .query(checkQuery);
+
+//     if (checkResult.recordset[0].count > 0) {
+//       return res.status(400).json({ error: "This LOT ID is already issued." });
+//     }
+
+//     // If LOT_ID is unique, proceed with the insert
+//     const insertQuery = `
+//       INSERT INTO [dbo].[noke_inventory] ([LOT_ID], [SUPERVISOR], [LOCATION], [STATUS])
+//       VALUES (@LOT_ID, @supervisor, @LOCATION, @status)
+//     `;
+
+//     await pool
+//       .request()
+//       .input("LOT_ID", sql.NVarChar, LOT_ID)
+//       .input("supervisor", sql.NVarChar, supervisor)
+//       .input("LOCATION", sql.NVarChar, LOCATION)
+//       .input("status", sql.NVarChar, status)
+//       .query(insertQuery);
+
+//     res
+//       .status(201)
+//       .json({ message: "Record added successfully to inventory." });
+//   } catch (error) {
+//     console.error("Error adding record to inventory:", error);
+//     res.status(500).json({ error: "Failed to add record to inventory." });
+//   }
+// });
 
 // PATCH API: Update a specific record in the table
 router.patch("/noke-inventory/:id", async (req, res) => {
@@ -2349,8 +2325,7 @@ router.patch("/noke-inventory/:id", async (req, res) => {
     await pool
       .request()
       .input("ID", sql.Int, id)
-      .input("STATUS", sql.NVarChar, STATUS)
-      .query(`
+      .input("STATUS", sql.NVarChar, STATUS).query(`
         UPDATE [dbo].[noke_inventory]
         SET [STATUS] = @STATUS
         WHERE [ID] = @ID
@@ -2362,7 +2337,6 @@ router.patch("/noke-inventory/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update status" });
   }
 });
-
 
 // DELETE API: Delete a specific record from the table
 router.delete("/noke-inventory/:id", async (req, res) => {
@@ -2392,7 +2366,6 @@ router.delete("/noke-inventory/:id", async (req, res) => {
   }
 });
 
-
 router.get("/noke-data", async (req, res) => {
   try {
     const query = `
@@ -2403,7 +2376,9 @@ router.get("/noke-data", async (req, res) => {
     const result = await pool.request().query(query);
 
     if (result.recordset.length === 0) {
-      return res.status(404).json({ message: "No records found in inventory." });
+      return res
+        .status(404)
+        .json({ message: "No records found in inventory." });
     }
     res.status(200).json(result.recordset);
   } catch (error) {
@@ -2411,5 +2386,204 @@ router.get("/noke-data", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch inventory records." });
   }
 });
+
+//// New API for Belt loading unloading  // 29 Jan 2025
+router.get("/order-dispatch", async (req, res) => {
+  try {
+    const query = `
+      SELECT [JOB ORDER NO]
+            ,[DATE]
+            ,[JOB ORDER DATE]
+            ,[PROCESS GROUP]
+            ,[PROCESS NAME]
+            ,[ITEM NAME]
+            ,[QUANTITY]
+            ,[DEPARTMENT]
+            ,[STATUS]
+            ,[ID]
+      FROM [dbo].[belt_loading_unloading]
+    `;
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching order dispatch records:", error);
+    res.status(500).json({ error: "Failed to fetch order dispatch records." });
+  }
+});
+
+// // PATCH API: Update a specific record
+// router.patch("/order-dispatch/:id", async (req, res) => {
+//   const { id } = req.params;
+//   const {
+//     JOB_ORDER_NO,
+//     JOB_ORDER_DATE,
+//     PROCESS_GROUP,
+//     PROCESS_NAME,
+//     ITEM_NAME,
+//     DEPARTMENT,
+//     STATUS,
+//   } = req.body;
+
+//   if (!id) {
+//     return res.status(400).json({ error: "ID is required" });
+//   }
+//   try {
+//     const query = `
+//                   UPDATE [dbo].[belt_loading_unloading]
+//                   SET [JOB ORDER NO] = @JOB_ORDER_NO,
+//                       [JOB ORDER DATE] = @JOB_ORDER_DATE,
+//                       [PROCESS GROUP] = @PROCESS_GROUP,
+//                       [PROCESS NAME] = @PROCESS_NAME,
+//                       [ITEM NAME] = @ITEM_NAME,
+//                       [DEPARTMENT] = @DEPARTMENT,
+//                       [STATUS] = @STATUS
+//                   WHERE [ID] = @ID
+//                 `;
+//     const pool = await poolPromise;
+//     const result = await pool
+//       .request()
+//       .input("ID", sql.Int, id)
+//       .input("JOB_ORDER_NO", sql.NVarChar, JOB_ORDER_NO)
+//       .input("JOB_ORDER_DATE", sql.NVarChar, JOB_ORDER_DATE)
+//       .input("PROCESS_GROUP", sql.NVarChar, PROCESS_GROUP)
+//       .input("PROCESS_NAME", sql.NVarChar, PROCESS_NAME)
+//       .input("ITEM_NAME", sql.NVarChar, ITEM_NAME)
+//       .input("DEPARTMENT", sql.NVarChar, DEPARTMENT)
+//       .input("STATUS", sql.NVarChar, STATUS)
+//       .query(query);
+
+//     if (result.rowsAffected[0] === 0) {
+//       return res.status(404).json({ error: "Record not found." });
+//     }
+
+//     res.status(200).json({ message: "Record updated successfully." });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
+
+
+// PATCH API: Update a specific record
+router.patch("/order-dispatch/:id", async (req, res) => {
+  const { id } = req.params;
+  const { STATUS } = req.body; // Only taking status to update
+
+  if (!id) {
+    return res.status(400).json({ error: "ID is required" });
+  }
+
+  try {
+    const query = `
+      UPDATE [dbo].[belt_loading_unloading]
+      SET [STATUS] = @STATUS
+      WHERE [ID] = @ID
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .input("STATUS", sql.NVarChar, STATUS)
+      .query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Status updated successfully." });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+// DELETE API: Delete a specific record
+router.delete("/order-dispatch/:id", async (req, res) =>{
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "ID is required" });
+  }
+  try {
+    const query = `
+    DELETE FROM [dbo].[belt_loading_unloading]
+    WHERE [ID] = @ID
+    `;
+    const pool = await poolPromise;
+    const result = await pool.request().input("ID", sql.Int, id).query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Record deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    res.status(500).json({ error: "Failed to delete record." });
+  }
+});
+
+// POST API: Add a new record
+router.post("/order-dispatch", async (req, res) => {
+  const {
+    JOB_ORDER_NO,
+    JOB_ORDER_DATE,
+    PROCESS_GROUP,
+    PROCESS_NAME,
+    ITEM_NAME,
+    QUANTITY,
+    DEPARTMENT,
+    // STATUS
+  } = req.body;
+
+  // Check if all required fields are provided
+  if (!JOB_ORDER_NO  || !JOB_ORDER_DATE || !PROCESS_GROUP || !PROCESS_NAME || !ITEM_NAME || !QUANTITY || !DEPARTMENT) {
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
+  try {
+    const query = `
+      INSERT INTO [dbo].[belt_loading_unloading] 
+      ([JOB ORDER NO], [JOB ORDER DATE], [PROCESS GROUP], [PROCESS NAME], [ITEM NAME], [QUANTITY], [DEPARTMENT])
+      VALUES (@JOB_ORDER_NO, @JOB_ORDER_DATE, @PROCESS_GROUP, @PROCESS_NAME, @ITEM_NAME, @QUANTITY, @DEPARTMENT)
+    `;
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input("JOB_ORDER_NO", sql.NVarChar, JOB_ORDER_NO)
+      .input("JOB_ORDER_DATE", sql.NVarChar, JOB_ORDER_DATE)
+      .input("PROCESS_GROUP", sql.NVarChar, PROCESS_GROUP)
+      .input("PROCESS_NAME", sql.NVarChar, PROCESS_NAME)
+      .input("ITEM_NAME", sql.NVarChar, ITEM_NAME)
+      .input("QUANTITY", sql.Int, QUANTITY)
+      .input("DEPARTMENT", sql.NVarChar, DEPARTMENT)
+      // .input("STATUS", sql.NVarChar, STATUS)
+      .query(query);
+
+    res.status(201).json({ message: "Record added successfully." });
+  } catch (error) {
+    console.error("Error adding record:", error);
+    res.status(500).json({ error: "Failed to add record." });
+  }
+});
+
+
+router.get("/dispatch-Notification", async (req, res) => {
+  try {
+    const query = `
+      select *  FROM [dbo].[belt_loading_unloading] where [STATUS] = 'Ready to Dispatch'
+    `;
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching order dispatch records:", error);
+    res.status(500).json({ error: "Failed to fetch order dispatch records." });
+  }
+});
+ 
 
 module.exports = router;

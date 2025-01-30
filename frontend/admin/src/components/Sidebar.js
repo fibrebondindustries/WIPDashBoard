@@ -11,6 +11,7 @@ const Sidebar = () => {
   const [score, setScore] = useState(null); // State for performance score //// 17 Jan 25 Yogesh
   const [performance, setPerformance] = useState(null); // State for performance percentage //// 17 Jan 25 Yogesh
   const [RMCount, setRMCount] = useState(0); // State for inventory count
+  const [orderCount, setOrderCount] = useState(0); // State for order count
   useEffect(() => {
     // Fetch the ticket count when the component mounts
     const fetchTicketCount = async () => {
@@ -57,8 +58,21 @@ const Sidebar = () => {
     }
   };
 
+  // Fetch order count for superadmin
+  const fetchOrderCount = async () => {
+    try {
+      const response = await axiosInstance.get("/api/order-dispatch"); // API to fetch order dispatch data
+      setOrderCount(response.data.length); // Set the count of order dispatch records
+    } catch (error) {
+      console.error("Error fetching order count:", error);
+      }
+    };
+    // end{code}
+
+
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
+      fetchOrderCount();
     }
     //performace data
     if (user?.Auth === "Supervisor") {
@@ -237,7 +251,23 @@ const Sidebar = () => {
             </div>
           </li>
         )}
-         
+        {/* end */}
+        {/* 29 jan 25 order dispatch module*/}
+        {user?.Auth === "SuperAdmin" && (
+          <li className="nav-item">
+            <NavLink
+              to="/order-dispatch"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Order Dispatch{" "}
+              {orderCount > 0 && (
+                <span className="badge bg-danger">{orderCount}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
        
       </ul>
     </div>

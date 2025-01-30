@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback} from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import axiosInstance from "../axiosConfig";
@@ -7,6 +7,7 @@ import logo from "../assets/Img/Logo-1.png";
 import User from "../assets/Img/User.gif";
 import Bell from "../assets/Img/BellIcon.png";
 import moment from "moment-timezone";
+import Dispatch from "../assets/Img/Dispatch.png";
 
 const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const { logout } = useContext(AuthContext);
@@ -18,44 +19,14 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const [delayedProcesses, setDelayedProcesses] = useState([]); // Delayed processes for admin
   const [showDelayedModal, setShowDelayedModal] = useState(false); // New modal for delayed processes
   const [delayed24hrProcesses, setDelayed24hrProcesses] = useState([]); // Delayed processes for superadmin
-  const [showDelayed24hrModal, setShowDelayed24hrModal] = useState(false);  // New modal for 24hr delayed processes // 03 Jan 25 yogesh
-  
-  // useEffect(() => {
-  //   const fetchProcessData = async () => {
-  //     try {
-  //       const supervisorName = user?.Name;
-  //       const response = await axiosInstance.get("/api/first-process-count",{
-  //         params: { supervisorName },
-  //       });
-  //       // const data = response.data;
-
-  //       setProcessData(response.data); // Update process data with filtered rows
-
-  //     } catch (error) {
-  //       console.error("Error fetching process data:", error);
-  //     }
-  //   };
-
-  //   const fetchDelayedProcesses = async () => {
-  //     try {
-  //       const response = await axiosInstance.get("/api/delayed-processes");
-  //       setDelayedProcesses(response.data); // Update state with delayed processes
-  //     } catch (error) {
-  //       console.error("Error fetching delayed processes:", error);
-  //     }
-  //   };
-
-  //   fetchProcessData();
-  //   if (user?.Auth === "Admin") {
-  //     fetchDelayedProcesses();
-  //   }
-  // }, [user?.Name, user?.Auth]);
-
-  //   fetchProcessData();
-  // }, [user?.Name]);
+  const [showDelayed24hrModal, setShowDelayed24hrModal] = useState(false); // New modal for 24hr delayed processes // 03 Jan 25 yogesh
+  // State to manage Dispatch Orders
+  const [dispatchOrders, setDispatchOrders] = useState([]);
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [dispatchCount, setDispatchCount] = useState(0);
 
   ///Confirm Process Modification 30 Dec 24 // modificaton 13 Jan 25 yogesh
-  
+
   // Fetch process data function - moved outside useEffect
   const fetchProcessData = useCallback(async () => {
     try {
@@ -69,7 +40,6 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       console.error("Error fetching process data:", error);
     }
   }, [user?.Name]);
-  
 
   useEffect(() => {
     fetchProcessData();
@@ -87,25 +57,25 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       fetchDelayedProcesses();
     }
   }, [user?.Name, user?.Auth, fetchProcessData]);
-  
+
   const handleConfirm = async (processName, id) => {
     try {
+      // Display a confirmation dialog
+      const isConfirmed = window.confirm(
+        `Are you sure you want to confirm this Process ${processName}?`
+      );
 
-       // Display a confirmation dialog
-    const isConfirmed = window.confirm(
-      `Are you sure you want to confirm this Process ${processName}?`
-    );
+      // Proceed only if the user confirms
+      if (!isConfirmed) {
+        return;
+      }
 
-
-    // Proceed only if the user confirms
-    if (!isConfirmed) {
-      return;
-    }
-  
-    // Get the current time in IST
-    const currentISTTime = moment().tz("Asia/Kolkata").format("DD/MM/YYYY : hh:mm A");
-    // Get the ConfirmBy value from localStorage
-    const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
+      // Get the current time in IST
+      const currentISTTime = moment()
+        .tz("Asia/Kolkata")
+        .format("DD/MM/YYYY : hh:mm A");
+      // Get the ConfirmBy value from localStorage
+      const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
       // Make an API call to the confirm-process endpoint
       await axiosInstance.post("/api/confirm-process", {
         ID: id,
@@ -113,67 +83,69 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
         ConfirmTime: currentISTTime, // Send IST-confirmed time explicitly
         ConfirmBy: confirmBy, // Pass ConfirmBy
       });
-    
+
       // Handle successful response
       showAlert(`Process ${processName} confirmed successfully!`, "success");
-      
+
       // Update only the relevant row in the processData state
-    // setProcessData((prevData) =>
-    //   prevData.map((process) =>
-    //     process["ITEM NAME"] === itemName
-    //       ? { ...process, ConfirmTime: currentISTTime, ConfirmBy: confirmBy }
-    //       : process
-    //   )
-    // )
-    // // Fetch the updated data
-    fetchProcessData();;
-    // setProcessData(response.data);
-      
+      // setProcessData((prevData) =>
+      //   prevData.map((process) =>
+      //     process["ITEM NAME"] === itemName
+      //       ? { ...process, ConfirmTime: currentISTTime, ConfirmBy: confirmBy }
+      //       : process
+      //   )
+      // )
+      // // Fetch the updated data
+      fetchProcessData();
+      // setProcessData(response.data);
     } catch (error) {
       console.error("Error confirming process:", error);
       alert(
-        error.response?.data?.error || "Failed to confirm process. Please try again."
+        error.response?.data?.error ||
+          "Failed to confirm process. Please try again."
       );
     }
   };
-  
- // Done button handler
- const handleDone = async (processName, id) => {
-  try {
-    const isConfirmed = window.confirm(
-      `Are you sure you want to mark this process as done: ${processName}?`
-    );
-    if (!isConfirmed) return;
 
-    const currentISTTime = moment().tz("Asia/Kolkata").format("DD/MM/YYYY : hh:mm A");
-    const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
+  // Done button handler
+  const handleDone = async (processName, id) => {
+    try {
+      const isConfirmed = window.confirm(
+        `Are you sure you want to mark this process as done: ${processName}?`
+      );
+      if (!isConfirmed) return;
 
-    // Trigger completedTime-process API
-    await axiosInstance.post("/api/completedTime-process", {
-      // LotId: itemName,
-      ID: id,
-      CompletedTime: currentISTTime,
-      ConfirmTime: currentISTTime,
-      ConfirmBy: confirmBy,
-    });
+      const currentISTTime = moment()
+        .tz("Asia/Kolkata")
+        .format("DD/MM/YYYY : hh:mm A");
+      const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
 
-    showAlert(`Process marked as done!`, "success");
+      // Trigger completedTime-process API
+      await axiosInstance.post("/api/completedTime-process", {
+        // LotId: itemName,
+        ID: id,
+        CompletedTime: currentISTTime,
+        ConfirmTime: currentISTTime,
+        ConfirmBy: confirmBy,
+      });
 
-    // Fetch the updated data after marking as done
-    fetchProcessData();
+      showAlert(`Process marked as done!`, "success");
 
-  } catch (error) {
-    console.error("Error marking process as done:", error);
-    alert(error.response?.data?.error || "Failed to mark process as done.");
-  }
-};
+      // Fetch the updated data after marking as done
+      fetchProcessData();
+    } catch (error) {
+      console.error("Error marking process as done:", error);
+      alert(error.response?.data?.error || "Failed to mark process as done.");
+    }
+  };
 
-  
   const showAlert = (message, type) => {
     const alertPlaceholder = document.getElementById("alertPlaceholder");
     const alertHTML = `
       <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        <strong>${type === "success" ? "Success!" : "Error!"}</strong> ${message}
+        <strong>${
+          type === "success" ? "Success!" : "Error!"
+        }</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>`;
     alertPlaceholder.innerHTML = alertHTML;
@@ -182,31 +154,19 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
     }, 3000);
   };
 
-
-  // const handleDone = () => {
-  //   // Confirmation before proceeding
-  //   const isConfirmed = window.confirm("Are you sure you want to mark the process as completed?");
-  //   if (!isConfirmed) return;
-
-  //   // Show success alert when "Done" button is clicked
-  //   showAlert("Process completed successfully!", "success");
-  // };
-
-
-
   const handleAdminDone = async (id) => {
     try {
       const isConfirmed = window.confirm(
         `Are you sure you want to mark this process as Done?`
       );
-  
+
       if (!isConfirmed) return;
-  
+
       const currentISTTime = moment()
         .tz("Asia/Kolkata")
         .format("DD/MM/YYYY : hh:mm A");
 
-            // Get the ConfirmBy value from localStorage
+      // Get the ConfirmBy value from localStorage
       const confirmBy = JSON.parse(localStorage.getItem("user"))?.Name;
 
       await axiosInstance.post("/api/completedTime-process", {
@@ -215,15 +175,17 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
         CompletedTime: currentISTTime,
         ConfirmBy: confirmBy, // Pass ConfirmBy
       });
-  
+
       showAlert(`Process marked as Done`, "success");
-  
+
       // Refetch delayed processes to update the table
       const response = await axiosInstance.get("/api/delayed-processes");
       setDelayedProcesses(response.data); // Update state with the latest data
 
       // Refetch 24hr delayed processes to update the table // 03 Jan 25 yogesh
-      const response24hr = await axiosInstance.get("/api/delayed-24hr-processes");
+      const response24hr = await axiosInstance.get(
+        "/api/delayed-24hr-processes"
+      );
       setDelayed24hrProcesses(response24hr.data); // Update state with the latest data
     } catch (error) {
       console.error("Error marking process as Done:", error);
@@ -235,7 +197,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   };
 
   // Show 24hr delayed processes // 03 Jan 25 yogesh
-  const fetchDelayed24hrProcesses = async () => {  
+  const fetchDelayed24hrProcesses = async () => {
     try {
       const response = await axiosInstance.get("/api/delayed-24hr-processes");
       setDelayed24hrProcesses(response.data);
@@ -243,17 +205,46 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       console.error("Error fetching 24hr delayed processes:", error);
     }
   };
-  
+
   useEffect(() => {
     if (user?.Auth === "SuperAdmin") {
       fetchDelayed24hrProcesses();
     }
   }, [user?.Auth]);
 
-  
+
+   
+   // Fetch Dispatch Orders (Only Status = "Ready to Dispatch")
+  const fetchDispatchOrders = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/api/order-dispatch");
+      const readyOrders = response.data.filter(order => order.STATUS === "Ready to Dispatch");
+      setDispatchOrders(readyOrders);
+      setDispatchCount(readyOrders.length); // Update dispatch count
+    } catch (error) {
+      console.error("Error fetching dispatch orders:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDispatchOrders();
+  }, [fetchDispatchOrders]);
+
+  // Handle Status Update to "Dispatched"
+  const handleDispatch = async (id) => {
+    try {
+      await axiosInstance.patch(`/api/order-dispatch/${id}`, { STATUS: "Dispatched" });
+      alert("Order Dispatched Successfully!");
+      fetchDispatchOrders(); // Refresh the table and count
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      alert("Failed to update order status.");
+    }
+  };
+
   return (
     <div>
-           <div id="alertPlaceholder"></div>
+      <div id="alertPlaceholder"></div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container-fluid">
           {/* Toggle Sidebar Button */}
@@ -299,9 +290,33 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0"></ul>
 
+       
+            {/* 
+             
+             */}
+
+         
             <span style={{ marginLeft: "-21rem" }}>
+            {user?.Auth === "Supervisor" && ["MONU", "SIDDHU"].includes(user?.Name) && (
+            <a
+                name="Dispatch"
+                id="Dispatch"
+                className="btn"
+                href="#"
+                role="button"
+                onClick={() => setShowDispatchModal(true)}
+              >
+               <span style={{ color: "red" }}>{dispatchCount}</span>
+                <img
+                  src={Dispatch}
+                  className="img-fluid rounded-top"
+                  alt="Dispatch Icon"
+                  style={{ height: "20px", width: "34px" }}
+                />
+              </a>
+              )}
               {/* Conditionally Render Bell Icon for Supervisors */}
-              {user?.Auth === "Supervisor"  && (
+              {user?.Auth === "Supervisor" && (
                 <a
                   name="Notification"
                   id="Notification"
@@ -310,7 +325,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   role="button"
                   onClick={() => setShowModal(true)}
                 >
-                 <span style={{ color: "red" }}>{processData.length}</span>
+                  <span style={{ color: "red" }}>{processData.length}</span>
                   <img
                     src={Bell}
                     className="img-fluid rounded-top"
@@ -319,7 +334,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   />
                 </a>
               )}
-                {user?.Auth === "Admin" && (
+              {user?.Auth === "Admin" && (
                 <a
                   name="AdminNotification"
                   id="AdminNotification"
@@ -328,7 +343,9 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   role="button"
                   onClick={() => setShowDelayedModal(true)}
                 >
-                  <span style={{ color: "red" }}>{delayedProcesses.length}</span>
+                  <span style={{ color: "red" }}>
+                    {delayedProcesses.length}
+                  </span>
                   <img
                     src={Bell}
                     className="img-fluid rounded-top"
@@ -346,7 +363,9 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   role="button"
                   onClick={() => setShowDelayed24hrModal(true)}
                 >
-                  <span style={{ color: "red" }}>{delayed24hrProcesses.length}</span>
+                  <span style={{ color: "red" }}>
+                    {delayed24hrProcesses.length}
+                  </span>
                   <img
                     src={Bell}
                     className="img-fluid rounded-top"
@@ -402,8 +421,8 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           </div>
         </div>
       </nav>
-       {/* Modal */}
-       {showModal && (
+      {/* Modal */}
+      {showModal && (
         <div className="modal show" style={{ display: "block" }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
@@ -436,7 +455,10 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                             <button
                               className="btn btn-outline-success"
                               onClick={() =>
-                                handleConfirm(process["PROCESS NAME"],process.ID)
+                                handleConfirm(
+                                  process["PROCESS NAME"],
+                                  process.ID
+                                )
                               }
                             >
                               Confirm
@@ -445,9 +467,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                             <button
                               className="btn btn-outline-primary"
                               onClick={() =>
-                                handleDone(
-                                  process["PROCESS NAME"],process.ID)
-                                
+                                handleDone(process["PROCESS NAME"], process.ID)
                               }
                             >
                               Done
@@ -510,7 +530,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                       </tr>
                     ))}
                   </tbody> */}
-                <tbody>
+                  <tbody>
                     {delayedProcesses.map((process, index) => (
                       <tr key={index}>
                         <td>{process["SupervisorName"]}</td>
@@ -523,7 +543,8 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                             ? "Process Incomplete" // Show ProcessIncomplete if true
                             : process["ConfirmDelay"] === "Yes"
                             ? "Confirm Incomplete" // Show ConfirmIncomplete if true
-                            : ""} {/* Leave blank otherwise */}
+                            : ""}{" "}
+                          {/* Leave blank otherwise */}
                         </td>
                         <td>
                           <button
@@ -592,7 +613,65 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
           </div>
         </div>
       )}
-
+       {/* Dispatch Orders Modal */}
+       {showDispatchModal && (
+        <div className="modal show" style={{ display: "block" }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Ready for Dispatch</h5>
+                <button className="btn-close" onClick={() => setShowDispatchModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Job Order No</th>
+                      <th>Item Name</th>
+                      <th>Quantity</th>
+                      <th>Process Name</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dispatchOrders.length > 0 ? (
+                      dispatchOrders.map((order) => (
+                        <tr key={order.ID}>
+                          <td>{order["JOB ORDER NO"]}</td>
+                          <td>{order["ITEM NAME"]}</td>
+                          <td>{order["QUANTITY"]}</td>
+                          <td>{order["PROCESS NAME"]}</td>
+                          <td>{order["STATUS"]}</td>
+                          <td>
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() => handleDispatch(order.ID)}
+                            >
+                              Dispatch
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center">
+                          No orders ready for dispatch.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowDispatchModal(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

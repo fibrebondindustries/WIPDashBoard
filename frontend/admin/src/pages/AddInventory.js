@@ -99,13 +99,13 @@ const AddInventory = () => {
       setIsEditing(false);
       fetchInventory();
     } catch (error) {
-      // Check for duplicate LOT_ID error
-      if (error.response && error.response.status === 400 && error.response.data.error === "This LOT ID is already issued.") {
-        alert("This LOT ID is already issued.");
-      } else {
+      // // Check for duplicate LOT_ID error
+      // if (error.response && error.response.status === 400 && error.response.data.error === "This LOT ID is already issued.") {
+      //   alert("This LOT ID is already issued.");
+      // } else {
         console.error("Error submitting form:", error);
         alert("Failed to submit form.");
-      }
+      
     }
   };
 
