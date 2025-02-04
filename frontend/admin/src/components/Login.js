@@ -13,7 +13,7 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login } = useContext(AuthContext); // Use AuthContext
-
+  const [capsLockOn, setCapsLockOn] = useState(false); // Track Caps Lock
   // Redirect users if they are already logged in
   useEffect(() => {
     const loginTime = localStorage.getItem("loginTime");
@@ -32,6 +32,10 @@ function Login() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleKeyDown = (e) => {
+    setCapsLockOn(e.getModifierState("CapsLock"));
   };
 
   const getISTTime = () => {
@@ -150,8 +154,15 @@ function Login() {
             placeholder="Password"
             value={formData.Password}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}  // Check Caps Lock state
             required
           />
+           {/* Show warning if Caps Lock is ON */}
+           {capsLockOn && (
+            <p style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
+              ⚠️ Caps Lock is ON!
+            </p>
+          )}
           <button type="submit">Login</button>
         </form>
       </div>

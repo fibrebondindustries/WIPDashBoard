@@ -226,7 +226,7 @@ useEffect(() => {
 
   // Table Columns
   const columns = [
-    { name: "Ticket Number", selector: (row) => row.ID, sortable: true },
+    { name: "Ticket Number", selector: (row) => row.ID, sortable: true, width: "112px" },
     // { name: "Category", selector: (row) => row.Category, sortable: true },
     // { name: "Subject", selector: (row) => row.Subject, sortable: true },
     // { name: "Brief Description", selector: (row) => row.Brief_Description, sortable: true },
@@ -234,11 +234,12 @@ useEffect(() => {
       <span
         data-bs-toggle="tooltip" /// add tooltip on  01 jan 2025
         data-bs-placement="top"
-        title={`${row.Category}`}
-      >
+        style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "150px", display: "inline-block" }}
+         title={`${row.Category}`}
+        >
         {row.Category}
       </span>
-    ), sortable: true },
+    ), sortable: true, width: "100px" },
     {
       name: "Subject",
       selector: (row) => (
@@ -258,7 +259,7 @@ useEffect(() => {
         <span
           data-bs-toggle="tooltip"
           data-bs-placement="top"
-          title={`${row.Brief_Description}`}
+          style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "300px", display: "inline-block" }} title={`${row.Brief_Description}`}
         >
           {row.Brief_Description}
         </span>
@@ -274,14 +275,15 @@ useEffect(() => {
         {row.Supervisor_Name}
       </span>
     ), sortable: true },
-    { name: "Priority", selector: (row) => row.Priority, sortable: true },
+    { name: "Priority", selector: (row) => row.Priority, sortable: true, width: "100px" },
     {
-      name: "Status",
+      name: "Status", width: "150px",
       cell: (row) => (
         <select
           value={row.Status}
           onChange={(e) => handleStatusChange(row.ID, e.target.value)}
           className="form-select form-select-sm bg-info text-black"
+          
         >
           <option value="Open">Open</option>
           <option value="In Progress">In Progress</option>
@@ -370,6 +372,8 @@ useEffect(() => {
             data={filteredTickets}
             pagination
             // selectableRows
+            highlightOnHover
+            pointerOnHover
             onSelectedRowsChange={(state) => setSelectedRows(state.selectedRows)}
             clearSelectedRows={toggleClearSelectedRows}
           />

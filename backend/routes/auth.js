@@ -2387,69 +2387,51 @@ router.get("/noke-data", async (req, res) => {
   }
 });
 
-//// New API for Belt loading unloading  // 29 Jan 2025
-router.get("/order-dispatch", async (req, res) => {
-  try {
-    const query = `
-      SELECT [JOB ORDER NO]
-            ,[DATE]
-            ,[JOB ORDER DATE]
-            ,[PROCESS GROUP]
-            ,[PROCESS NAME]
-            ,[ITEM NAME]
-            ,[QUANTITY]
-            ,[DEPARTMENT]
-            ,[STATUS]
-            ,[ID]
-      FROM [dbo].[belt_loading_unloading]
-    `;
-    const pool = await poolPromise;
-    const result = await pool.request().query(query);
-    res.status(200).json(result.recordset);
-  } catch (error) {
-    console.error("Error fetching order dispatch records:", error);
-    res.status(500).json({ error: "Failed to fetch order dispatch records." });
-  }
-});
+// //// New API for Belt loading unloading  // 29 Jan 2025
+// router.get("/order-dispatch", async (req, res) => {
+//   try {
+//     const query = `
+//       SELECT [JOB ORDER NO]
+//             ,[DATE]
+//             ,[JOB ORDER DATE]
+//             ,[PROCESS GROUP]
+//             ,[PROCESS NAME]
+//             ,[ITEM NAME]
+//             ,[QUANTITY]
+//             ,[DEPARTMENT]
+//             ,[STATUS]
+//             ,[ID]
+//       FROM [dbo].[belt_loading_unloading] where [ITEM NAME] is not null
+//     `;
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(query);
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching order dispatch records:", error);
+//     res.status(500).json({ error: "Failed to fetch order dispatch records." });
+//   }
+// });
 
 // // PATCH API: Update a specific record
 // router.patch("/order-dispatch/:id", async (req, res) => {
 //   const { id } = req.params;
-//   const {
-//     JOB_ORDER_NO,
-//     JOB_ORDER_DATE,
-//     PROCESS_GROUP,
-//     PROCESS_NAME,
-//     ITEM_NAME,
-//     DEPARTMENT,
-//     STATUS,
-//   } = req.body;
+//   const { STATUS } = req.body; // Only taking status to update
 
 //   if (!id) {
 //     return res.status(400).json({ error: "ID is required" });
 //   }
+
 //   try {
 //     const query = `
-//                   UPDATE [dbo].[belt_loading_unloading]
-//                   SET [JOB ORDER NO] = @JOB_ORDER_NO,
-//                       [JOB ORDER DATE] = @JOB_ORDER_DATE,
-//                       [PROCESS GROUP] = @PROCESS_GROUP,
-//                       [PROCESS NAME] = @PROCESS_NAME,
-//                       [ITEM NAME] = @ITEM_NAME,
-//                       [DEPARTMENT] = @DEPARTMENT,
-//                       [STATUS] = @STATUS
-//                   WHERE [ID] = @ID
-//                 `;
+//       UPDATE [dbo].[belt_loading_unloading]
+//       SET [STATUS] = @STATUS
+//       WHERE [ID] = @ID
+//     `;
+
 //     const pool = await poolPromise;
 //     const result = await pool
 //       .request()
 //       .input("ID", sql.Int, id)
-//       .input("JOB_ORDER_NO", sql.NVarChar, JOB_ORDER_NO)
-//       .input("JOB_ORDER_DATE", sql.NVarChar, JOB_ORDER_DATE)
-//       .input("PROCESS_GROUP", sql.NVarChar, PROCESS_GROUP)
-//       .input("PROCESS_NAME", sql.NVarChar, PROCESS_NAME)
-//       .input("ITEM_NAME", sql.NVarChar, ITEM_NAME)
-//       .input("DEPARTMENT", sql.NVarChar, DEPARTMENT)
 //       .input("STATUS", sql.NVarChar, STATUS)
 //       .query(query);
 
@@ -2457,116 +2439,189 @@ router.get("/order-dispatch", async (req, res) => {
 //       return res.status(404).json({ error: "Record not found." });
 //     }
 
-//     res.status(200).json({ message: "Record updated successfully." });
-//   } catch (err) {
-//     console.error(err);
+//     res.status(200).json({ message: "Status updated successfully." });
+//   } catch (error) {
+//     console.error("Error updating status:", error);
 //     res.status(500).json({ error: "Internal Server Error" });
 //   }
 // });
 
 
-// PATCH API: Update a specific record
-router.patch("/order-dispatch/:id", async (req, res) => {
-  const { id } = req.params;
-  const { STATUS } = req.body; // Only taking status to update
+// // DELETE API: Delete a specific record
+// router.delete("/order-dispatch/:id", async (req, res) =>{
+//   const { id } = req.params;
 
-  if (!id) {
-    return res.status(400).json({ error: "ID is required" });
-  }
+//   if (!id) {
+//     return res.status(400).json({ error: "ID is required" });
+//   }
+//   try {
+//     const query = `
+//     DELETE FROM [dbo].[belt_loading_unloading]
+//     WHERE [ID] = @ID
+//     `;
+//     const pool = await poolPromise;
+//     const result = await pool.request().input("ID", sql.Int, id).query(query);
 
+//     if (result.rowsAffected[0] === 0) {
+//       return res.status(404).json({ error: "Record not found." });
+//     }
+
+//     res.status(200).json({ message: "Record deleted successfully." });
+//   } catch (error) {
+//     console.error("Error deleting record:", error);
+//     res.status(500).json({ error: "Failed to delete record." });
+//   }
+// });
+
+// // POST API: Add a new record
+// router.post("/order-dispatch", async (req, res) => {
+//   const {
+//     JOB_ORDER_NO,
+//     JOB_ORDER_DATE,
+//     PROCESS_GROUP,
+//     PROCESS_NAME,
+//     ITEM_NAME,
+//     QUANTITY,
+//     DEPARTMENT,
+//     // STATUS
+//   } = req.body;
+
+//   // Check if all required fields are provided
+//   if (!JOB_ORDER_NO  || !JOB_ORDER_DATE || !PROCESS_GROUP || !PROCESS_NAME || !ITEM_NAME || !QUANTITY || !DEPARTMENT) {
+//     return res.status(400).json({ error: "All fields are required." });
+//   }
+
+//   try {
+//     const query = `
+//       INSERT INTO [dbo].[belt_loading_unloading] 
+//       ([JOB ORDER NO], [JOB ORDER DATE], [PROCESS GROUP], [PROCESS NAME], [ITEM NAME], [QUANTITY], [DEPARTMENT])
+//       VALUES (@JOB_ORDER_NO, @JOB_ORDER_DATE, @PROCESS_GROUP, @PROCESS_NAME, @ITEM_NAME, @QUANTITY, @DEPARTMENT)
+//     `;
+//     const pool = await poolPromise;
+//     await pool
+//       .request()
+//       .input("JOB_ORDER_NO", sql.NVarChar, JOB_ORDER_NO)
+//       .input("JOB_ORDER_DATE", sql.NVarChar, JOB_ORDER_DATE)
+//       .input("PROCESS_GROUP", sql.NVarChar, PROCESS_GROUP)
+//       .input("PROCESS_NAME", sql.NVarChar, PROCESS_NAME)
+//       .input("ITEM_NAME", sql.NVarChar, ITEM_NAME)
+//       .input("QUANTITY", sql.Int, QUANTITY)
+//       .input("DEPARTMENT", sql.NVarChar, DEPARTMENT)
+//       // .input("STATUS", sql.NVarChar, STATUS)
+//       .query(query);
+
+//     res.status(201).json({ message: "Record added successfully." });
+//   } catch (error) {
+//     console.error("Error adding record:", error);
+//     res.status(500).json({ error: "Failed to add record." });
+//   }
+// });
+
+
+// router.get("/dispatch-Notification", async (req, res) => {
+//   try {
+//     const query = `
+//       select *  FROM [dbo].[belt_loading_unloading] where [STATUS] = 'Ready to Dispatch'
+//     `;
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(query);
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching order dispatch records:", error);
+//     res.status(500).json({ error: "Failed to fetch order dispatch records." });
+//   }
+// });
+ 
+
+// 📌 GET: Fetch all records from srpReport
+router.get("/srpReport", async (req, res) => {
   try {
-    const query = `
-      UPDATE [dbo].[belt_loading_unloading]
-      SET [STATUS] = @STATUS
-      WHERE [ID] = @ID
-    `;
-
     const pool = await poolPromise;
     const result = await pool
       .request()
-      .input("ID", sql.Int, id)
-      .input("STATUS", sql.NVarChar, STATUS)
-      .query(query);
+      .query(`SELECT [ID]
+        ,[LOT ID]
+        ,[GRN NO.]
+        ,[RECEIVED DATE]
+        ,[TOTAL QUANTITY]
+        ,[STATUS]
+        ,[delete_yes_no]  FROM [dbo].[srpReport] WHERE [delete_yes_no] = 'No' order by [RECEIVED DATE] DESC`);
 
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ error: "Record not found." });
-    }
-
-    res.status(200).json({ message: "Status updated successfully." });
+    res.status(200).json(result.recordset);
   } catch (error) {
-    console.error("Error updating status:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error fetching srpReport data:", error);
+    res.status(500).json({ error: "Failed to fetch data." });
   }
 });
 
-
-// DELETE API: Delete a specific record
-router.delete("/order-dispatch/:id", async (req, res) =>{
-  const { id } = req.params;
-
-  if (!id) {
-    return res.status(400).json({ error: "ID is required" });
-  }
+// 📌 POST: Add a new record to srpReport
+router.post("/srpReport", async (req, res) => {
   try {
-    const query = `
-    DELETE FROM [dbo].[belt_loading_unloading]
-    WHERE [ID] = @ID
-    `;
-    const pool = await poolPromise;
-    const result = await pool.request().input("ID", sql.Int, id).query(query);
+    const { LOT_ID, GRN_NO, RECEIVED_DATE, TOTAL_QUANTITY } = req.body;
 
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ error: "Record not found." });
-    }
-
-    res.status(200).json({ message: "Record deleted successfully." });
-  } catch (error) {
-    console.error("Error deleting record:", error);
-    res.status(500).json({ error: "Failed to delete record." });
-  }
-});
-
-// POST API: Add a new record
-router.post("/order-dispatch", async (req, res) => {
-  const {
-    JOB_ORDER_NO,
-    JOB_ORDER_DATE,
-    PROCESS_GROUP,
-    PROCESS_NAME,
-    ITEM_NAME,
-    QUANTITY,
-    DEPARTMENT,
-    // STATUS
-  } = req.body;
-
-  // Check if all required fields are provided
-  if (!JOB_ORDER_NO  || !JOB_ORDER_DATE || !PROCESS_GROUP || !PROCESS_NAME || !ITEM_NAME || !QUANTITY || !DEPARTMENT) {
-    return res.status(400).json({ error: "All fields are required." });
-  }
-
-  try {
-    const query = `
-      INSERT INTO [dbo].[belt_loading_unloading] 
-      ([JOB ORDER NO], [JOB ORDER DATE], [PROCESS GROUP], [PROCESS NAME], [ITEM NAME], [QUANTITY], [DEPARTMENT])
-      VALUES (@JOB_ORDER_NO, @JOB_ORDER_DATE, @PROCESS_GROUP, @PROCESS_NAME, @ITEM_NAME, @QUANTITY, @DEPARTMENT)
-    `;
     const pool = await poolPromise;
     await pool
       .request()
-      .input("JOB_ORDER_NO", sql.NVarChar, JOB_ORDER_NO)
-      .input("JOB_ORDER_DATE", sql.NVarChar, JOB_ORDER_DATE)
-      .input("PROCESS_GROUP", sql.NVarChar, PROCESS_GROUP)
-      .input("PROCESS_NAME", sql.NVarChar, PROCESS_NAME)
-      .input("ITEM_NAME", sql.NVarChar, ITEM_NAME)
-      .input("QUANTITY", sql.Int, QUANTITY)
-      .input("DEPARTMENT", sql.NVarChar, DEPARTMENT)
-      // .input("STATUS", sql.NVarChar, STATUS)
-      .query(query);
+      .input("LOT_ID", sql.VarChar, LOT_ID)
+      .input("GRN_NO", sql.VarChar, GRN_NO)
+      .input("RECEIVED_DATE", sql.Date, RECEIVED_DATE)
+      .input("TOTAL_QUANTITY", sql.Int, TOTAL_QUANTITY)
+      // .input("STATUS", sql.VarChar, STATUS)
+      .query(`
+        INSERT INTO [dbo].[srpReport] ([LOT ID], [GRN NO.], [RECEIVED DATE], [TOTAL QUANTITY])
+        VALUES (@LOT_ID, @GRN_NO, @RECEIVED_DATE, @TOTAL_QUANTITY)
+      `);
 
-    res.status(201).json({ message: "Record added successfully." });
+    res.status(201).json({ message: "Record added successfully" });
   } catch (error) {
     console.error("Error adding record:", error);
     res.status(500).json({ error: "Failed to add record." });
+  }
+});
+
+// 📌 PATCH: Update record status
+router.patch("/srpReport/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { STATUS } = req.body;
+
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .input("STATUS", sql.VarChar, STATUS)
+      .query(`
+        UPDATE [dbo].[srpReport] 
+        SET [STATUS] = @STATUS
+        WHERE ID = @ID
+      `);
+
+    res.status(200).json({ message: "Record updated successfully" });
+  } catch (error) {
+    console.error("Error updating record:", error);
+    res.status(500).json({ error: "Failed to update record." });
+  }
+});
+
+// 📌 DELETE: Soft delete (marks delete_yes_no as 1)
+router.delete("/srpReport/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .query(`
+        UPDATE [dbo].[srpReport] 
+        SET delete_yes_no = 'Yes'
+        WHERE ID = @ID
+      `);
+
+    res.status(200).json({ message: "Record deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    res.status(500).json({ error: "Failed to delete record." });
   }
 });
 
@@ -2574,7 +2629,7 @@ router.post("/order-dispatch", async (req, res) => {
 router.get("/dispatch-Notification", async (req, res) => {
   try {
     const query = `
-      select *  FROM [dbo].[belt_loading_unloading] where [STATUS] = 'Ready to Dispatch'
+      select *  FROM [dbo].[srpReport] where [STATUS] = 'READY TO DISPATCH' and delete_yes_no ='No'
     `;
     const pool = await poolPromise;
     const result = await pool.request().query(query);
@@ -2584,6 +2639,5 @@ router.get("/dispatch-Notification", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch order dispatch records." });
   }
 });
- 
 
 module.exports = router;

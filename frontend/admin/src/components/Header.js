@@ -214,13 +214,23 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
 
 
    
-   // Fetch Dispatch Orders (Only Status = "Ready to Dispatch")
+  //  // Fetch Dispatch Orders (Only Status = "Ready to Dispatch")
+  // const fetchDispatchOrders = useCallback(async () => {
+  //   try {
+  //     const response = await axiosInstance.get("/api/order-dispatch");
+  //     const readyOrders = response.data.filter(order => order.STATUS === "READY TO DISPATCH");
+  //     setDispatchOrders(readyOrders);
+  //     setDispatchCount(readyOrders.length); // Update dispatch count
+  //   } catch (error) {
+  //     console.error("Error fetching dispatch orders:", error);
+  //   }
+  // }, []);
+  // Fetch Dispatch Orders (Only Status = "READY TO DISPATCH")
   const fetchDispatchOrders = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/api/order-dispatch");
-      const readyOrders = response.data.filter(order => order.STATUS === "Ready to Dispatch");
-      setDispatchOrders(readyOrders);
-      setDispatchCount(readyOrders.length); // Update dispatch count
+      const response = await axiosInstance.get("/api/dispatch-Notification");
+      setDispatchOrders(response.data);
+      setDispatchCount(response.data.length); // Update count
     } catch (error) {
       console.error("Error fetching dispatch orders:", error);
     }
@@ -231,9 +241,21 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   }, [fetchDispatchOrders]);
 
   // Handle Status Update to "Dispatched"
+  // const handleDispatch = async (id) => {
+  //   try {
+  //     await axiosInstance.patch(`/api/order-dispatch/${id}`, { STATUS: "Dispatched" });
+  //     alert("Order Dispatched Successfully!");
+  //     fetchDispatchOrders(); // Refresh the table and count
+  //   } catch (error) {
+  //     console.error("Error updating order status:", error);
+  //     alert("Failed to update order status.");
+  //   }
+  // };
+
+  // Handle Status Update to "Dispatched"
   const handleDispatch = async (id) => {
     try {
-      await axiosInstance.patch(`/api/order-dispatch/${id}`, { STATUS: "Dispatched" });
+      await axiosInstance.patch(`/api/srpReport/${id}`, { STATUS: "DISPATCHED" });
       alert("Order Dispatched Successfully!");
       fetchDispatchOrders(); // Refresh the table and count
     } catch (error) {
@@ -354,7 +376,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                   />
                 </a>
               )}
-              {user?.Auth === "SuperAdmin" && (
+              {user?.Auth === "SuperAdmin" && user?.Name !== "Sandeep Maintenance" && (
                 <a
                   name="SuperAdminNotification"
                   id="SuperAdminNotification"
@@ -614,7 +636,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
         </div>
       )}
        {/* Dispatch Orders Modal */}
-       {showDispatchModal && (
+       {/* {showDispatchModal && (
         <div className="modal show" style={{ display: "block" }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
@@ -649,6 +671,61 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                               onClick={() => handleDispatch(order.ID)}
                             >
                               Dispatch
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center">
+                          No orders ready for dispatch.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowDispatchModal(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )} */}
+       {showDispatchModal && (
+        <div className="modal show" style={{ display: "block" }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Ready for Dispatch</h5>
+                <button className="btn-close" onClick={() => setShowDispatchModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Lot ID</th>
+                      <th>GRN No</th>
+                      <th>Received Date</th>
+                      <th>Total Quantity</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dispatchOrders.length > 0 ? (
+                      dispatchOrders.map((order) => (
+                        <tr key={order.ID}>
+                          <td>{order["LOT ID"]}</td>
+                          <td>{order["GRN NO."]}</td>
+                          <td>{order["RECEIVED DATE"]}</td>
+                          <td>{order["TOTAL QUANTITY"]}</td>
+                          <td>{order["STATUS"]}</td>
+                          <td>
+                            <button className="btn btn-success btn-sm" onClick={() => handleDispatch(order.ID)}>
+                             Dispatch
                             </button>
                           </td>
                         </tr>
