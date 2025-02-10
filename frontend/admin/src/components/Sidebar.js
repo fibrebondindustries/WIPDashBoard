@@ -11,6 +11,7 @@ const Sidebar = () => {
   const [score, setScore] = useState(null); // State for performance score //// 17 Jan 25 Yogesh
   const [performance, setPerformance] = useState(null); // State for performance percentage //// 17 Jan 25 Yogesh
   const [RMCount, setRMCount] = useState(0); // State for inventory count
+  const [NokeData, setNokeData] = useState(0); // State for
   // const [orderCount, setOrderCount] = useState(0); // State for order count
   useEffect(() => {
     // Fetch the ticket count when the component mounts
@@ -58,18 +59,17 @@ const Sidebar = () => {
     }
   };
 
-  // Fetch order count for superadmin
-  // const fetchOrderCount = async () => {
-  //   try {
-  //     const response = await axiosInstance.get("/api/order-dispatch"); // API to fetch order dispatch data
-  //     setOrderCount(response.data.length); // Set the count of order dispatch records
-  //   } catch (error) {
-  //     console.error("Error fetching order count:", error);
-  //     }
-  //   };
-    // end{code}
+ // Fetch the ticket count when the component mounts
+ const fetchNokeCount = async () => {
+  try {
+    const response = await axiosInstance.get("/api/noke-data"); // Use appropriate API for admin tickets
+     setNokeData(response.data.length); // Set the count based on the number of tickets
+  } catch (error) {
+    console.error("Error fetching ticket count:", error);
+  }
+};
 
-
+  // Fetch  count for superadmin
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
       // fetchOrderCount();
@@ -78,6 +78,7 @@ const Sidebar = () => {
     if (user?.Auth === "Supervisor") {
       fetchPerformanceData();
       fetchInventoryCount();
+      fetchNokeCount();
     }
   }, [user]);
 
@@ -208,7 +209,10 @@ const Sidebar = () => {
                 isActive ? "nav-link active" : "nav-link"
               }
             >
-              <i className="bi bi-box-arrow-out"></i> Add Inventory
+              <i className="bi bi-box-arrow-out"></i> Add Inventory{" "}
+              {NokeData > 0 && (
+                 <span className="badge bg-danger">{NokeData}</span>
+              )}
             </NavLink>
           </li>
           )}

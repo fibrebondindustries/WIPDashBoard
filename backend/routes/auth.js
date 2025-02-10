@@ -2545,6 +2545,8 @@ router.get("/srpReport", async (req, res) => {
         ,[RECEIVED DATE]
         ,[TOTAL QUANTITY]
         ,[STATUS]
+        ,[admin_REMARK]
+        ,[user_REMARK]  
         ,[delete_yes_no]  FROM [dbo].[srpReport] WHERE [delete_yes_no] = 'No' order by [RECEIVED DATE] DESC`);
 
     res.status(200).json(result.recordset);
@@ -2629,7 +2631,16 @@ router.delete("/srpReport/:id", async (req, res) => {
 router.get("/dispatch-Notification", async (req, res) => {
   try {
     const query = `
-      select *  FROM [dbo].[srpReport] where [STATUS] = 'READY TO DISPATCH' and delete_yes_no ='No'
+  	select [ID]
+        ,[LOT ID]
+		    ,[GRN NO.]
+		    ,[RECEIVED DATE]
+        ,[TOTAL QUANTITY]
+        ,[STATUS]
+        ,[delete_yes_no]
+        ,[admin_REMARK]
+        ,[user_REMARK]  
+		FROM [dbo].[srpReport] where [STATUS] = 'READY TO DISPATCH' and delete_yes_no ='No'
     `;
     const pool = await poolPromise;
     const result = await pool.request().query(query);
@@ -2639,5 +2650,48 @@ router.get("/dispatch-Notification", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch order dispatch records." });
   }
 });
+
+
+////// FOR ADD REMAR
+router.patch("/srpReport/remark_admin/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { admin_REMARK } = req.body;
+
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .input("admin_REMARK", sql.NVarChar, admin_REMARK)
+      .query(`UPDATE [dbo].[srpReport] SET [admin_REMARK] = @admin_REMARK WHERE ID = @ID`);
+
+    res.status(200).json({ message: "Remark updated successfully" });
+  } catch (error) {
+    console.error("Error updating remark:", error);
+    res.status(500).json({ error: "Failed to update remark." });
+  }
+});
+
+
+router.patch("/srpReport/remark_user/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_REMARK } = req.body;
+
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .input("user_REMARK", sql.NVarChar, user_REMARK)
+      .query(`UPDATE [dbo].[srpReport] SET [user_REMARK] = @user_REMARK WHERE ID = @ID`);
+
+    res.status(200).json({ message: "Remark updated successfully" });
+  } catch (error) {
+    console.error("Error updating remark:", error);
+    res.status(500).json({ error: "Failed to update remark." });
+  }
+});
+
+
 
 module.exports = router;

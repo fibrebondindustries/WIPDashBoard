@@ -24,6 +24,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
   const [dispatchOrders, setDispatchOrders] = useState([]);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [dispatchCount, setDispatchCount] = useState(0);
+  const [remarkInput, setRemarkInput] = useState({});
 
   ///Confirm Process Modification 30 Dec 24 // modificaton 13 Jan 25 yogesh
 
@@ -263,6 +264,29 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       alert("Failed to update order status.");
     }
   };
+
+  const handleRemarkChange = (id, value) => {
+    setRemarkInput((prev) => ({ ...prev, [id]: value }));
+  };
+
+  
+  const handleRemarkSubmit = async (id) => {
+    try {
+      const remark = remarkInput[id]; // Get the current remark
+      // if (!remark) return alert("Please enter a remark!");
+  
+      await axiosInstance.patch(`/api/srpReport/remark_user/${id}`, {
+        user_REMARK: remark,
+      });
+  
+      alert("Remark updated successfully!");
+      fetchDispatchOrders(); // Refresh the dispatch orders
+    } catch (error) {
+      console.error("Error updating remark:", error);
+      alert("Failed to update remark.");
+    }
+  };
+  
 
   return (
     <div>
@@ -696,7 +720,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
       )} */}
        {showDispatchModal && (
         <div className="modal show" style={{ display: "block" }}>
-          <div className="modal-dialog modal-lg">
+          <div className="modal-dialog modal-xl">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Ready for Dispatch</h5>
@@ -709,8 +733,10 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                       <th>Lot ID</th>
                       <th>GRN No</th>
                       <th>Received Date</th>
-                      <th>Total Quantity</th>
+                      <th>Quantity</th>
+                      <th>Remark</th>
                       <th>Status</th>
+                      <th>Add Remark</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -722,7 +748,38 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                           <td>{order["GRN NO."]}</td>
                           <td>{order["RECEIVED DATE"]}</td>
                           <td>{order["TOTAL QUANTITY"]}</td>
+                          <td>{order["admin_REMARK"|| "N/A"]}</td>
                           <td>{order["STATUS"]}</td>
+                          <td>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={remarkInput[order.ID] ?? order.user_REMARK ?? ""}
+                            onChange={(e) => handleRemarkChange(order.ID, e.target.value)}
+                            placeholder="Add a remark"
+                          />
+                          <button
+                            className="btn btn-primary btn-sm mt-2"
+                            onClick={() => handleRemarkSubmit(order.ID)}
+                          >
+                            Save
+                          </button>
+                        </td>
+                          {/* <td>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={remarkInput[order.ID] || order.user_REMARK || ""}
+                            onChange={(e) => handleRemarkChange(order.ID, e.target.value)}
+                            placeholder="Add a remark"
+                          />
+                          <button
+                            className="btn btn-primary btn-sm mt-2"
+                            onClick={() => handleRemarkSubmit(order.ID)}
+                          >
+                            Save
+                          </button>
+                        </td> */}
                           <td>
                             <button className="btn btn-success btn-sm" onClick={() => handleDispatch(order.ID)}>
                              Dispatch

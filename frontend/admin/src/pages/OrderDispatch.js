@@ -96,26 +96,100 @@ const OrderDispatch = () => {
         setSearchLotId("");
         setFilteredData(srpOrder);
       };
+
+
+   // Handle remark update
+  //  const handleRemarkUpdate = async (id, newRemark) => {
+  //   try {
+  //     await axiosInstance.patch(`/api/srpReport/remark_admin/${id}`, { admin_REMARK: newRemark });
+      
+  //     // Update the UI after a successful update
+  //     setSrpOrder((prevOrders) =>
+  //       prevOrders.map((order) =>
+  //         order.ID === id ? { ...order, admin_REMARK: newRemark } : order
+  //       )
+  //     );
+  //     setFilteredData((prevFiltered) =>
+  //       prevFiltered.map((order) =>
+  //         order.ID === id ? { ...order, admin_REMARK: newRemark } : order
+  //       )
+  //     );
+  //   } catch (error) {
+  //     console.error("Error updating remark:", error);
+  //     alert("Failed to update remark.");
+  //   }
+  // };
+
+  const handleRemarkUpdate = (id, newRemark) => {
+    if (!id) return;
+    
+    setSrpOrder((prevOrders) =>
+      prevOrders.map((order) =>
+        order.ID === id ? { ...order, admin_REMARK: newRemark } : order
+      )
+    );
+  
+    setFilteredData((prevFiltered) =>
+      prevFiltered.map((order) =>
+        order.ID === id ? { ...order, admin_REMARK: newRemark } : order
+      )
+    );
+  
+    clearTimeout(window.remarkTimeout);
+    window.remarkTimeout = setTimeout(async () => {
+      try {
+        await axiosInstance.patch(`/api/srpReport/remark_admin/${id}`, { admin_REMARK: newRemark });
+      } catch (error) {
+        console.error("Error updating remark:", error);
+        alert("Failed to update remark.");
+      }
+    }, 800); // API call triggers after 800ms of inactivity
+  };
+
+  
   // DataTable columns
   const columns = [
     {
-      name: "Lot ID",
-      selector: (row) => row["LOT ID"],
+      name: "Lot ID",width: "159px",
+      selector: (row) =>(
+        <span
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title={row["LOT ID"]}
+        >
+          {row["LOT ID"]}
+          </span>
+      ), //row["LOT ID"],
       sortable: true,
     },
     {
-      name: "GRN No",
+      name: "GRN No",width: "110px",
       selector: (row) => row["GRN NO."],
       sortable: true,
     },
     {
-      name: "Received Date",
+      name: "Received Date", width: "125px",
       selector: (row) => row["RECEIVED DATE"],
       sortable: true,
     },
     {
-      name: "Total Quantity",
+      name: "Quantity", width: "100px",
       selector: (row) => row["TOTAL QUANTITY"],
+      sortable: true,
+    },//row["user_REMARK"],
+    {
+      name: "Issue",
+      selector: (row) => (
+        <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row.user_REMARK || "N/A"} // Tooltip still shows "N/A" if remark is missing
+      style={{ cursor: "pointer" }}
+    >
+      {row.user_REMARK && row.user_REMARK.trim() !== "" ? row.user_REMARK : "N/A"}
+    </span>
+
+      ),
       sortable: true,
     },
     {
@@ -132,6 +206,22 @@ const OrderDispatch = () => {
         </select>
       ),
       sortable: true,
+    },
+
+    {
+      name: "Add Remark",
+      cell: (row) => (
+        <textarea
+          className="form-control"
+          rows="1"
+          value={row["admin_REMARK"] || ""}
+          onChange={(e) => handleRemarkUpdate(row.ID, e.target.value)}
+          placeholder="Enter remark..."
+          style={{ fontSize: "14px" }}
+        />
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
     },
     {
       name: "Action",
@@ -157,7 +247,7 @@ const OrderDispatch = () => {
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
         <main className="main-container p-4" style={{ height: "-webkit-fill-available" }}>
-          <div className="container mt-0">
+          <div className=" mt-0">
             <h3 className="mb-4">Order Dispatch</h3>
              {/* Date Range Filters*/}
              <div className="row mb-4">
@@ -286,6 +376,8 @@ const OrderDispatch = () => {
                 pagination
                 highlightOnHover
                 pointerOnHover
+                // striped
+                //dense
               />
             ) : (
               <p className="text-center mt-4">No order dispatch data available.</p>
