@@ -21,6 +21,8 @@ import Remarks from './pages/Remarks';
 import AddInventory from './pages/AddInventory';
 import ViewInventory from './pages/ViewInventory';
 import OrderDispatch from './pages/OrderDispatch';
+import LoopiChecking from './pages/LoopiChecking';
+import LoopiCheckingView from './pages/LoopiCheckingView';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -131,6 +133,21 @@ function App() {
                                 <OrderDispatch />
                             </ProtectedRoute>
                         }
+                    />
+                    <Route
+                        path='/loopi-checking'
+                        element={
+                            <ProtectedRoute>
+                                <LoopiChecking/>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route path="/loopi-CheckingView"
+                         element={
+                        <ProtectedRoute>
+                        < LoopiCheckingView />
+                        </ProtectedRoute>
+                    }
                     />
                       
                 </Routes>

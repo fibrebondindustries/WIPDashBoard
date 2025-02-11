@@ -2692,6 +2692,236 @@ router.patch("/srpReport/remark_user/:id", async (req, res) => {
   }
 });
 
+//New API's for loopi checking 11 fab 25
+router.get("/loopiChecking_Notify", async (req, res) => {
+  try {
+    const query = `
+  	  select [JOB ORDER NO]
+      ,[JOB ORDER DATE]
+      ,[PROCESS GROUP]
+      ,[PROCESS NAME]
+      ,[ITEM NAME]
+      ,[QUANTITY]
+      ,[JO QUANTITY]
+      ,[JO QUANTITY PRODUCED]
+      ,[DEPARTMENT]
+	    ,[Supervisor]
+       FROM [dbo].[StagingTable] where [PROCESS NAME] = 'LOOPI STAPLE' 
+     `;
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching order dispatch records:", error);
+    res.status(500).json({ error: "Failed to fetch order dispatch records." });
+  }
+});
+
+
+// **GET API - Fetch all records**
+router.get("/loopi-checking", async (req, res) => {
+  try {
+    const { supervisor } = req.query;
+
+    let query = `
+      SELECT [ID], [Previous_Supervisor], [Current_Supervisor], [Quantity], 
+             [Hours], [Lot_ID], [Process_name] 
+      FROM [dbo].[Loopi_Checking]
+    `;
+
+    if (supervisor) {
+      query += ` WHERE [Current_Supervisor] = @supervisor`;
+    }
+
+    const pool = await poolPromise;
+    const request = pool.request();
+    if (supervisor) {
+      request.input("supervisor", supervisor);
+    }
+
+    const result = await request.query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching records:", error);
+    res.status(500).json({ error: "Failed to fetch records." });
+  }
+});
+
+// router.get("/loopi-checking", async (req, res) => {
+//   try {
+//     const query = `
+//       SELECT [ID], [Previous_Supervisor], [Current_Supervisor], [Quantity], 
+//              [Hours], [Lot_ID], [Process_name] 
+//       FROM [dbo].[Loopi_Checking]
+//     `;
+
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(query);
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching records:", error);
+//     res.status(500).json({ error: "Failed to fetch records." });
+//   }
+// });
+
+// **POST API - Insert new record**
+router.post("/loopi-checking", async (req, res) => {
+  try {
+    const { Previous_Supervisor, Current_Supervisor, Quantity, Hours, Lot_ID, Process_name } = req.body;
+
+    if (!Current_Supervisor || !Quantity || !Hours || !Lot_ID || !Process_name) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    const query = `
+      INSERT INTO [dbo].[Loopi_Checking] ([Previous_Supervisor], [Current_Supervisor], 
+        [Quantity], [Hours], [Lot_ID], [Process_name])
+      VALUES (@Previous_Supervisor, @Current_Supervisor, @Quantity, @Hours, @Lot_ID, @Process_name)
+    `;
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input("Previous_Supervisor", Previous_Supervisor)
+      .input("Current_Supervisor", Current_Supervisor)
+      .input("Quantity", Quantity)
+      .input("Hours", Hours)
+      .input("Lot_ID", Lot_ID)
+      .input("Process_name", Process_name)
+      .query(query);
+
+    res.status(201).json({ message: "Record inserted successfully." });
+  } catch (error) {
+    console.error("Error inserting record:", error);
+    res.status(500).json({ error: "Failed to insert record." });
+  }
+});
+
+// // **PUT API - Update a record by ID**
+// router.put("/loopi-checking/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { Previous_Supervisor, Current_Supervisor, Quantity, Hours, Lot_ID, Process_name } = req.body;
+
+//     if (!id) {
+//       return res.status(400).json({ error: "ID is required." });
+//     }
+
+//     const query = `
+//       UPDATE [dbo].[Loopi_Checking]
+//       SET Previous_Supervisor = @Previous_Supervisor, 
+//           Current_Supervisor = @Current_Supervisor,
+//           Quantity = @Quantity,
+//           Hours = @Hours,
+//           Lot_ID = @Lot_ID,
+//           Process_name = @Process_name
+//       WHERE ID = @id
+//     `;
+
+//     const pool = await poolPromise;
+//     const result = await pool.request()
+//       .input("id", id)
+//       .input("Previous_Supervisor", Previous_Supervisor)
+//       .input("Current_Supervisor", Current_Supervisor)
+//       .input("Quantity", Quantity)
+//       .input("Hours", Hours)
+//       .input("Lot_ID", Lot_ID)
+//       .input("Process_name", Process_name)
+//       .query(query);
+
+//     if (result.rowsAffected[0] === 0) {
+//       return res.status(404).json({ error: "Record not found." });
+//     }
+
+//     res.status(200).json({ message: "Record updated successfully." });
+//   } catch (error) {
+//     console.error("Error updating record:", error);
+//     res.status(500).json({ error: "Failed to update record." });
+//   }
+// });
+
+// **PUT API - Update a record by ID with Supervisor Auto-Swap**
+router.put("/loopi-checking/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Current_Supervisor, Quantity, Hours, Lot_ID, Process_name } = req.body;
+
+    if (!id || !Current_Supervisor) {
+      return res.status(400).json({ error: "ID and Current_Supervisor are required." });
+    }
+
+    const pool = await poolPromise;
+
+    // Fetch the existing record
+    const existingQuery = `SELECT [Previous_Supervisor], [Current_Supervisor] FROM [dbo].[Loopi_Checking] WHERE ID = @id`;
+    const existingResult = await pool.request().input("id", id).query(existingQuery);
+
+    if (existingResult.recordset.length === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    const previousSupervisor = existingResult.recordset[0].Current_Supervisor; // Move Current to Previous
+
+    // Update the record with swapped supervisors
+    const updateQuery = `
+      UPDATE [dbo].[Loopi_Checking]
+      SET Previous_Supervisor = @previousSupervisor, 
+          Current_Supervisor = @Current_Supervisor,
+          Quantity = @Quantity,
+          Hours = @Hours,
+          Lot_ID = @Lot_ID,
+          Process_name = @Process_name
+      WHERE ID = @id
+    `;
+
+    const result = await pool.request()
+      .input("id", id)
+      .input("previousSupervisor", previousSupervisor) // Set old Current_Supervisor as Previous
+      .input("Current_Supervisor", Current_Supervisor) // Set new Supervisor as Current
+      .input("Quantity", Quantity)
+      .input("Hours", Hours)
+      .input("Lot_ID", Lot_ID)
+      .input("Process_name", Process_name)
+      .query(updateQuery);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Record updated successfully with supervisor swap." });
+  } catch (error) {
+    console.error("Error updating record:", error);
+    res.status(500).json({ error: "Failed to update record." });
+  }
+});
+
+
+
+// **DELETE API - Delete a record by ID**
+router.delete("/loopi-checking/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "ID is required." });
+    }
+
+    const query = `DELETE FROM [dbo].[Loopi_Checking] WHERE ID = @id`;
+
+    const pool = await poolPromise;
+    const result = await pool.request().input("id", id).query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Record deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    res.status(500).json({ error: "Failed to delete record." });
+  }
+});
+
+
 
 
 module.exports = router;

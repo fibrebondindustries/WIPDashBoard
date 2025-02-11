@@ -234,6 +234,39 @@ const Sidebar = () => {
         )}
         {/* end */}
 
+      {/* New Module create Loopi checking on 11 fab 25 */}
+      {user?.Auth === "Supervisor" && (user?.Name !== "SARFRAZ KHAN") && (
+          <li className="nav-item">
+            <NavLink
+              to="/loopi-checkingView"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Loopi Checking{" "}
+              {ticketCount > 0 && (
+                <span className="badge bg-danger">{ticketCount}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
+      {/*  */}
+      {user?.Auth === "Supervisor" && (user?.Name === "SARFRAZ KHAN") && (
+          <li className="nav-item">
+            <NavLink
+              to="/loopi-checking"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Loopi Checking{" "}
+              {ticketCount > 0 && (
+                <span className="badge bg-danger">{ticketCount}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
+
 
         {/* added on 17 jan 25 */}
         {user?.Auth === "Supervisor" && (
