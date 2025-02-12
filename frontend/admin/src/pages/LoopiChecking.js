@@ -159,8 +159,16 @@ const LoopiChecking = () => {
   // **Columns for DataTable**
   const columns = [
     {
-      name: "Lot ID",
-      selector: (row) => row["Lot_ID"],
+      name: "Item Name",
+      selector: (row) =>(
+        <span
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title={row["Lot_ID"]}
+        >
+          {row["Lot_ID"]}          
+        </span>
+      ) ,
       sortable: true,
     },
     {
@@ -243,7 +251,7 @@ const LoopiChecking = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center">
+                  <td colSpan="6" className="text-center">
                     No data available.
                   </td>
                 </tr>
@@ -272,7 +280,7 @@ const LoopiChecking = () => {
                   <form onSubmit={handleFormSubmit}>
                     <div className="modal-body">
                       <div className="mb-3">
-                        <label className="form-label">Lot ID</label>
+                        <label className="form-label">Item Name</label>
                         <input
                           type="text"
                           name="Lot_ID"
@@ -320,7 +328,7 @@ const LoopiChecking = () => {
                         />
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">Current Supervisor</label>
+                        <label className="form-label">Supervisor</label>
                         <select
                           name="Current_Supervisor"
                           value={formData.Current_Supervisor}

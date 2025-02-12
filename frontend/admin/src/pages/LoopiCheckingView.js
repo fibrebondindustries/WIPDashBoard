@@ -162,17 +162,26 @@ const LoopiCheckingView = () => {
   // **Columns for DataTable**
   const columns = [
     {
-      name: "Lot ID",
-      selector: (row) => row["Lot_ID"],
+      name: "Item Name",
+      selector: (row) =>(
+        <span
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title={row["Lot_ID"]}
+        >
+          {row["Lot_ID"]}
+        </span>
+      ),
+       
       sortable: true,
     },
     {
-      name: "Quantity",
+      name: "Quantity",width: "96px",
       selector: (row) => row["Quantity"],
       sortable: true,
     },
     {
-      name: "Hours",
+      name: "Hours", width: "100px",
       selector: (row) => row["Hours"],
       sortable: true,
     },
@@ -192,7 +201,7 @@ const LoopiCheckingView = () => {
       sortable: true,
     },
     {
-      name: "Actions",
+      name: "Actions",width: "90px",
       cell: (row) => (
         <>
           <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(row)}>
@@ -236,7 +245,7 @@ const LoopiCheckingView = () => {
                   <form onSubmit={handleFormSubmit}>
                     <div className="modal-body">
                       <div className="mb-3">
-                        <label className="form-label">Lot ID</label>
+                        <label className="form-label">Item Name</label>
                         <input
                           type="text"
                           name="Lot_ID"
@@ -244,6 +253,7 @@ const LoopiCheckingView = () => {
                           onChange={handleInputChange}
                           className="form-control"
                           required
+                          readOnly
                         />
                       </div>
                       <div className="mb-3">
@@ -260,7 +270,7 @@ const LoopiCheckingView = () => {
                       <div className="mb-3">
                         <label className="form-label">Hours</label>
                         <input
-                          type="number"
+                          type="text"
                           name="Hours"
                           value={formData.Hours}
                           onChange={handleInputChange}
@@ -280,7 +290,7 @@ const LoopiCheckingView = () => {
                         />
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">Current Supervisor</label>
+                        <label className="form-label">Next Supervisor</label>
                         <select
                           name="Current_Supervisor"
                           value={formData.Current_Supervisor}

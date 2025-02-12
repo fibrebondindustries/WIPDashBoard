@@ -12,6 +12,7 @@ const Sidebar = () => {
   const [performance, setPerformance] = useState(null); // State for performance percentage //// 17 Jan 25 Yogesh
   const [RMCount, setRMCount] = useState(0); // State for inventory count
   const [NokeData, setNokeData] = useState(0); // State for
+  const [LoopiCheckingCount, setLoopiCheckingCount] = useState(0); // State for Loopi Checking Count
   // const [orderCount, setOrderCount] = useState(0); // State for order count
   useEffect(() => {
     // Fetch the ticket count when the component mounts
@@ -69,6 +70,20 @@ const Sidebar = () => {
   }
 };
 
+ // Fetch Loopi Checking Count for the logged-in supervisor// 12 Feb 25
+ const fetchLoopiCheckingCount = async () => {
+  try {
+    const response = await axiosInstance.get("/api/loopi-checking"); // API to fetch Loopi Checking
+    const filteredLoopiChecking = response.data.filter(
+      (item) => item["Current_Supervisor"] === user?.Name
+    ); // Filter by logged-in supervisor's name
+    setLoopiCheckingCount(filteredLoopiChecking.length); // Set the count of  records
+    console.log("LoopiCheckingCount", filteredLoopiChecking.length);
+  } catch (error) {
+    console.error("Error fetching LoopiChecking count:", error);
+  }
+};
+
   // Fetch  count for superadmin
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
@@ -79,11 +94,12 @@ const Sidebar = () => {
       fetchPerformanceData();
       fetchInventoryCount();
       fetchNokeCount();
+      fetchLoopiCheckingCount();
     }
   }, [user]);
 
 
-  
+ 
   return (
     <div className="d-flex flex-column vh-100 bg-light sidebar">
       <div className=" text-center">
@@ -200,7 +216,7 @@ const Sidebar = () => {
           </li>
         )}
         
-       {/* new module created 28 jan 25 */}
+       {/* new module created 28 jan 25  only access by monu and siddhu*/}
        {user?.Auth === "Supervisor" && (user?.Name === "MONU" || user?.Name === "SIDDHU") && (
           <li className="nav-item">
             <NavLink
@@ -234,8 +250,9 @@ const Sidebar = () => {
         )}
         {/* end */}
 
-      {/* New Module create Loopi checking on 11 fab 25 */}
-      {user?.Auth === "Supervisor" && (user?.Name !== "SARFRAZ KHAN") && (
+     {/* New Module create Loopi checking on 11 Feb 25 */}
+      {user?.Auth === "Supervisor" &&
+        ["MONU", "VIRAT (MAMA)", "SONU"].includes(user?.Name) && (
           <li className="nav-item">
             <NavLink
               to="/loopi-checkingView"
@@ -244,14 +261,15 @@ const Sidebar = () => {
               }
             >
               <i className="bi bi-calendar-check"></i> Loopi Checking{" "}
-              {ticketCount > 0 && (
-                <span className="badge bg-danger">{ticketCount}</span>
+              {LoopiCheckingCount > 0 && (
+                <span className="badge bg-danger">{LoopiCheckingCount}</span>
               )}
             </NavLink>
           </li>
         )}
-      {/*  */}
-      {user?.Auth === "Supervisor" && (user?.Name === "SARFRAZ KHAN") && (
+
+      {/*loopi checking  this will be only accessed by ANWAR */}
+      {user?.Auth === "Supervisor" && (user?.Name === "ANWAR") && (
           <li className="nav-item">
             <NavLink
               to="/loopi-checking"
@@ -260,9 +278,9 @@ const Sidebar = () => {
               }
             >
               <i className="bi bi-calendar-check"></i> Loopi Checking{" "}
-              {ticketCount > 0 && (
+              {/* {ticketCount > 0 && (
                 <span className="badge bg-danger">{ticketCount}</span>
-              )}
+              )} */}
             </NavLink>
           </li>
         )}

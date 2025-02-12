@@ -2706,7 +2706,7 @@ router.get("/loopiChecking_Notify", async (req, res) => {
       ,[JO QUANTITY PRODUCED]
       ,[DEPARTMENT]
 	    ,[Supervisor]
-       FROM [dbo].[StagingTable] where [PROCESS NAME] = 'LOOPI STAPLE' 
+       FROM [dbo].[StagingTable] where [PROCESS NAME] = 'LOOPI CHECKING' 
      `;
     const pool = await poolPromise;
     const result = await pool.request().query(query);
