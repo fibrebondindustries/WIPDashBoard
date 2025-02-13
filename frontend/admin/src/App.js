@@ -23,6 +23,8 @@ import ViewInventory from './pages/ViewInventory';
 import OrderDispatch from './pages/OrderDispatch';
 import LoopiChecking from './pages/LoopiChecking';
 import LoopiCheckingView from './pages/LoopiCheckingView';
+import SalesFlow from './pages/SalesFlow';
+import SalesFlowNotify from './pages/SalesFlowNotify';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -147,9 +149,22 @@ function App() {
                         <ProtectedRoute>
                         < LoopiCheckingView />
                         </ProtectedRoute>
-                    }
+                      }
                     />
-                      
+                    <Route path='/sales-flow'
+                    element={
+                        <ProtectedRoute>
+                            <SalesFlow/>
+                        </ProtectedRoute>
+                    }
+                    />  
+                    <Route path='/sales-flowNotify'
+                    element={
+                        <ProtectedRoute>
+                            <SalesFlowNotify/>
+                        </ProtectedRoute>
+                    }
+                    />                   
                 </Routes>
             </div>
         </BrowserRouter>

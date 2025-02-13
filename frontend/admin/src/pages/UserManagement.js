@@ -236,6 +236,7 @@ function UserManagement() {
     setSelectedRows(state.selectedRows);
   };
 
+
   return (
     <div className="d-flex">
       <div
@@ -265,12 +266,20 @@ function UserManagement() {
               >
                 Update User
               </button>
-              <button
+              {/* <button
                 className="btn btn-outline-danger mb-5"
                 onClick={handleDeleteUser}
               >
                 Delete User
-              </button>
+              </button> */}
+              {user?.Auth === "SuperAdmin" && ( // Show button only if Auth is "SuperAdmin"
+                <button
+                  className="btn btn-outline-danger mb-5"
+                  onClick={handleDeleteUser}
+                >
+                  Delete User
+                </button>
+              )}
             </div>
           </div>
 

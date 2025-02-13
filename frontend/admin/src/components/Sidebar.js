@@ -221,6 +221,33 @@ const Sidebar = () => {
             </NavLink>
           </li>
         )}
+        {/* Ṇew Module create on 13 fab 25 this will only visible to Ashwini */}
+        {user?.Auth === "Admin" && user?.EmployeeID === "1017" && (
+          <li className="nav-item">
+            <NavLink
+              to="/sales-flow"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Sales Flow
+            </NavLink>
+          </li>
+        )}
+
+         {/* Ṇew Module create on 13 fab 25 this will only visible to Faizan */}
+         {(user?.Auth === "Admin" && user?.EmployeeID === "1018") && (
+          <li className="nav-item">
+            <NavLink
+              to="/sales-flowNotify"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Sales Flow
+            </NavLink>
+          </li>
+        )}
         
        {/* new module created 28 jan 25  only access by monu and siddhu*/}
        {user?.Auth === "Supervisor" && (user?.Name === "MONU" || user?.Name === "SIDDHU") && (
