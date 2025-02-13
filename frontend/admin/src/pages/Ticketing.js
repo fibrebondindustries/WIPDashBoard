@@ -19,6 +19,7 @@ function AdminTicketManagement() {
     Brief_Description: "",
     Supervisor_Name: "",
     Priority: "",
+    Responsible: "", // New field
   });
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [toggleClearSelectedRows, setToggleClearSelectedRows] = useState(false);
@@ -240,6 +241,7 @@ useEffect(() => {
         {row.Category}
       </span>
     ), sortable: true, width: "100px" },
+    { name: "Responsible", selector: (row) => row.Responsible, sortable: true }, // New field
     {
       name: "Subject",
       selector: (row) => (

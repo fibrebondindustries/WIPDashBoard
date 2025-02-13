@@ -343,7 +343,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
 
          
             <span style={{ marginLeft: "-21rem" }}>
-            {user?.Auth === "Supervisor" && ["MONU", "SIDDHU"].includes(user?.Name) && (
+            {user?.Auth === "Supervisor" && ["MONU", "Sudhir CK"].includes(user?.Name) && (
             <a
                 name="Dispatch"
                 id="Dispatch"

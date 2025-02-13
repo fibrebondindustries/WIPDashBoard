@@ -18,6 +18,7 @@ function TicketHome() {
     Brief_Description: "",
     Supervisor_Name: user?.Name || "", // Pre-fill Supervisor Name from user context
     Priority: "",
+    Responsible: "", // New field
   });
   const [filters, setFilters] = useState({
     searchQuery: "",
@@ -72,6 +73,7 @@ function TicketHome() {
           ticket.Brief_Description,
           ticket.Supervisor_Name,
           ticket.Priority,
+          ticket.Responsible,
           ticket.Status,
         ]
           .join(" ")
@@ -116,6 +118,7 @@ function TicketHome() {
         Brief_Description: "",
         Supervisor_Name: user?.Name || "", // Reset Supervisor Name
         Priority: "",
+        Responsible: "",
       });
     } catch (error) {
       console.error("Error creating ticket:", error);
@@ -200,6 +203,7 @@ const confirmTicket = async (id) => {
                   <tr>
                     <th>Ticket Number</th>
                     <th>Category</th>
+                    <th>Responsible</th>
                     <th>Subject</th>
                     <th>Brief Description</th>
                     <th>Supervisor Name</th>
@@ -215,21 +219,13 @@ const confirmTicket = async (id) => {
                       <tr key={ticket.ID}>
                         <td>{ticket.ID}</td>
                         <td>{ticket.Category}</td>
+                        <td>{ticket.Responsible}</td>
                         <td>{ticket.Subject}</td>
                         <td>{ticket.Brief_Description}</td>
                         <td>{ticket.Supervisor_Name}</td>
                         <td>{ticket.Priority}</td>
                         <td>{ticket.Status}</td>
-                        <td>
-                          {new Date(ticket.RaiseDate).toLocaleDateString(
-                            "en-GB",
-                            {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            }
-                          )}
-                        </td>
+                        <td>{ticket.RaiseDate}</td>
                         <td>
                         {ticket.Status === "Resolved" && (
                           <button
@@ -282,6 +278,21 @@ const confirmTicket = async (id) => {
                       placeholder="Enter Category"
                       required
                     />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Responsible</label>
+                    <select
+                      name="Responsible"
+                      value={formData.Responsible}
+                      onChange={handleFormChange}
+                      className="form-select"
+                      required
+                    >
+                      <option value="">Select Responsible Person</option>
+                      <option value="Sandeep Maintenance">Sandeep</option>
+                      <option value="Asif Khan Maintenance">Asif Khan </option>
+                      <option value="Imtiyaz husen Maintenance">Imtiyaz husen</option>
+                    </select>
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Subject</label>

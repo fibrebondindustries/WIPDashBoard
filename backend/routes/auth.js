@@ -1309,7 +1309,7 @@ router.get("/wip", async (req, res) => {
 
 // POST API to create a ticket
 router.post("/tickets", async (req, res) => {
-  const { Category, Subject, Brief_Description, Priority, EmployeeID } =
+  const { Category, Subject, Brief_Description, Priority, EmployeeID, Responsible } =
     req.body; // Extract EmployeeID from body
 
   try {
@@ -1341,10 +1341,12 @@ router.post("/tickets", async (req, res) => {
       .input("Supervisor_Name", sql.NVarChar, Name)
       .input("Priority", sql.NVarChar, Priority)
       .input("Status", sql.NVarChar, "Open") // Default to "Open" if not provided
-      .input("RaiseDate", sql.NVarChar, RaiseDateIST).query(`
+      .input("RaiseDate", sql.NVarChar, RaiseDateIST)
+      .input("Responsible", sql.NVarChar, Responsible)
+      .query(`
         INSERT INTO [dbo].[TICKETS] 
-        (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, RaiseDate)
-        VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @RaiseDate)
+        (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, RaiseDate, Responsible)
+        VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @RaiseDate, @Responsible)
       `);
 
     res.status(201).json({ message: "Ticket created successfully!" });
@@ -1440,6 +1442,50 @@ router.put("/tickets/:id", async (req, res) => {
 });
 
 // PATCH API to partially update a ticket // modificate on 08 jan 2025, store sovle date and confirm time // yogesh
+// router.patch("/tickets/:id", async (req, res) => {
+//   const { id } = req.params;
+//   const fields = req.body; // Fields to update dynamically
+
+//   try {
+//     if (Object.keys(fields).length === 0) {
+//       return res.status(400).json({ message: "No fields to update" });
+//     }
+
+//     // Check if the status is being updated to 'Resolved'
+//     const IsResolved =
+//       fields.Status && fields.Status.toLowerCase() === "resolved";
+//     if (IsResolved) {
+//       fields.SolvedDate = formatDateTime(new Date()); // Set SolvedDate to current time in IST
+//     }
+//     let setQuery = Object.keys(fields)
+//       .map((key) => `${key} = @${key}`)
+//       .join(", ");
+
+//     const query = `UPDATE TICKETS SET ${setQuery} WHERE ID = @ID`;
+
+//     const pool = await poolPromise;
+//     const request = pool.request().input("ID", id);
+
+//     // Dynamically add inputs to the query
+//     Object.keys(fields).forEach((key) => {
+//       request.input(key, fields[key]);
+//     });
+
+//     const result = await request.query(query);
+
+//     if (result.rowsAffected[0] === 0) {
+//       return res.status(404).json({ message: "Ticket not found" });
+//     }
+
+//     return res.status(200).json({ message: "Ticket updated successfully" });
+//   } catch (error) {
+//     console.error("Error partially updating ticket:", error);
+//     return res.status(500).json({ error: "Failed to update ticket" });
+//   }
+// });
+
+// changes occures in patch api on 13 fab 2025
+// PATCH API to partially update a ticket // Modified on 13 Feb 2025
 router.patch("/tickets/:id", async (req, res) => {
   const { id } = req.params;
   const fields = req.body; // Fields to update dynamically
@@ -1449,19 +1495,33 @@ router.patch("/tickets/:id", async (req, res) => {
       return res.status(400).json({ message: "No fields to update" });
     }
 
-    // Check if the status is being updated to 'Resolved'
-    const IsResolved =
-      fields.Status && fields.Status.toLowerCase() === "resolved";
-    if (IsResolved) {
-      fields.SolvedDate = formatDateTime(new Date()); // Set SolvedDate to current time in IST
+    const pool = await poolPromise;
+
+    // Fetch the existing ticket details before updating
+    const existingTicket = await pool.request().input("ID", id).query(`
+        SELECT * FROM [dbo].[TICKETS] WHERE ID = @ID
+    `);
+
+    if (existingTicket.recordset.length === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
     }
+
+    const ticketData = existingTicket.recordset[0];
+
+    // Check if the status is being updated to 'Resolved'
+    const isResolved = fields.Status && fields.Status.toLowerCase() === "resolved";
+    if (isResolved) {
+      fields.SolvedDate = formatDateTime(new Date()); // Set SolvedDate to current time in IST
+      // fields.ConfirmTime = formatDateTime(new Date()); // Store confirmation time
+    }
+
+    // Update the existing ticket
     let setQuery = Object.keys(fields)
       .map((key) => `${key} = @${key}`)
       .join(", ");
 
-    const query = `UPDATE TICKETS SET ${setQuery} WHERE ID = @ID`;
+    const updateQuery = `UPDATE [dbo].[TICKETS] SET ${setQuery} WHERE ID = @ID`;
 
-    const pool = await poolPromise;
     const request = pool.request().input("ID", id);
 
     // Dynamically add inputs to the query
@@ -1469,15 +1529,40 @@ router.patch("/tickets/:id", async (req, res) => {
       request.input(key, fields[key]);
     });
 
-    const result = await request.query(query);
+    const result = await request.query(updateQuery);
 
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
+    // If ticket is resolved, move it to Solved_Tickets table and delete from TICKETS
+    if (isResolved) {
+      await pool.request()
+        .input("Category", sql.NVarChar, ticketData.Category)
+        .input("Subject", sql.NVarChar, ticketData.Subject)
+        .input("Brief_Description", sql.NVarChar, ticketData.Brief_Description)
+        .input("Supervisor_Name", sql.NVarChar, ticketData.Supervisor_Name)
+        .input("Priority", sql.NVarChar, ticketData.Priority)
+        .input("Status", sql.NVarChar, "Resolved")
+        .input("ID", sql.Int, ticketData.ID)
+        .input("RaiseDate", sql.NVarChar, ticketData.RaiseDate)
+        .input("SolvedDate", sql.NVarChar, fields.SolvedDate)
+        .input("Responsible", sql.NVarChar, ticketData.Responsible)
+        .query(`
+          INSERT INTO [dbo].[Solved_Tickets]
+          (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, Responsible)
+          VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate, @Responsible)
+        `);
+
+      // Delete from TICKETS table after moving to Solved_Tickets
+      // await pool.request().input("ID", id).query(`
+      //     DELETE FROM [dbo].[TICKETS] WHERE ID = @ID
+      // `);
+    }
+
     return res.status(200).json({ message: "Ticket updated successfully" });
   } catch (error) {
-    console.error("Error partially updating ticket:", error);
+    console.error("Error updating ticket:", error);
     return res.status(500).json({ error: "Failed to update ticket" });
   }
 });
@@ -1502,7 +1587,77 @@ router.delete("/tickets/:id", async (req, res) => {
   }
 });
 
-// Confirm Ticket API: Move resolved ticket to Solved_Tickets table
+// // Confirm Ticket API: Move resolved ticket to Solved_Tickets table
+// router.post("/tickets/confirm/:id", async (req, res) => {
+//   const { id } = req.params;
+
+//   try {
+//     const pool = await poolPromise;
+
+//     // Fetch the ticket from the TICKETS table
+//     const ticket = await pool.request().input("ID", sql.Int, id).query(`
+//         SELECT 
+//         Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, Responsible
+//         FROM [dbo].[TICKETS]
+//         WHERE ID = @ID
+//       `);
+
+//     if (ticket.recordset.length === 0) {
+//       return res.status(404).json({ error: "Ticket not found" });
+//     }
+
+//     const ticketData = ticket.recordset[0];
+
+//     // Ensure the ticket is Resolved before moving  // yogesh
+//     if (ticketData.Status !== "Resolved") {
+//       return res
+//         .status(400)
+//         .json({ error: "Only resolved tickets can be confirmed" });
+//     }
+
+//     // Format RaiseDate and SolvedDate to IST
+//     const confirmTimeIST = formatDateTime(new Date());
+//     // const raiseDateIST = formatDateTime(new Date(ticketData.RaiseDate));
+
+//     // Move the ticket to Solved_Tickets table
+//     await pool
+//       .request()
+//       .input("Category", sql.NVarChar, ticketData.Category)
+//       .input("Subject", sql.NVarChar, ticketData.Subject)
+//       .input("Brief_Description", sql.NVarChar, ticketData.Brief_Description)
+//       .input("Supervisor_Name", sql.NVarChar, ticketData.Supervisor_Name)
+//       .input("Priority", sql.NVarChar, ticketData.Priority)
+//       .input("Status", sql.NVarChar, ticketData.Status)
+//       .input("ID", sql.Int, ticketData.ID)
+//       .input("RaiseDate", sql.NVarChar, ticketData.RaiseDate)
+//       .input("SolvedDate", sql.NVarChar, ticketData.SolvedDate)
+//       .input("ConfirmTime", sql.NVarChar, confirmTimeIST)
+//       .input("Responsible", sql.NVarChar, ticketData.Responsible)
+//       .query(`
+//         INSERT INTO [dbo].[Solved_Tickets]
+//         (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, ConfirmTime, Responsible)
+//         VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate, @ConfirmTime, @Responsible)
+//       `);
+
+//     // Delete the ticket from TICKETS table
+//     await pool.request().input("ID", sql.Int, id).query(`
+//         DELETE FROM [dbo].[TICKETS]
+//         WHERE ID = @ID
+//       `);
+
+//     res
+//       .status(200)
+//       .json({ message: "Ticket confirmed and moved to solved tickets" });
+//   } catch (error) {
+//     console.error("Error confirming ticket:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+/// new api for WIP Dashboard Design table in model
+
+//changes on 13 fab 2025
+// Confirm Ticket API: Update ConfirmTime in Solved_Tickets and delete from TICKETS
 router.post("/tickets/confirm/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -1511,11 +1666,10 @@ router.post("/tickets/confirm/:id", async (req, res) => {
 
     // Fetch the ticket from the TICKETS table
     const ticket = await pool.request().input("ID", sql.Int, id).query(`
-        SELECT 
-          Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate
+        SELECT ID, Status
         FROM [dbo].[TICKETS]
         WHERE ID = @ID
-      `);
+    `);
 
     if (ticket.recordset.length === 0) {
       return res.status(404).json({ error: "Ticket not found" });
@@ -1523,51 +1677,45 @@ router.post("/tickets/confirm/:id", async (req, res) => {
 
     const ticketData = ticket.recordset[0];
 
-    // Ensure the ticket is Resolved before moving  // yogesh
+    // Ensure the ticket is Resolved before confirming
     if (ticketData.Status !== "Resolved") {
-      return res
-        .status(400)
-        .json({ error: "Only resolved tickets can be confirmed" });
+      return res.status(400).json({ error: "Only resolved tickets can be confirmed" });
     }
 
-    // Format RaiseDate and SolvedDate to IST
+    // Format ConfirmTime to IST
     const confirmTimeIST = formatDateTime(new Date());
-    // const raiseDateIST = formatDateTime(new Date(ticketData.RaiseDate));
 
-    // Move the ticket to Solved_Tickets table
-    await pool
+    // Update ConfirmTime in Solved_Tickets table
+    const updateQuery = `
+        UPDATE [dbo].[Solved_Tickets]
+        SET ConfirmTime = @ConfirmTime
+        WHERE ID = @ID
+    `;
+
+    const updateResult = await pool
       .request()
-      .input("Category", sql.NVarChar, ticketData.Category)
-      .input("Subject", sql.NVarChar, ticketData.Subject)
-      .input("Brief_Description", sql.NVarChar, ticketData.Brief_Description)
-      .input("Supervisor_Name", sql.NVarChar, ticketData.Supervisor_Name)
-      .input("Priority", sql.NVarChar, ticketData.Priority)
-      .input("Status", sql.NVarChar, ticketData.Status)
+      .input("ConfirmTime", sql.NVarChar, confirmTimeIST)
       .input("ID", sql.Int, ticketData.ID)
-      .input("RaiseDate", sql.NVarChar, ticketData.RaiseDate)
-      .input("SolvedDate", sql.NVarChar, ticketData.SolvedDate)
-      .input("ConfirmTime", sql.NVarChar, confirmTimeIST).query(`
-        INSERT INTO [dbo].[Solved_Tickets]
-        (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, ConfirmTime)
-        VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate, @ConfirmTime)
-      `);
+      .query(updateQuery);
+
+    if (updateResult.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Ticket not found in Solved_Tickets" });
+    }
 
     // Delete the ticket from TICKETS table
     await pool.request().input("ID", sql.Int, id).query(`
         DELETE FROM [dbo].[TICKETS]
         WHERE ID = @ID
-      `);
+    `);
 
-    res
-      .status(200)
-      .json({ message: "Ticket confirmed and moved to solved tickets" });
+    res.status(200).json({ message: "Ticket confirmed, ConfirmTime updated, and ticket deleted from TICKETS" });
   } catch (error) {
     console.error("Error confirming ticket:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-/// new api for WIP Dashboard Design table in model
+
 router.get("/matched-data", async (req, res) => {
   try {
     const pool = await poolPromise;
