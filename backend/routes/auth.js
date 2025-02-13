@@ -3070,6 +3070,163 @@ router.delete("/loopi-checking/:id", async (req, res) => {
 });
 
 
+/// Sales flow API // 13 Fab 2025 
+// **GET API - Fetch all records**
+router.get("/sales-flow", async (req, res) => {
+  try {
+    const query = `
+      SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number]
+      FROM [dbo].[SalesFlow]
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching SalesFlow records:", error);
+    res.status(500).json({ error: "Failed to fetch SalesFlow records." });
+  }
+});
+
+// **POST API - Insert a new record**
+router.post("/sales-flow", async (req, res) => {
+  try {
+    const { LOT_ID, GRN_NO, RECEIVED_TIME, QUANTITY, Invoice_Number } = req.body;
+
+    if (!LOT_ID || !GRN_NO || !RECEIVED_TIME || !QUANTITY || !Invoice_Number) {
+      return res.status(400).json({ error: "All fields except Confirm Time are required." });
+    }
+
+   
+
+    const query = `
+      INSERT INTO [dbo].[SalesFlow] ([LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [Invoice_Number])
+      VALUES (@LOT_ID, @GRN_NO, @RECEIVED_TIME, @QUANTITY, @Invoice_Number)
+    `;
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input("LOT_ID", sql.NVarChar, LOT_ID)
+      .input("GRN_NO", sql.NVarChar, GRN_NO)
+      .input("RECEIVED_TIME", sql.NVarChar, RECEIVED_TIME)
+      .input("QUANTITY", sql.Int, QUANTITY)
+      //.input("Confirm_Time", sql.NVarChar, confirmTimeIST)
+      .input("Invoice_Number", sql.NVarChar, Invoice_Number)
+      .query(query);
+
+    res.status(201).json({ message: "Record inserted successfully." });
+  } catch (error) {
+    console.error("Error inserting record into SalesFlow:", error);
+    res.status(500).json({ error: "Failed to insert record into SalesFlow." });
+  }
+});
+
+
+// PATCH API - Confirm a SalesFlow Record (Update Confirm Time by ID)
+router.patch("/sales-flow/confirm/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "ID is required for confirmation update." });
+    }
+
+    // Format current time in IST
+    const confirmTimeIST = formatDateTime(new Date());
+
+    // Update Confirm Time
+    const query = `
+      UPDATE [dbo].[SalesFlow]
+      SET [Confirm Time] = @Confirm_Time
+      WHERE [ID] = @id
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input("id", sql.Int, id)
+      .input("Confirm_Time", sql.VarChar, confirmTimeIST)
+      .query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Confirm Time updated successfully." });
+  } catch (error) {
+    console.error("Error updating Confirm Time:", error);
+    res.status(500).json({ error: "Failed to update Confirm Time." });
+  }
+});
+
+
+
+// **PUT API - Update a record by ID**
+router.put("/sales-flow/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { LOT_ID, GRN_NO, RECEIVED_TIME, QUANTITY, Invoice_Number } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "ID is required for updating a record." });
+    }
+
+    
+    const query = `
+      UPDATE [dbo].[SalesFlow]
+      SET [LOT ID] = @LOT_ID,
+          [GRN NO] = @GRN_NO,
+          [RECEIVED TIME] = @RECEIVED_TIME,
+          [QUANTITY] = @QUANTITY,      
+          [Invoice_Number] = @Invoice_Number
+      WHERE [ID] = @id
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input("id", sql.Int, id)
+      .input("LOT_ID", sql.NVarChar, LOT_ID)
+      .input("GRN_NO", sql.NVarChar, GRN_NO)
+      .input("RECEIVED_TIME", sql.NVarChar, RECEIVED_TIME)
+      .input("QUANTITY", sql.Int, QUANTITY)
+      .input("Invoice_Number", sql.NVarChar, Invoice_Number)
+      .query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Record updated successfully." });
+  } catch (error) {
+    console.error("Error updating record:", error);
+    res.status(500).json({ error: "Failed to update record." });
+  }
+});
+
+// **DELETE API - Delete a record by ID**
+router.delete("/sales-flow/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "ID is required for deleting a record." });
+    }
+
+    const query = `DELETE FROM [dbo].[SalesFlow] WHERE ID = @id`;
+
+    const pool = await poolPromise;
+    const result = await pool.request().input("id", sql.Int, id).query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Record deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    res.status(500).json({ error: "Failed to delete record." });
+  }
+});
+
 
 
 module.exports = router;
