@@ -164,7 +164,7 @@ function SalesFlow() {
     { name: "GRN NO", selector: (row) => row["GRN NO"], sortable: true },
     { name: "Received Time", selector: (row) => row["RECEIVED TIME"], sortable: true },
     { name: "Quantity", selector: (row) => row["QUANTITY"], sortable: true },
-    { name: "Invoice Number", selector: (row) => row["Invoice_Number"], sortable: true },
+    { name: "Invoice Number", selector: (row) => row["Invoice_Number"] || "N/A", sortable: true },
     {
       name: "Actions",
       cell: (row) => (
@@ -185,7 +185,7 @@ function SalesFlow() {
       </div>
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
-        <main className="main-container p-4">
+        <main className="main-container p-4" style={{ height: "-webkit-fill-available" }}>
           <div id="alertPlaceholder"></div>
           <div className="container">
           <div className="d-flex justify-content-between align-items-center"> 
@@ -267,10 +267,7 @@ function SalesFlow() {
                 <label className="form-label">Quantity</label>
                 <input type="number" name="QUANTITY" value={formData.QUANTITY} onChange={handleFormChange} className="form-control" placeholder="Enter Quantity" required />
                 </div>
-                <div className="mb-3">
-                <label className="form-label">Invoice Number</label>
-                <input type="text" name="Invoice_Number" value={formData.Invoice_Number} onChange={handleFormChange} className="form-control" placeholder="Enter Invoice Number" required />
-                </div>
+               
             </div>
             <div className="modal-footer">
                 <button type="submit" className="btn btn-primary">Save</button>
@@ -303,16 +300,13 @@ function SalesFlow() {
                 </div>
                 <div className="mb-3">
                 <label className="form-label">Received Time</label>
-                <input type="text" name="RECEIVED_TIME" value={formData.RECEIVED_TIME} onChange={handleFormChange} className="form-control" required />
+                <input type="text" name="RECEIVED_TIME" value={formData.RECEIVED_TIME} onChange={handleFormChange} className="form-control" />
                 </div>
                 <div className="mb-3">
                 <label className="form-label">Quantity</label>
                 <input type="number" name="QUANTITY" value={formData.QUANTITY} onChange={handleFormChange} className="form-control" required />
                 </div>
-                <div className="mb-3">
-                <label className="form-label">Invoice Number</label>
-                <input type="text" name="Invoice_Number" value={formData.Invoice_Number} onChange={handleFormChange} className="form-control" required />
-                </div>
+                
             </div>
             <div className="modal-footer">
                 <button type="submit" className="btn btn-primary">Update</button>

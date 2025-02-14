@@ -25,6 +25,7 @@ import LoopiChecking from './pages/LoopiChecking';
 import LoopiCheckingView from './pages/LoopiCheckingView';
 import SalesFlow from './pages/SalesFlow';
 import SalesFlowNotify from './pages/SalesFlowNotify';
+import SalesFlowScan from './pages/SalesFlowScan';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -164,7 +165,14 @@ function App() {
                             <SalesFlowNotify/>
                         </ProtectedRoute>
                     }
-                    />                   
+                    /> 
+                    <Route path='/sales-scan'
+                    element={
+                        <ProtectedRoute>
+                            <SalesFlowScan/>
+                        </ProtectedRoute>
+                    }
+                    />                  
                 </Routes>
             </div>
         </BrowserRouter>

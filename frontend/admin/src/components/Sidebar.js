@@ -13,6 +13,8 @@ const Sidebar = () => {
   const [RMCount, setRMCount] = useState(0); // State for inventory count
   const [NokeData, setNokeData] = useState(0); // State for
   const [LoopiCheckingCount, setLoopiCheckingCount] = useState(0); // State for Loopi Checking Count
+  const [SalesFlowCount, setSalesFlowCount] = useState(0); // State for Sales Flow Count
+  const [scanCount, setScanCount] = useState(0); // State for Sales Flow Count
   // const [orderCount, setOrderCount] = useState(0); // State for order count
   useEffect(() => {
     // Fetch the ticket count when the component mounts
@@ -84,17 +86,44 @@ const Sidebar = () => {
   }
 };
 
+
+// Fetch Sales Flow Count for the admin// 14 Feb 25
+const fetchSalesFlowCount = async () => {
+  try {
+    const response = await axiosInstance.get("/api/sales-flow-Notification"); // Use appropriate API for admin tickets
+    setSalesFlowCount(response.data.length); // Set the count based on the number of tickets
+  } catch (error) {
+    console.error("Error fetching ticket count:", error);
+  }
+};
+// Fetch Scan Count for the admin// 14 Feb 25
+const fetchScanCount = async () => {
+  try {
+    const response = await axiosInstance.get("/api/sales-flow-ScanNotification"); // Use appropriate API for admin tickets
+    setScanCount(response.data.length); // Set the count based on the number of tickets
+  } catch (error) {
+    console.error("Error fetching ticket count:", error);
+  }
+};
+
   // Fetch  count for superadmin
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
+      fetchSalesFlowCount();
       // fetchOrderCount();
     }
+    // Fetch  count for admin
+    if (user?.Auth === "Admin") {
+      fetchSalesFlowCount();
+    }
+    // Fetch  count for supervisor
     //performace data
     if (user?.Auth === "Supervisor") {
       fetchPerformanceData();
       fetchInventoryCount();
       fetchNokeCount();
-      fetchLoopiCheckingCount();
+      fetchLoopiCheckingCount();      
+      fetchScanCount();
     }
   }, [user]);
 
@@ -125,15 +154,7 @@ const Sidebar = () => {
             <i className="bi bi-speedometer2"></i> Dashboard
           </NavLink>
         </li>
-        {/* <li className="nav-item">
-          <NavLink to="/users" 
-           className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-          // className="nav-link" 
-          // activeClassName="active"
-          >
-            <i className="bi bi-card-list"></i> Users
-          </NavLink>
-        </li> */}
+
           {(user?.Auth === "Admin" || 
           // (user?.Auth === "SuperAdmin" && user?.EmployeeID !== "33")) && (
             (user?.Auth === "SuperAdmin" && !["33", "34", "35"].includes(user?.EmployeeID))) && (
@@ -244,7 +265,26 @@ const Sidebar = () => {
                 isActive ? "nav-link active" : "nav-link"
               }
             >
-              <i className="bi bi-calendar-check"></i> Sales Flow
+              <i className="bi bi-calendar-check"></i>Sales Flow{" "}
+              {SalesFlowCount > 0 && (
+                <span className="badge bg-danger">{SalesFlowCount}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
+         {/* Ṇew Module create on 13 fab 25 this will only visible to Ashwini */}
+         {user?.Auth === "Supervisor" && user?.EmployeeID === "12" && (
+          <li className="nav-item">
+            <NavLink
+              to="/sales-scan"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i>Sales Flow{" "}
+              {scanCount > 0 && (
+                <span className="badge bg-danger">{scanCount}</span>
+              )}
             </NavLink>
           </li>
         )}

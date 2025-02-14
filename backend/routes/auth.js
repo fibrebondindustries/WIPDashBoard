@@ -3075,7 +3075,7 @@ router.delete("/loopi-checking/:id", async (req, res) => {
 router.get("/sales-flow", async (req, res) => {
   try {
     const query = `
-      SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number]
+      SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [InvoiceStatus], [ScanStatus]
       FROM [dbo].[SalesFlow]
     `;
 
@@ -3091,17 +3091,17 @@ router.get("/sales-flow", async (req, res) => {
 // **POST API - Insert a new record**
 router.post("/sales-flow", async (req, res) => {
   try {
-    const { LOT_ID, GRN_NO, RECEIVED_TIME, QUANTITY, Invoice_Number } = req.body;
+    const { LOT_ID, GRN_NO, RECEIVED_TIME, QUANTITY} = req.body;
 
-    if (!LOT_ID || !GRN_NO || !RECEIVED_TIME || !QUANTITY || !Invoice_Number) {
+    if (!LOT_ID || !GRN_NO || !RECEIVED_TIME || !QUANTITY ) {
       return res.status(400).json({ error: "All fields except Confirm Time are required." });
     }
 
    
 
     const query = `
-      INSERT INTO [dbo].[SalesFlow] ([LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [Invoice_Number])
-      VALUES (@LOT_ID, @GRN_NO, @RECEIVED_TIME, @QUANTITY, @Invoice_Number)
+      INSERT INTO [dbo].[SalesFlow] ([LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY])
+      VALUES (@LOT_ID, @GRN_NO, @RECEIVED_TIME, @QUANTITY )
     `;
 
     const pool = await poolPromise;
@@ -3111,7 +3111,7 @@ router.post("/sales-flow", async (req, res) => {
       .input("RECEIVED_TIME", sql.NVarChar, RECEIVED_TIME)
       .input("QUANTITY", sql.Int, QUANTITY)
       //.input("Confirm_Time", sql.NVarChar, confirmTimeIST)
-      .input("Invoice_Number", sql.NVarChar, Invoice_Number)
+      
       .query(query);
 
     res.status(201).json({ message: "Record inserted successfully." });
@@ -3227,6 +3227,145 @@ router.delete("/sales-flow/:id", async (req, res) => {
   }
 });
 
+// PATCH API: Update Invoice Number & Timestamp
+router.patch("/sales-flow/invoice/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Invoice_Number } = req.body;
 
+    // if (!id || !Invoice_Number) {
+    //   return res.status(400).json({ error: "Invoice Number and ID are required." });
+    // }
+
+    const invoiceTimeIST = formatDateTime(new Date()); // Get current time in IST
+
+    const query = `
+      UPDATE [dbo].[SalesFlow]
+      SET [Invoice_Number] = @Invoice_Number,
+          [InvoiceNumber_time] = @InvoiceNumber_time
+      WHERE [ID] = @id
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input("id", sql.Int, id)
+      .input("Invoice_Number", sql.NVarChar, Invoice_Number)
+      .input("InvoiceNumber_time", sql.NVarChar, invoiceTimeIST)
+      .query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Record not found." });
+    }
+
+    res.status(200).json({ message: "Invoice Number updated successfully!", InvoiceNumber_time: invoiceTimeIST });
+  } catch (error) {
+    console.error("Error updating Invoice Number:", error);
+    res.status(500).json({ error: "Failed to update Invoice Number." });
+  }
+});
+
+router.patch("/sales-flow/scan-status/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ScanStatus } = req.body;
+
+    if (!id || !ScanStatus) {
+      return res.status(400).json({ error: "ID and ScanStatus are required." });
+    }
+
+    let ReadyForScan_Time = null;
+    if (ScanStatus === "Ready for Scan") {
+      ReadyForScan_Time = formatDateTime(new Date()); // Store timestamp in IST format
+    }
+
+    const query = `
+      UPDATE [dbo].[SalesFlow]
+      SET ScanStatus = @ScanStatus, 
+          ReadyForScan_Time = COALESCE(@ReadyForScan_Time, ReadyForScan_Time)
+      WHERE ID = @id
+    `;
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input("id", sql.Int, id)
+      .input("ScanStatus", sql.NVarChar, ScanStatus)
+      .input("ReadyForScan_Time", sql.NVarChar, ReadyForScan_Time) // Store as string in DD/MM/YYYY : HH:MM AM/PM
+      .query(query);
+
+    res.status(200).json({ message: "Scan Status updated successfully." });
+  } catch (error) {
+    console.error("Error updating Scan Status:", error);
+    res.status(500).json({ error: "Failed to update Scan Status." });
+  }
+});
+
+router.patch("/sales-flow/invoice-status/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { InvoiceStatus } = req.body;
+
+    if (!id || !InvoiceStatus) {
+      return res.status(400).json({ error: "ID and InvoiceStatus are required." });
+    }
+
+    let ReadyForInvoice_Time = null;
+    if (InvoiceStatus === "Create Invoice") {
+      ReadyForInvoice_Time = formatDateTime(new Date()); // Store timestamp in IST format
+    }
+
+    const query = `
+      UPDATE [dbo].[SalesFlow]
+      SET InvoiceStatus = @InvoiceStatus, 
+          ReadyForInvoice_Time = COALESCE(@ReadyForInvoice_Time, ReadyForInvoice_Time)
+      WHERE ID = @id
+    `;
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input("id", sql.Int, id)
+      .input("InvoiceStatus", sql.NVarChar, InvoiceStatus)
+      .input("ReadyForInvoice_Time", sql.NVarChar, ReadyForInvoice_Time) // Store as string in DD/MM/YYYY : HH:MM AM/PM
+      .query(query);
+
+    res.status(200).json({ message: "Invoice Status updated successfully." });
+  } catch (error) {
+    console.error("Error updating Invoice Status:", error);
+    res.status(500).json({ error: "Failed to update Invoice Status." });
+  }
+});
+
+// **GET API - Nofitication for new record or invoice status **
+router.get("/sales-flow-Notification", async (req, res) => {
+  try {
+    const query = `
+      SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [InvoiceStatus], [ScanStatus]
+     FROM [dbo].[SalesFlow] where [InvoiceStatus] = 'Create Invoice' or [Confirm Time] is null
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching SalesFlow records:", error);
+    res.status(500).json({ error: "Failed to fetch SalesFlow records." });
+  }
+});
+
+// **GET API -scan Nofitication for create invoice **
+router.get("/sales-flow-ScanNotification", async (req, res) => {
+  try {
+    const query = `
+       SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [InvoiceStatus], [ScanStatus]
+     FROM [dbo].[SalesFlow] where [ScanStatus] = 'Ready for Scan' or ([InvoiceStatus] is null or [InvoiceStatus]= 'Pending')
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching SalesFlow records:", error);
+    res.status(500).json({ error: "Failed to fetch SalesFlow records." });
+  }
+});
 
 module.exports = router;

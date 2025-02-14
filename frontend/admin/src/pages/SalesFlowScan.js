@@ -5,13 +5,14 @@ import axiosInstance from "../axiosConfig";
 import Sidebar from "../components/Sidebar";
 import DataTable from "react-data-table-component";
 
-function SalesFlowNotify() {
+function SalesFlowScan() {
   const [records, setRecords] = useState([]); // SalesFlow records
   const [filteredRecords, setFilteredRecords] = useState([]); // Filtered records
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [filters, setFilters] = useState({ searchQuery: "", fromDate: "", toDate: "" });
-  const [invoiceUpdates, setInvoiceUpdates] = useState({});
+//   const [invoiceUpdates, setInvoiceUpdates] = useState({});
   const [scanStatusUpdates, setScanStatusUpdates] = useState({});
+  const [invoiceStatusUpdates, setInvoiceStatusUpdates] = useState({});
   // const handleInvoiceChange = (e, id) => {
   //   setInvoiceUpdates((prev) => ({ ...prev, [id]: e.target.value }));
   // };
@@ -78,48 +79,48 @@ function SalesFlowNotify() {
   };
 
   // ** Delete a Record **
-  const ConfirnRecord = async (id) => {
-    if (!window.confirm("Are you sure you want to Confirm this record?")) return;
-    try {
-      await axiosInstance.patch(`/api//sales-flow/confirm/${id}`);
-      showAlert("Confirm successfully!", "success");
-      fetchRecords();
-    } catch (error) {
-      console.error("Error confirming record:", error);
-      showAlert("Failed to confirming record.", "danger");
-    }
-  };
+//   const ConfirnRecord = async (id) => {
+//     if (!window.confirm("Are you sure you want to Confirm this record?")) return;
+//     try {
+//       await axiosInstance.patch(`/api//sales-flow/confirm/${id}`);
+//       showAlert("Confirm successfully!", "success");
+//       fetchRecords();
+//     } catch (error) {
+//       console.error("Error confirming record:", error);
+//       showAlert("Failed to confirming record.", "danger");
+//     }
+//   };
 
 
-  const handleInvoiceUpdate = (id, newInvoice) => {
-    if (!id) return;
+//   const handleInvoiceUpdate = (id, newInvoice) => {
+//     if (!id) return;
   
-    // Trim whitespace and ensure null is only sent when user intentionally clears it
-    const sanitizedInvoice = newInvoice?.trim() || null;
+//     // Trim whitespace and ensure null is only sent when user intentionally clears it
+//     const sanitizedInvoice = newInvoice?.trim() || null;
   
-    // If the value hasn't changed, do not trigger an update
-    if (sanitizedInvoice === records.find((record) => record.ID === id)?.Invoice_Number) {
-      return;
-    }
+//     // If the value hasn't changed, do not trigger an update
+//     if (sanitizedInvoice === records.find((record) => record.ID === id)?.Invoice_Number) {
+//       return;
+//     }
   
-    // Update local state for immediate UI feedback
-    setInvoiceUpdates((prev) => ({ ...prev, [id]: sanitizedInvoice }));
+//     // Update local state for immediate UI feedback
+//     setInvoiceUpdates((prev) => ({ ...prev, [id]: sanitizedInvoice }));
   
-    clearTimeout(window.invoiceUpdateTimeout);
-    window.invoiceUpdateTimeout = setTimeout(async () => {
-      try {
-        await axiosInstance.patch(`/api/sales-flow/invoice/${id}`, {
-          Invoice_Number: sanitizedInvoice,
-        });
+//     clearTimeout(window.invoiceUpdateTimeout);
+//     window.invoiceUpdateTimeout = setTimeout(async () => {
+//       try {
+//         await axiosInstance.patch(`/api/sales-flow/invoice/${id}`, {
+//           Invoice_Number: sanitizedInvoice,
+//         });
   
-        showAlert("Invoice Number updated successfully!", "success");
-        fetchRecords(); // Refresh Data
-      } catch (error) {
-        console.error("Error updating Invoice Number:", error);
-        showAlert("Failed to update Invoice Number.", "danger");
-      }
-    }, 800); // 800ms delay to reduce API calls
-  };
+//         showAlert("Invoice Number updated successfully!", "success");
+//         fetchRecords(); // Refresh Data
+//       } catch (error) {
+//         console.error("Error updating Invoice Number:", error);
+//         showAlert("Failed to update Invoice Number.", "danger");
+//       }
+//     }, 800); // 800ms delay to reduce API calls
+//   };
   
     // ** Update Scan Status **
     const handleScanStatusUpdate = async (id, newStatus) => {
@@ -138,31 +139,47 @@ function SalesFlowNotify() {
       }
     };
 
+    const handleInvoiceStatusUpdate = async (id, newInvoiceStatus) => {
+        try {
+          if (!id) return;
+    
+          setInvoiceStatusUpdates((prev) => ({ ...prev, [id]: newInvoiceStatus }));
+    
+          await axiosInstance.patch(`/api/sales-flow/invoice-status/${id}`, { InvoiceStatus: newInvoiceStatus });
+    
+          showAlert("invoice invoice updated successfully!", "success");
+          fetchRecords();
+        } catch (error) {
+          console.error("Error updating invoice Status:", error);
+          showAlert("Failed to update invoice Status.", "danger");
+        }
+      };
+
   const columns = [
     { name: "LOT ID", selector: (row) => row["LOT ID"], sortable: true },
     { name: "GRN NO", selector: (row) => row["GRN NO"], sortable: true },
     { name: "Received Time", selector: (row) => row["RECEIVED TIME"], sortable: true },
     { name: "Quantity", selector: (row) => row["QUANTITY"], sortable: true },
-    // { name: "Invoice Number", selector: (row) => row["Invoice_Number"], sortable: true },
-    {
-      name: "Invoice Number",
-      cell: (row) => (
-        <textarea
-          className="form-control"
-          rows="1"
-          value={
-            invoiceUpdates[row.ID] !== undefined
-              ? invoiceUpdates[row.ID]
-              : row.Invoice_Number || ""
-          }
-          onChange={(e) => setInvoiceUpdates((prev) => ({ ...prev, [row.ID]: e.target.value }))}
-          onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
-          placeholder="EnterInvoice"
-          style={{ fontSize: "12px" }}
-        />
-      ),
-      sortable: true,
-    },
+    { name: "Invoice Number", selector: (row) => row["Invoice_Number"], sortable: true },
+    // {
+    //   name: "Invoice Number",
+    //   cell: (row) => (
+    //     <textarea
+    //       className="form-control"
+    //       rows="1"
+    //       value={
+    //         invoiceUpdates[row.ID] !== undefined
+    //           ? invoiceUpdates[row.ID]
+    //           : row.Invoice_Number || ""
+    //       }
+    //       onChange={(e) => setInvoiceUpdates((prev) => ({ ...prev, [row.ID]: e.target.value }))}
+    //       onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
+    //       placeholder="EnterInvoice"
+    //       style={{ fontSize: "12px" }}
+    //     />
+    //   ),
+    //   sortable: true,
+    // },
     {
       name: "Scan Status",
       cell: (row) => (
@@ -171,28 +188,43 @@ function SalesFlowNotify() {
           value={scanStatusUpdates[row.ID] !== undefined ? scanStatusUpdates[row.ID] : row.ScanStatus || "N/A"}
           onChange={(e) => handleScanStatusUpdate(row.ID, e.target.value)}
         >
-          <option value="Pending">Pending</option>
+          {/* <option value="Pending">Pending</option> */}
           <option value="Ready for Scan">Ready for Scan</option>
-          <option value="Scanned" style={{display:"none"}}>Scanned</option>
+          <option value="Scanned">Scanned</option>
         </select>
       ),
       sortable: true,
     },
-    { name: "Invoice Status", selector: (row) => row["InvoiceStatus"] || "N/A", sortable: true },
-     {
-      name: "Actions",
-      cell: (row) =>
-        row["Confirm Time"] === null ? ( // Check if "Confirm Time" is NULL
-          <button className="btn btn-success btn-sm" onClick={() => ConfirnRecord(row.ID)}>
-            Confirm
-          </button>
-        ) : (
-          <span className="text-muted">Confirmed</span> // Hide button if already confirmed
+    // { name: "Invoice Status", selector: (row) => row["InvoiceStatus"] || "N/A", sortable: true },
+    {
+        name: "Invoice Status",
+        cell: (row) => (
+          <select
+            className="form-select form-select-sm bg-success text-white"
+            value={invoiceStatusUpdates[row.ID] !== undefined ? invoiceStatusUpdates[row.ID] : row.InvoiceStatus || "N/A"}
+            onChange={(e) => handleInvoiceStatusUpdate(row.ID, e.target.value)}
+          >
+            <option value="Pending">Pending</option>
+            <option value="Create Invoice">Create Invoice</option>
+            {/* <option value="Scanned">Scanned</option> */}
+          </select>
         ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-    },
+        sortable: true,
+      },
+    //  {
+    //   name: "Actions",
+    //   cell: (row) =>
+    //     row["Confirm Time"] === null ? ( // Check if "Confirm Time" is NULL
+    //       <button className="btn btn-success btn-sm" onClick={() => ConfirnRecord(row.ID)}>
+    //         Confirm
+    //       </button>
+    //     ) : (
+    //       <span className="text-muted">Confirmed</span> // Hide button if already confirmed
+    //     ),
+    //   ignoreRowClick: true,
+    //   allowOverflow: true,
+    //   button: true,
+    // },
   ];
 
   return (
@@ -206,7 +238,7 @@ function SalesFlowNotify() {
           <div id="alertPlaceholder"></div>
           <div className="">
           <div className="d-flex justify-content-between align-items-center"> 
-            <h3 className="mb-5">Notification</h3>
+            <h3 className="mb-5">Sales Flow</h3>
             <div className="d-flex gap-2">
               {/* add record btn */}
             
@@ -242,4 +274,4 @@ function SalesFlowNotify() {
   );
 }
 
-export default SalesFlowNotify;
+export default SalesFlowScan;
