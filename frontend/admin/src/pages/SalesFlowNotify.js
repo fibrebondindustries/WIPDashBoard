@@ -50,7 +50,7 @@ function SalesFlowNotify() {
 
       const matchesSearch =
         searchQuery === "" ||
-        [record["LOT ID"], record["GRN NO"], record.QUANTITY ,record.Invoice_Number]
+        [record["LOT ID"], record["SRP NO"], record.QUANTITY ,record.Invoice_Number]
           .join(" ")
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
@@ -139,11 +139,35 @@ function SalesFlowNotify() {
     };
 
   const columns = [
-    { name: "LOT ID", selector: (row) => row["LOT ID"], sortable: true },
-    { name: "GRN NO", selector: (row) => row["GRN NO"], sortable: true },
-    { name: "Received Time", selector: (row) => row["RECEIVED TIME"], sortable: true },
+    { name: "LOT ID",width:"170px", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["LOT ID"]}
+      >
+      {row["LOT ID"]}
+      </span>
+    ), sortable: true },
+    { name: "SRP NO", selector: (row) => row["SRP NO"], sortable: true },
+    { name: "Received Time", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["RECEIVED TIME"]}
+      >
+      {row["RECEIVED TIME"]}
+      </span>
+    ), sortable: true },
     { name: "Quantity", selector: (row) => row["QUANTITY"], sortable: true },
-    // { name: "Invoice Number", selector: (row) => row["Invoice_Number"], sortable: true },
+    { name: "Remarks", selector: (row) =>(
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["Remarks"]}
+      >
+      {row["Remarks"] || "N/A"}
+      </span>
+    ), sortable: true },
     {
       name: "Invoice Number",
       cell: (row) => (
@@ -159,6 +183,7 @@ function SalesFlowNotify() {
           onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
           placeholder="EnterInvoice"
           style={{ fontSize: "12px" }}
+          disabled={!row["Confirm Time"] || row.ScanStatus !== "Scanned"}  // Disable if Confirm Time is null (not confirmed)
         />
       ),
       sortable: true,
@@ -170,6 +195,7 @@ function SalesFlowNotify() {
           className="form-select form-select-sm bg-info text-black"
           value={scanStatusUpdates[row.ID] !== undefined ? scanStatusUpdates[row.ID] : row.ScanStatus || "N/A"}
           onChange={(e) => handleScanStatusUpdate(row.ID, e.target.value)}
+          disabled={!row["Confirm Time"]} // Disable if not confirmed
         >
           <option value="Pending">Pending</option>
           <option value="Ready for Scan">Ready for Scan</option>
@@ -178,7 +204,6 @@ function SalesFlowNotify() {
       ),
       sortable: true,
     },
-    { name: "Invoice Status", selector: (row) => row["InvoiceStatus"] || "N/A", sortable: true },
      {
       name: "Actions",
       cell: (row) =>

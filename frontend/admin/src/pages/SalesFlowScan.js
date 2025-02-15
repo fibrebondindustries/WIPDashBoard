@@ -12,7 +12,7 @@ function SalesFlowScan() {
   const [filters, setFilters] = useState({ searchQuery: "", fromDate: "", toDate: "" });
 //   const [invoiceUpdates, setInvoiceUpdates] = useState({});
   const [scanStatusUpdates, setScanStatusUpdates] = useState({});
-  const [invoiceStatusUpdates, setInvoiceStatusUpdates] = useState({});
+  // const [invoiceStatusUpdates, setInvoiceStatusUpdates] = useState({});
   // const handleInvoiceChange = (e, id) => {
   //   setInvoiceUpdates((prev) => ({ ...prev, [id]: e.target.value }));
   // };
@@ -23,7 +23,7 @@ function SalesFlowScan() {
   // ** Fetch all SalesFlow records **
   const fetchRecords = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/api/sales-flow");
+      const response = await axiosInstance.get("/api/sales-flow-Scan");
       setRecords(response.data);
       setFilteredRecords(response.data);
     } catch (error) {
@@ -51,7 +51,7 @@ function SalesFlowScan() {
 
       const matchesSearch =
         searchQuery === "" ||
-        [record["LOT ID"], record["GRN NO"], record.QUANTITY ,record.Invoice_Number]
+        [record["LOT ID"], record["SRP NO"], record.QUANTITY ,record.Invoice_Number]
           .join(" ")
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
@@ -139,47 +139,45 @@ function SalesFlowScan() {
       }
     };
 
-    const handleInvoiceStatusUpdate = async (id, newInvoiceStatus) => {
-        try {
-          if (!id) return;
+    // const handleInvoiceStatusUpdate = async (id, newInvoiceStatus) => {
+    //     try {
+    //       if (!id) return;
     
-          setInvoiceStatusUpdates((prev) => ({ ...prev, [id]: newInvoiceStatus }));
+    //       setInvoiceStatusUpdates((prev) => ({ ...prev, [id]: newInvoiceStatus }));
     
-          await axiosInstance.patch(`/api/sales-flow/invoice-status/${id}`, { InvoiceStatus: newInvoiceStatus });
+    //       await axiosInstance.patch(`/api/sales-flow/invoice-status/${id}`, { InvoiceStatus: newInvoiceStatus });
     
-          showAlert("invoice invoice updated successfully!", "success");
-          fetchRecords();
-        } catch (error) {
-          console.error("Error updating invoice Status:", error);
-          showAlert("Failed to update invoice Status.", "danger");
-        }
-      };
+    //       showAlert("invoice invoice updated successfully!", "success");
+    //       fetchRecords();
+    //     } catch (error) {
+    //       console.error("Error updating invoice Status:", error);
+    //       showAlert("Failed to update invoice Status.", "danger");
+    //     }
+    //   };
 
   const columns = [
     { name: "LOT ID", selector: (row) => row["LOT ID"], sortable: true },
-    { name: "GRN NO", selector: (row) => row["GRN NO"], sortable: true },
-    { name: "Received Time", selector: (row) => row["RECEIVED TIME"], sortable: true },
+    { name: "SRP NO", selector: (row) => row["SRP NO"], sortable: true },
+    { name: "Received Time", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["RECEIVED TIME"]}
+      >
+      {row["RECEIVED TIME"]}
+      </span>
+    ), sortable: true },
     { name: "Quantity", selector: (row) => row["QUANTITY"], sortable: true },
-    { name: "Invoice Number", selector: (row) => row["Invoice_Number"], sortable: true },
-    // {
-    //   name: "Invoice Number",
-    //   cell: (row) => (
-    //     <textarea
-    //       className="form-control"
-    //       rows="1"
-    //       value={
-    //         invoiceUpdates[row.ID] !== undefined
-    //           ? invoiceUpdates[row.ID]
-    //           : row.Invoice_Number || ""
-    //       }
-    //       onChange={(e) => setInvoiceUpdates((prev) => ({ ...prev, [row.ID]: e.target.value }))}
-    //       onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
-    //       placeholder="EnterInvoice"
-    //       style={{ fontSize: "12px" }}
-    //     />
-    //   ),
-    //   sortable: true,
-    // },
+    { name: "Invoice Number", selector: (row) => row["Invoice_Number"] || "N/A", sortable: true },
+    { name: "Remarks", selector: (row) =>(
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["Remarks"]}
+      >
+      {row["Remarks"] || "N/A"}
+      </span>
+    ), sortable: true },
     {
       name: "Scan Status",
       cell: (row) => (
@@ -188,29 +186,29 @@ function SalesFlowScan() {
           value={scanStatusUpdates[row.ID] !== undefined ? scanStatusUpdates[row.ID] : row.ScanStatus || "N/A"}
           onChange={(e) => handleScanStatusUpdate(row.ID, e.target.value)}
         >
-          {/* <option value="Pending">Pending</option> */}
-          <option value="Ready for Scan">Ready for Scan</option>
+          <option value="" disabled selected>Select</option>
+          <option value="Ready for Scan" style={{display:"none"}}>Ready for Scan</option>
           <option value="Scanned">Scanned</option>
         </select>
       ),
       sortable: true,
     },
     // { name: "Invoice Status", selector: (row) => row["InvoiceStatus"] || "N/A", sortable: true },
-    {
-        name: "Invoice Status",
-        cell: (row) => (
-          <select
-            className="form-select form-select-sm bg-success text-white"
-            value={invoiceStatusUpdates[row.ID] !== undefined ? invoiceStatusUpdates[row.ID] : row.InvoiceStatus || "N/A"}
-            onChange={(e) => handleInvoiceStatusUpdate(row.ID, e.target.value)}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Create Invoice">Create Invoice</option>
-            {/* <option value="Scanned">Scanned</option> */}
-          </select>
-        ),
-        sortable: true,
-      },
+    // {
+    //     name: "Invoice Status",
+    //     cell: (row) => (
+    //       <select
+    //         className="form-select form-select-sm bg-success text-white"
+    //         value={invoiceStatusUpdates[row.ID] !== undefined ? invoiceStatusUpdates[row.ID] : row.InvoiceStatus || "N/A"}
+    //         onChange={(e) => handleInvoiceStatusUpdate(row.ID, e.target.value)}
+    //       >
+    //         <option value="Pending">Pending</option>
+    //         <option value="Create Invoice">Create Invoice</option>
+    //         {/* <option value="Scanned">Scanned</option> */}
+    //       </select>
+    //     ),
+    //     sortable: true,
+    //   },
     //  {
     //   name: "Actions",
     //   cell: (row) =>

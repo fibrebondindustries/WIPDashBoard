@@ -497,11 +497,9 @@ router.put("/users/:employeeID", async (req, res) => {
         existingUser.Password
       );
       if (isSamePassword) {
-        return res
-          .status(400)
-          .json({
-            error: "New password cannot be the same as the old password.",
-          });
+        return res.status(400).json({
+          error: "New password cannot be the same as the old password.",
+        });
       }
 
       // Hash the new password
@@ -680,11 +678,9 @@ router.post("/restoreDepartment", async (req, res) => {
       `);
 
     if (updateHistory.rowsAffected[0] === 0) {
-      return res
-        .status(404)
-        .json({
-          error: "No active temporary assignment found for this employee.",
-        });
+      return res.status(404).json({
+        error: "No active temporary assignment found for this employee.",
+      });
     }
 
     // Restore the original department in UserActivity
@@ -1107,11 +1103,9 @@ router.put("/departments/update-lot", async (req, res) => {
         WHERE DepartmentName = @DepartmentName;
       `);
 
-    res
-      .status(200)
-      .json({
-        message: "Lot quantity and required workers updated successfully.",
-      });
+    res.status(200).json({
+      message: "Lot quantity and required workers updated successfully.",
+    });
   } catch (error) {
     console.error("Error updating lot quantity:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -1193,11 +1187,9 @@ router.post("/departments/approve-extra-time", async (req, res) => {
       .query(updateQuery);
 
     if (updateResult.rowsAffected[0] === 0) {
-      return res
-        .status(404)
-        .json({
-          error: "No rows updated. Ensure department exists in StagingTable.",
-        });
+      return res.status(404).json({
+        error: "No rows updated. Ensure department exists in StagingTable.",
+      });
     }
 
     res.status(200).json({
@@ -1309,8 +1301,14 @@ router.get("/wip", async (req, res) => {
 
 // POST API to create a ticket
 router.post("/tickets", async (req, res) => {
-  const { Category, Subject, Brief_Description, Priority, EmployeeID, Responsible } =
-    req.body; // Extract EmployeeID from body
+  const {
+    Category,
+    Subject,
+    Brief_Description,
+    Priority,
+    EmployeeID,
+    Responsible,
+  } = req.body; // Extract EmployeeID from body
 
   try {
     const pool = await poolPromise;
@@ -1342,8 +1340,7 @@ router.post("/tickets", async (req, res) => {
       .input("Priority", sql.NVarChar, Priority)
       .input("Status", sql.NVarChar, "Open") // Default to "Open" if not provided
       .input("RaiseDate", sql.NVarChar, RaiseDateIST)
-      .input("Responsible", sql.NVarChar, Responsible)
-      .query(`
+      .input("Responsible", sql.NVarChar, Responsible).query(`
         INSERT INTO [dbo].[TICKETS] 
         (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, RaiseDate, Responsible)
         VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @RaiseDate, @Responsible)
@@ -1509,7 +1506,8 @@ router.patch("/tickets/:id", async (req, res) => {
     const ticketData = existingTicket.recordset[0];
 
     // Check if the status is being updated to 'Resolved'
-    const isResolved = fields.Status && fields.Status.toLowerCase() === "resolved";
+    const isResolved =
+      fields.Status && fields.Status.toLowerCase() === "resolved";
     if (isResolved) {
       fields.SolvedDate = formatDateTime(new Date()); // Set SolvedDate to current time in IST
       // fields.ConfirmTime = formatDateTime(new Date()); // Store confirmation time
@@ -1537,7 +1535,8 @@ router.patch("/tickets/:id", async (req, res) => {
 
     // If ticket is resolved, move it to Solved_Tickets table and delete from TICKETS
     if (isResolved) {
-      await pool.request()
+      await pool
+        .request()
         .input("Category", sql.NVarChar, ticketData.Category)
         .input("Subject", sql.NVarChar, ticketData.Subject)
         .input("Brief_Description", sql.NVarChar, ticketData.Brief_Description)
@@ -1547,8 +1546,7 @@ router.patch("/tickets/:id", async (req, res) => {
         .input("ID", sql.Int, ticketData.ID)
         .input("RaiseDate", sql.NVarChar, ticketData.RaiseDate)
         .input("SolvedDate", sql.NVarChar, fields.SolvedDate)
-        .input("Responsible", sql.NVarChar, ticketData.Responsible)
-        .query(`
+        .input("Responsible", sql.NVarChar, ticketData.Responsible).query(`
           INSERT INTO [dbo].[Solved_Tickets]
           (Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, Responsible)
           VALUES (@Category, @Subject, @Brief_Description, @Supervisor_Name, @Priority, @Status, @ID, @RaiseDate, @SolvedDate, @Responsible)
@@ -1596,7 +1594,7 @@ router.delete("/tickets/:id", async (req, res) => {
 
 //     // Fetch the ticket from the TICKETS table
 //     const ticket = await pool.request().input("ID", sql.Int, id).query(`
-//         SELECT 
+//         SELECT
 //         Category, Subject, Brief_Description, Supervisor_Name, Priority, Status, ID, RaiseDate, SolvedDate, Responsible
 //         FROM [dbo].[TICKETS]
 //         WHERE ID = @ID
@@ -1679,7 +1677,9 @@ router.post("/tickets/confirm/:id", async (req, res) => {
 
     // Ensure the ticket is Resolved before confirming
     if (ticketData.Status !== "Resolved") {
-      return res.status(400).json({ error: "Only resolved tickets can be confirmed" });
+      return res
+        .status(400)
+        .json({ error: "Only resolved tickets can be confirmed" });
     }
 
     // Format ConfirmTime to IST
@@ -1699,7 +1699,9 @@ router.post("/tickets/confirm/:id", async (req, res) => {
       .query(updateQuery);
 
     if (updateResult.rowsAffected[0] === 0) {
-      return res.status(404).json({ error: "Ticket not found in Solved_Tickets" });
+      return res
+        .status(404)
+        .json({ error: "Ticket not found in Solved_Tickets" });
     }
 
     // Delete the ticket from TICKETS table
@@ -1708,13 +1710,17 @@ router.post("/tickets/confirm/:id", async (req, res) => {
         WHERE ID = @ID
     `);
 
-    res.status(200).json({ message: "Ticket confirmed, ConfirmTime updated, and ticket deleted from TICKETS" });
+    res
+      .status(200)
+      .json({
+        message:
+          "Ticket confirmed, ConfirmTime updated, and ticket deleted from TICKETS",
+      });
   } catch (error) {
     console.error("Error confirming ticket:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 router.get("/matched-data", async (req, res) => {
   try {
@@ -2385,7 +2391,7 @@ router.get("/noke-inventory", async (req, res) => {
 router.post("/noke-inventory", async (req, res) => {
   const { LOT_ID, supervisor, LOCATION, status } = req.body;
 
-  if (!LOT_ID  || !supervisor || !LOCATION || !status) {
+  if (!LOT_ID || !supervisor || !LOCATION || !status) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
@@ -2395,14 +2401,17 @@ router.post("/noke-inventory", async (req, res) => {
       VALUES (@LOT_ID, @supervisor, @LOCATION, @status)
     `;
     const pool = await poolPromise;
-    await pool.request()
+    await pool
+      .request()
       .input("LOT_ID", sql.NVarChar, LOT_ID)
       .input("supervisor", sql.NVarChar, supervisor)
       .input("LOCATION", sql.NVarChar, LOCATION)
       .input("status", sql.NVarChar, status)
       .query(query);
 
-    res.status(201).json({ message: "Record added successfully to inventory." });
+    res
+      .status(201)
+      .json({ message: "Record added successfully to inventory." });
   } catch (error) {
     console.error("Error adding record to inventory:", error);
     res.status(500).json({ error: "Failed to add record to inventory." });
@@ -2594,7 +2603,6 @@ router.get("/noke-data", async (req, res) => {
 //   }
 // });
 
-
 // // DELETE API: Delete a specific record
 // router.delete("/order-dispatch/:id", async (req, res) =>{
 //   const { id } = req.params;
@@ -2641,7 +2649,7 @@ router.get("/noke-data", async (req, res) => {
 
 //   try {
 //     const query = `
-//       INSERT INTO [dbo].[belt_loading_unloading] 
+//       INSERT INTO [dbo].[belt_loading_unloading]
 //       ([JOB ORDER NO], [JOB ORDER DATE], [PROCESS GROUP], [PROCESS NAME], [ITEM NAME], [QUANTITY], [DEPARTMENT])
 //       VALUES (@JOB_ORDER_NO, @JOB_ORDER_DATE, @PROCESS_GROUP, @PROCESS_NAME, @ITEM_NAME, @QUANTITY, @DEPARTMENT)
 //     `;
@@ -2665,7 +2673,6 @@ router.get("/noke-data", async (req, res) => {
 //   }
 // });
 
-
 // router.get("/dispatch-Notification", async (req, res) => {
 //   try {
 //     const query = `
@@ -2679,15 +2686,12 @@ router.get("/noke-data", async (req, res) => {
 //     res.status(500).json({ error: "Failed to fetch order dispatch records." });
 //   }
 // });
- 
 
 // 📌 GET: Fetch all records from srpReport
 router.get("/srpReport", async (req, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .query(`SELECT [ID]
+    const result = await pool.request().query(`SELECT [ID]
         ,[LOT ID]
         ,[GRN NO.]
         ,[RECEIVED DATE]
@@ -2710,14 +2714,13 @@ router.post("/srpReport", async (req, res) => {
     const { LOT_ID, GRN_NO, RECEIVED_DATE, TOTAL_QUANTITY } = req.body;
 
     const pool = await poolPromise;
-    await pool
+    await // .input("STATUS", sql.VarChar, STATUS)
+    pool
       .request()
       .input("LOT_ID", sql.VarChar, LOT_ID)
       .input("GRN_NO", sql.VarChar, GRN_NO)
       .input("RECEIVED_DATE", sql.Date, RECEIVED_DATE)
-      .input("TOTAL_QUANTITY", sql.Int, TOTAL_QUANTITY)
-      // .input("STATUS", sql.VarChar, STATUS)
-      .query(`
+      .input("TOTAL_QUANTITY", sql.Int, TOTAL_QUANTITY).query(`
         INSERT INTO [dbo].[srpReport] ([LOT ID], [GRN NO.], [RECEIVED DATE], [TOTAL QUANTITY])
         VALUES (@LOT_ID, @GRN_NO, @RECEIVED_DATE, @TOTAL_QUANTITY)
       `);
@@ -2739,8 +2742,7 @@ router.patch("/srpReport/:id", async (req, res) => {
     await pool
       .request()
       .input("ID", sql.Int, id)
-      .input("STATUS", sql.VarChar, STATUS)
-      .query(`
+      .input("STATUS", sql.VarChar, STATUS).query(`
         UPDATE [dbo].[srpReport] 
         SET [STATUS] = @STATUS
         WHERE ID = @ID
@@ -2759,10 +2761,7 @@ router.delete("/srpReport/:id", async (req, res) => {
     const { id } = req.params;
 
     const pool = await poolPromise;
-    await pool
-      .request()
-      .input("ID", sql.Int, id)
-      .query(`
+    await pool.request().input("ID", sql.Int, id).query(`
         UPDATE [dbo].[srpReport] 
         SET delete_yes_no = 'Yes'
         WHERE ID = @ID
@@ -2774,7 +2773,6 @@ router.delete("/srpReport/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete record." });
   }
 });
-
 
 router.get("/dispatch-Notification", async (req, res) => {
   try {
@@ -2799,7 +2797,6 @@ router.get("/dispatch-Notification", async (req, res) => {
   }
 });
 
-
 ////// FOR ADD REMAR
 router.patch("/srpReport/remark_admin/:id", async (req, res) => {
   try {
@@ -2811,7 +2808,9 @@ router.patch("/srpReport/remark_admin/:id", async (req, res) => {
       .request()
       .input("ID", sql.Int, id)
       .input("admin_REMARK", sql.NVarChar, admin_REMARK)
-      .query(`UPDATE [dbo].[srpReport] SET [admin_REMARK] = @admin_REMARK WHERE ID = @ID`);
+      .query(
+        `UPDATE [dbo].[srpReport] SET [admin_REMARK] = @admin_REMARK WHERE ID = @ID`
+      );
 
     res.status(200).json({ message: "Remark updated successfully" });
   } catch (error) {
@@ -2819,7 +2818,6 @@ router.patch("/srpReport/remark_admin/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update remark." });
   }
 });
-
 
 router.patch("/srpReport/remark_user/:id", async (req, res) => {
   try {
@@ -2831,7 +2829,9 @@ router.patch("/srpReport/remark_user/:id", async (req, res) => {
       .request()
       .input("ID", sql.Int, id)
       .input("user_REMARK", sql.NVarChar, user_REMARK)
-      .query(`UPDATE [dbo].[srpReport] SET [user_REMARK] = @user_REMARK WHERE ID = @ID`);
+      .query(
+        `UPDATE [dbo].[srpReport] SET [user_REMARK] = @user_REMARK WHERE ID = @ID`
+      );
 
     res.status(200).json({ message: "Remark updated successfully" });
   } catch (error) {
@@ -2865,7 +2865,6 @@ router.get("/loopiChecking_Notify", async (req, res) => {
   }
 });
 
-
 // **GET API - Fetch all records**
 router.get("/loopi-checking", async (req, res) => {
   try {
@@ -2898,8 +2897,8 @@ router.get("/loopi-checking", async (req, res) => {
 // router.get("/loopi-checking", async (req, res) => {
 //   try {
 //     const query = `
-//       SELECT [ID], [Previous_Supervisor], [Current_Supervisor], [Quantity], 
-//              [Hours], [Lot_ID], [Process_name] 
+//       SELECT [ID], [Previous_Supervisor], [Current_Supervisor], [Quantity],
+//              [Hours], [Lot_ID], [Process_name]
 //       FROM [dbo].[Loopi_Checking]
 //     `;
 
@@ -2915,9 +2914,22 @@ router.get("/loopi-checking", async (req, res) => {
 // **POST API - Insert new record**
 router.post("/loopi-checking", async (req, res) => {
   try {
-    const { Previous_Supervisor, Current_Supervisor, Quantity, Hours, Lot_ID, Process_name } = req.body;
+    const {
+      Previous_Supervisor,
+      Current_Supervisor,
+      Quantity,
+      Hours,
+      Lot_ID,
+      Process_name,
+    } = req.body;
 
-    if (!Current_Supervisor || !Quantity || !Hours || !Lot_ID || !Process_name) {
+    if (
+      !Current_Supervisor ||
+      !Quantity ||
+      !Hours ||
+      !Lot_ID ||
+      !Process_name
+    ) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -2928,7 +2940,8 @@ router.post("/loopi-checking", async (req, res) => {
     `;
 
     const pool = await poolPromise;
-    await pool.request()
+    await pool
+      .request()
       .input("Previous_Supervisor", Previous_Supervisor)
       .input("Current_Supervisor", Current_Supervisor)
       .input("Quantity", Quantity)
@@ -2956,7 +2969,7 @@ router.post("/loopi-checking", async (req, res) => {
 
 //     const query = `
 //       UPDATE [dbo].[Loopi_Checking]
-//       SET Previous_Supervisor = @Previous_Supervisor, 
+//       SET Previous_Supervisor = @Previous_Supervisor,
 //           Current_Supervisor = @Current_Supervisor,
 //           Quantity = @Quantity,
 //           Hours = @Hours,
@@ -2991,17 +3004,23 @@ router.post("/loopi-checking", async (req, res) => {
 router.put("/loopi-checking/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { Current_Supervisor, Quantity, Hours, Lot_ID, Process_name } = req.body;
+    const { Current_Supervisor, Quantity, Hours, Lot_ID, Process_name } =
+      req.body;
 
     if (!id || !Current_Supervisor) {
-      return res.status(400).json({ error: "ID and Current_Supervisor are required." });
+      return res
+        .status(400)
+        .json({ error: "ID and Current_Supervisor are required." });
     }
 
     const pool = await poolPromise;
 
     // Fetch the existing record
     const existingQuery = `SELECT [Previous_Supervisor], [Current_Supervisor] FROM [dbo].[Loopi_Checking] WHERE ID = @id`;
-    const existingResult = await pool.request().input("id", id).query(existingQuery);
+    const existingResult = await pool
+      .request()
+      .input("id", id)
+      .query(existingQuery);
 
     if (existingResult.recordset.length === 0) {
       return res.status(404).json({ error: "Record not found." });
@@ -3021,7 +3040,8 @@ router.put("/loopi-checking/:id", async (req, res) => {
       WHERE ID = @id
     `;
 
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("id", id)
       .input("previousSupervisor", previousSupervisor) // Set old Current_Supervisor as Previous
       .input("Current_Supervisor", Current_Supervisor) // Set new Supervisor as Current
@@ -3035,14 +3055,14 @@ router.put("/loopi-checking/:id", async (req, res) => {
       return res.status(404).json({ error: "Record not found." });
     }
 
-    res.status(200).json({ message: "Record updated successfully with supervisor swap." });
+    res
+      .status(200)
+      .json({ message: "Record updated successfully with supervisor swap." });
   } catch (error) {
     console.error("Error updating record:", error);
     res.status(500).json({ error: "Failed to update record." });
   }
 });
-
-
 
 // **DELETE API - Delete a record by ID**
 router.delete("/loopi-checking/:id", async (req, res) => {
@@ -3069,14 +3089,13 @@ router.delete("/loopi-checking/:id", async (req, res) => {
   }
 });
 
-
-/// Sales flow API // 13 Fab 2025 
+/// Sales flow API // 13 Fab 2025
 // **GET API - Fetch all records**
 router.get("/sales-flow", async (req, res) => {
   try {
     const query = `
-      SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [InvoiceStatus], [ScanStatus]
-      FROM [dbo].[SalesFlow]
+      SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted], [Remarks]
+      FROM [dbo].[SalesFlow] WHERE isDeleted = 'No'
     `;
 
     const pool = await poolPromise;
@@ -3091,27 +3110,29 @@ router.get("/sales-flow", async (req, res) => {
 // **POST API - Insert a new record**
 router.post("/sales-flow", async (req, res) => {
   try {
-    const { LOT_ID, GRN_NO, RECEIVED_TIME, QUANTITY} = req.body;
+    const { LOT_ID, SRP_NO, QUANTITY, Remarks } = req.body;
 
-    if (!LOT_ID || !GRN_NO || !RECEIVED_TIME || !QUANTITY ) {
-      return res.status(400).json({ error: "All fields except Confirm Time are required." });
+    if (!LOT_ID || !SRP_NO || !QUANTITY) {
+      return res.status(400).json({ error: "All fields required." });
     }
 
-   
+    const receivedTimeIST = formatDateTime(new Date());
 
     const query = `
-      INSERT INTO [dbo].[SalesFlow] ([LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY])
-      VALUES (@LOT_ID, @GRN_NO, @RECEIVED_TIME, @QUANTITY )
+      INSERT INTO [dbo].[SalesFlow] ([LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [Remarks])
+      VALUES (@LOT_ID, @SRP_NO, @RECEIVED_TIME, @QUANTITY, @Remarks)
     `;
 
     const pool = await poolPromise;
-    await pool.request()
+    await pool
+      .request()
       .input("LOT_ID", sql.NVarChar, LOT_ID)
-      .input("GRN_NO", sql.NVarChar, GRN_NO)
-      .input("RECEIVED_TIME", sql.NVarChar, RECEIVED_TIME)
+      .input("SRP_NO", sql.NVarChar, SRP_NO)
+      .input("RECEIVED_TIME", sql.NVarChar, receivedTimeIST)
       .input("QUANTITY", sql.Int, QUANTITY)
+      .input("Remarks", sql.NVarChar, Remarks)
       //.input("Confirm_Time", sql.NVarChar, confirmTimeIST)
-      
+
       .query(query);
 
     res.status(201).json({ message: "Record inserted successfully." });
@@ -3121,14 +3142,15 @@ router.post("/sales-flow", async (req, res) => {
   }
 });
 
-
 // PATCH API - Confirm a SalesFlow Record (Update Confirm Time by ID)
 router.patch("/sales-flow/confirm/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(400).json({ error: "ID is required for confirmation update." });
+      return res
+        .status(400)
+        .json({ error: "ID is required for confirmation update." });
     }
 
     // Format current time in IST
@@ -3142,7 +3164,8 @@ router.patch("/sales-flow/confirm/:id", async (req, res) => {
     `;
 
     const pool = await poolPromise;
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("id", sql.Int, id)
       .input("Confirm_Time", sql.VarChar, confirmTimeIST)
       .query(query);
@@ -3158,37 +3181,40 @@ router.patch("/sales-flow/confirm/:id", async (req, res) => {
   }
 });
 
-
-
 // **PUT API - Update a record by ID**
 router.put("/sales-flow/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { LOT_ID, GRN_NO, RECEIVED_TIME, QUANTITY, Invoice_Number } = req.body;
+    const { LOT_ID, SRP_NO, RECEIVED_TIME, QUANTITY, Invoice_Number, Remarks } =
+      req.body;
 
     if (!id) {
-      return res.status(400).json({ error: "ID is required for updating a record." });
+      return res
+        .status(400)
+        .json({ error: "ID is required for updating a record." });
     }
 
-    
     const query = `
       UPDATE [dbo].[SalesFlow]
       SET [LOT ID] = @LOT_ID,
-          [GRN NO] = @GRN_NO,
+          [SRP NO] = @SRP_NO,
           [RECEIVED TIME] = @RECEIVED_TIME,
           [QUANTITY] = @QUANTITY,      
-          [Invoice_Number] = @Invoice_Number
+          [Invoice_Number] = @Invoice_Number,
+          [Remarks] = @Remarks
       WHERE [ID] = @id
     `;
 
     const pool = await poolPromise;
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("id", sql.Int, id)
       .input("LOT_ID", sql.NVarChar, LOT_ID)
-      .input("GRN_NO", sql.NVarChar, GRN_NO)
+      .input("SRP_NO", sql.NVarChar, SRP_NO)
       .input("RECEIVED_TIME", sql.NVarChar, RECEIVED_TIME)
       .input("QUANTITY", sql.Int, QUANTITY)
       .input("Invoice_Number", sql.NVarChar, Invoice_Number)
+      .input("Remarks", sql.NVarChar, Remarks)
       .query(query);
 
     if (result.rowsAffected[0] === 0) {
@@ -3208,11 +3234,12 @@ router.delete("/sales-flow/:id", async (req, res) => {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(400).json({ error: "ID is required for deleting a record." });
+      return res
+        .status(400)
+        .json({ error: "ID is required for deleting a record." });
     }
 
-    const query = `DELETE FROM [dbo].[SalesFlow] WHERE ID = @id`;
-
+    const query = `UPDATE [dbo].[SalesFlow] SET isDeleted = 'Yes' WHERE ID = @id`;
     const pool = await poolPromise;
     const result = await pool.request().input("id", sql.Int, id).query(query);
 
@@ -3247,7 +3274,8 @@ router.patch("/sales-flow/invoice/:id", async (req, res) => {
     `;
 
     const pool = await poolPromise;
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("id", sql.Int, id)
       .input("Invoice_Number", sql.NVarChar, Invoice_Number)
       .input("InvoiceNumber_time", sql.NVarChar, invoiceTimeIST)
@@ -3257,7 +3285,12 @@ router.patch("/sales-flow/invoice/:id", async (req, res) => {
       return res.status(404).json({ error: "Record not found." });
     }
 
-    res.status(200).json({ message: "Invoice Number updated successfully!", InvoiceNumber_time: invoiceTimeIST });
+    res
+      .status(200)
+      .json({
+        message: "Invoice Number updated successfully!",
+        InvoiceNumber_time: invoiceTimeIST,
+      });
   } catch (error) {
     console.error("Error updating Invoice Number:", error);
     res.status(500).json({ error: "Failed to update Invoice Number." });
@@ -3274,22 +3307,31 @@ router.patch("/sales-flow/scan-status/:id", async (req, res) => {
     }
 
     let ReadyForScan_Time = null;
+    let Scanned_Time = null;
+
     if (ScanStatus === "Ready for Scan") {
       ReadyForScan_Time = formatDateTime(new Date()); // Store timestamp in IST format
+    }
+
+    if (ScanStatus === "Scanned") {
+      Scanned_Time = formatDateTime(new Date()); // Store timestamp in IST format
     }
 
     const query = `
       UPDATE [dbo].[SalesFlow]
       SET ScanStatus = @ScanStatus, 
-          ReadyForScan_Time = COALESCE(@ReadyForScan_Time, ReadyForScan_Time)
+          ReadyForScan_Time = COALESCE(@ReadyForScan_Time, ReadyForScan_Time),
+          Scanned_Time = COALESCE(@Scanned_Time, Scanned_Time)
       WHERE ID = @id
     `;
 
     const pool = await poolPromise;
-    await pool.request()
+    await pool
+      .request()
       .input("id", sql.Int, id)
       .input("ScanStatus", sql.NVarChar, ScanStatus)
       .input("ReadyForScan_Time", sql.NVarChar, ReadyForScan_Time) // Store as string in DD/MM/YYYY : HH:MM AM/PM
+      .input("Scanned_Time", sql.NVarChar, Scanned_Time) // Store Scanned time
       .query(query);
 
     res.status(200).json({ message: "Scan Status updated successfully." });
@@ -3299,47 +3341,47 @@ router.patch("/sales-flow/scan-status/:id", async (req, res) => {
   }
 });
 
-router.patch("/sales-flow/invoice-status/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { InvoiceStatus } = req.body;
+// router.patch("/sales-flow/invoice-status/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { InvoiceStatus } = req.body;
 
-    if (!id || !InvoiceStatus) {
-      return res.status(400).json({ error: "ID and InvoiceStatus are required." });
-    }
+//     if (!id || !InvoiceStatus) {
+//       return res.status(400).json({ error: "ID and InvoiceStatus are required." });
+//     }
 
-    let ReadyForInvoice_Time = null;
-    if (InvoiceStatus === "Create Invoice") {
-      ReadyForInvoice_Time = formatDateTime(new Date()); // Store timestamp in IST format
-    }
+//     let ReadyForInvoice_Time = null;
+//     if (InvoiceStatus === "Create Invoice") {
+//       ReadyForInvoice_Time = formatDateTime(new Date()); // Store timestamp in IST format
+//     }
 
-    const query = `
-      UPDATE [dbo].[SalesFlow]
-      SET InvoiceStatus = @InvoiceStatus, 
-          ReadyForInvoice_Time = COALESCE(@ReadyForInvoice_Time, ReadyForInvoice_Time)
-      WHERE ID = @id
-    `;
+//     const query = `
+//       UPDATE [dbo].[SalesFlow]
+//       SET InvoiceStatus = @InvoiceStatus,
+//           ReadyForInvoice_Time = COALESCE(@ReadyForInvoice_Time, ReadyForInvoice_Time)
+//       WHERE ID = @id
+//     `;
 
-    const pool = await poolPromise;
-    await pool.request()
-      .input("id", sql.Int, id)
-      .input("InvoiceStatus", sql.NVarChar, InvoiceStatus)
-      .input("ReadyForInvoice_Time", sql.NVarChar, ReadyForInvoice_Time) // Store as string in DD/MM/YYYY : HH:MM AM/PM
-      .query(query);
+//     const pool = await poolPromise;
+//     await pool.request()
+//       .input("id", sql.Int, id)
+//       .input("InvoiceStatus", sql.NVarChar, InvoiceStatus)
+//       .input("ReadyForInvoice_Time", sql.NVarChar, ReadyForInvoice_Time) // Store as string in DD/MM/YYYY : HH:MM AM/PM
+//       .query(query);
 
-    res.status(200).json({ message: "Invoice Status updated successfully." });
-  } catch (error) {
-    console.error("Error updating Invoice Status:", error);
-    res.status(500).json({ error: "Failed to update Invoice Status." });
-  }
-});
+//     res.status(200).json({ message: "Invoice Status updated successfully." });
+//   } catch (error) {
+//     console.error("Error updating Invoice Status:", error);
+//     res.status(500).json({ error: "Failed to update Invoice Status." });
+//   }
+// });
 
 // **GET API - Nofitication for new record or invoice status **
 router.get("/sales-flow-Notification", async (req, res) => {
   try {
     const query = `
-      SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [InvoiceStatus], [ScanStatus]
-     FROM [dbo].[SalesFlow] where [InvoiceStatus] = 'Create Invoice' or [Confirm Time] is null
+      SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted], [Remarks]
+     FROM [dbo].[SalesFlow] where [Confirm Time] is null and isDeleted = 'No'
     `;
 
     const pool = await poolPromise;
@@ -3351,12 +3393,12 @@ router.get("/sales-flow-Notification", async (req, res) => {
   }
 });
 
-// **GET API -scan Nofitication for create invoice **
+// **GET API -scan Nofitication **
 router.get("/sales-flow-ScanNotification", async (req, res) => {
   try {
     const query = `
-       SELECT [LOT ID], [GRN NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [InvoiceStatus], [ScanStatus]
-     FROM [dbo].[SalesFlow] where [ScanStatus] = 'Ready for Scan' or ([InvoiceStatus] is null or [InvoiceStatus]= 'Pending')
+       SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted] [Remarks]
+     FROM [dbo].[SalesFlow] where [ScanStatus] = 'Ready for Scan' AND isDeleted = 'No'
     `;
 
     const pool = await poolPromise;
@@ -3368,4 +3410,20 @@ router.get("/sales-flow-ScanNotification", async (req, res) => {
   }
 });
 
+// **GET API -scan Details for table**
+router.get("/sales-flow-Scan", async (req, res) => {
+  try {
+    const query = `
+       SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus],[isDeleted], [Remarks]
+     FROM [dbo].[SalesFlow] where ([ScanStatus] = 'Ready for Scan' or [ScanStatus] = 'Scanned' ) AND isDeleted = 'No'
+    `;
+
+    const pool = await poolPromise;
+    const result = await pool.request().query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching SalesFlow records:", error);
+    res.status(500).json({ error: "Failed to fetch SalesFlow records." });
+  }
+});
 module.exports = router;

@@ -16,10 +16,11 @@ function SalesFlow() {
 
   const initialFormData = {
     LOT_ID: "",
-    GRN_NO: "",
+    SRP_NO: "",
     RECEIVED_TIME: "",
     QUANTITY: "",
     Invoice_Number: "",
+    Remarks: "",
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -50,23 +51,23 @@ function SalesFlow() {
 
   // ** Apply filters (search & date range) **
   useEffect(() => {
-    const { searchQuery, fromDate, toDate } = filters;
+    const { searchQuery } = filters;
 
     const filtered = records.filter((record) => {
-      const recordDate = new Date(record["RECEIVED TIME"]);
+      // const recordDate = new Date(record["RECEIVED TIME"]);
 
       const matchesSearch =
         searchQuery === "" ||
-        [record["LOT ID"], record["GRN NO"], record.QUANTITY ,record.Invoice_Number]
+        [record["LOT ID"], record["SRP NO"], record.QUANTITY, record["RECEIVED TIME"] ,record.Invoice_Number]
           .join(" ")
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
 
-      const matchesDate =
-        (fromDate === "" || recordDate >= new Date(fromDate)) &&
-        (toDate === "" || recordDate <= new Date(toDate));
+      // const matchesDate =
+      //   (fromDate === "" || recordDate >= new Date(fromDate)) &&
+      //   (toDate === "" || recordDate <= new Date(toDate));
 
-      return matchesSearch && matchesDate;
+      return matchesSearch ;
     });
 
     setFilteredRecords(filtered);
@@ -134,10 +135,12 @@ function SalesFlow() {
     if (selectedRow) {
       setFormData({
         LOT_ID: selectedRow["LOT ID"] || "",
-        GRN_NO: selectedRow["GRN NO"] || "",
-        RECEIVED_TIME: selectedRow["RECEIVED TIME"] || "",
+        SRP_NO: selectedRow["SRP NO"] || "",
+        RECEIVED_TIME: selectedRow["RECEIVED TIME"] || "", // If empty, use new timestamp
         QUANTITY: selectedRow["QUANTITY"] || "",
         Invoice_Number: selectedRow["Invoice_Number"] || "",
+        Remarks: selectedRow["Remarks"] || "",
+
       });
       setShowUpdateModal(true);
     } else {
@@ -160,11 +163,37 @@ function SalesFlow() {
 
   // ** DataTable Columns **
   const columns = [
-    { name: "LOT ID", selector: (row) => row["LOT ID"], sortable: true },
-    { name: "GRN NO", selector: (row) => row["GRN NO"], sortable: true },
-    { name: "Received Time", selector: (row) => row["RECEIVED TIME"], sortable: true },
+    { name: "LOT ID",width:"170px", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["LOT ID"]}
+      >
+      {row["LOT ID"]}
+      </span>
+    ), sortable: true },
+    { name: "SRP NO",width:"95px", selector: (row) => row["SRP NO"], sortable: true },
+    { name: "Issued Time", width:"170px", selector: (row) =>(
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["RECEIVED TIME"]}
+      >
+        {row["RECEIVED TIME"]}
+      </span>
+    ) , sortable: true },
     { name: "Quantity", selector: (row) => row["QUANTITY"], sortable: true },
     { name: "Invoice Number", selector: (row) => row["Invoice_Number"] || "N/A", sortable: true },
+    { name: "Confirmed", selector: (row) => (row["Confirm Time"] ? "Yes" : "No"), sortable: true },
+    { name: "Remarks", selector: (row) =>(
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["Remarks"]}
+      >
+      {row["Remarks"] || "N/A"}
+      </span>
+    ), sortable: true },
     {
       name: "Actions",
       cell: (row) => (
@@ -177,6 +206,8 @@ function SalesFlow() {
       button: true,
     },
   ];
+
+  
 
   return (
     <div className="d-flex dashboard">
@@ -197,19 +228,19 @@ function SalesFlow() {
               >
                 Add Record
               </button>
-              {/* <button
-                  className="btn btn-primary"
-                  onClick={() => {
-                    if (selectedRow) {
-                      setFormData(selectedRow); // Populate the update form with selected row data
-                      setShowUpdateModal(true); // Open update modal
-                    } else {
-                      showAlert("Please select a row to update!", "danger");
-                    }
-                  }}
-                >
-                  Update Remark
-                </button> */}
+             {/* <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setFormData({ 
+                    ...initialFormData, 
+                    RECEIVED_TIME: formatDateTime(new Date())  // Auto-fill timestamp
+                  });
+                  setShowModal(true);
+                }}
+              >
+                Add Record
+              </button> */}
+
                 <button className="btn btn-primary" onClick={handleUpdateClick}>
                   Update Record
                 </button>
@@ -256,17 +287,22 @@ function SalesFlow() {
                 <input type="text" name="LOT_ID" value={formData.LOT_ID} onChange={handleFormChange} className="form-control" placeholder="Enter LOT ID" required />
                 </div>
                 <div className="mb-3">
-                <label className="form-label">GRN NO</label>
-                <input type="text" name="GRN_NO" value={formData.GRN_NO} onChange={handleFormChange} className="form-control" placeholder="Enter GRN NO" required />
+                <label className="form-label">SRP NO</label>
+                <input type="text" name="SRP_NO" value={formData.SRP_NO} onChange={handleFormChange} className="form-control" placeholder="Enter SRP NO" required />
                 </div>
-                <div className="mb-3">
-                <label className="form-label">Received Time</label>
-                <input type="text" name="RECEIVED_TIME" value={formData.RECEIVED_TIME} onChange={handleFormChange} className="form-control" required />
-                </div>
+                {/* <div className="mb-3">
+                <label className="form-label">Issued Time</label>
+                <input type="text" name="RECEIVED_TIME" value={formData.RECEIVED_TIME} onChange={handleFormChange} className="form-control" required readOnly/>
+                </div> */}
                 <div className="mb-3">
                 <label className="form-label">Quantity</label>
                 <input type="number" name="QUANTITY" value={formData.QUANTITY} onChange={handleFormChange} className="form-control" placeholder="Enter Quantity" required />
                 </div>
+                <div className="mb-3">
+                <label className="form-label">Remarks</label>               
+                <textarea name="Remarks" value={formData.Remarks} onChange={handleFormChange} className="form-control" placeholder="Enter Remarks" required />
+                </div>
+                
                
             </div>
             <div className="modal-footer">
@@ -295,16 +331,20 @@ function SalesFlow() {
                 <input type="text" name="LOT_ID" value={formData.LOT_ID} onChange={handleFormChange} className="form-control" required />
                 </div>
                 <div className="mb-3">
-                <label className="form-label">GRN NO</label>
-                <input type="text" name="GRN_NO" value={formData.GRN_NO} onChange={handleFormChange} className="form-control" required />
+                <label className="form-label">SRP NO</label>
+                <input type="text" name="SRP_NO" value={formData.SRP_NO} onChange={handleFormChange} className="form-control" required />
                 </div>
-                <div className="mb-3">
-                <label className="form-label">Received Time</label>
-                <input type="text" name="RECEIVED_TIME" value={formData.RECEIVED_TIME} onChange={handleFormChange} className="form-control" />
-                </div>
+                {/* <div className="mb-3">
+                <label className="form-label">Issued Time</label>
+                <input type="text" name="RECEIVED_TIME" value={formData.RECEIVED_TIME} onChange={handleFormChange} className="form-control" readOnly/>
+                </div> */}
                 <div className="mb-3">
                 <label className="form-label">Quantity</label>
                 <input type="number" name="QUANTITY" value={formData.QUANTITY} onChange={handleFormChange} className="form-control" required />
+                </div>
+                <div className="mb-3">
+                <label className="form-label">Remarks</label>               
+                <textarea name="Remarks" value={formData.Remarks} onChange={handleFormChange} className="form-control" placeholder="Enter Remarks" required />
                 </div>
                 
             </div>
