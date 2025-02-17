@@ -3381,7 +3381,7 @@ router.get("/sales-flow-Notification", async (req, res) => {
   try {
     const query = `
       SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted], [Remarks]
-     FROM [dbo].[SalesFlow] where [Confirm Time] is null and isDeleted = 'No'
+     FROM [dbo].[SalesFlow] where [Confirm Time] is null or Invoice_Number is null and isDeleted = 'No'
     `;
 
     const pool = await poolPromise;

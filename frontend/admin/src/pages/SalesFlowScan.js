@@ -156,7 +156,15 @@ function SalesFlowScan() {
     //   };
 
   const columns = [
-    { name: "LOT ID", selector: (row) => row["LOT ID"], sortable: true },
+    { name: "LOT ID",width:"170px", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["LOT ID"]}
+      >
+      {row["LOT ID"]}
+      </span>
+    ), sortable: true },
     { name: "SRP NO", selector: (row) => row["SRP NO"], sortable: true },
     { name: "Received Time", selector: (row) => (
       <span
