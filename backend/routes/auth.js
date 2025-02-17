@@ -2,6 +2,11 @@ const express = require("express");
 const { poolPromise, sql } = require("../config/db");
 const bcrypt = require("bcrypt");
 const router = express.Router();
+const multer = require("multer");
+const ExcelJS = require("exceljs");
+// Configure Multer for file uploads
+const upload = multer({ dest: "uploads/" });
+
 
 router.get("/data", async (req, res) => {
   try {
@@ -3426,4 +3431,159 @@ router.get("/sales-flow-Scan", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch SalesFlow records." });
   }
 });
+
+
+// ** Import Excel Data into StockAudit Table **
+// ** Import Excel Data into StockAudit Table **
+router.post("/import-excel", upload.single("file"), async (req, res) => {
+  try {
+    console.log("Received Request: ", req.body); // ✅ Debugging log
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // ✅ Extract Uploaded_By Correctly
+    const { Uploaded_By } = req.body;
+    if (!Uploaded_By || Uploaded_By.trim() === "") {
+      return res.status(400).json({ error: "Uploaded_By field is required." });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(req.file.path);
+    const worksheet = workbook.worksheets[0]; // Read first sheet
+
+    const importedData = [];
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header row
+
+      const rowData = {
+        ITEM_CODE: row.getCell(1).value ? parseFloat(row.getCell(2).value) : null,  
+        ITEM_NAME: row.getCell(2).value ? String(row.getCell(11).value).trim() : null,
+        SIZE: row.getCell(3).value ? String(row.getCell(24).value).trim() : null, // Convert PACKING to string
+        LOT_NUMBER: row.getCell(4).value ? String(row.getCell(10).value).trim() : null,
+        LOT_CODE: row.getCell(5).value ? parseFloat(row.getCell(19).value) : null, // Convert to float
+        TOTAL_QTY: row.getCell(6).value ? parseFloat(row.getCell(13).value) : null, // Convert PUR. QUANTITY to float
+        GRN_NO: row.getCell(7).value ? String(row.getCell(4).value).trim() : null,
+        GRN_DATE: row.getCell(8).value ? String(row.getCell(5).value).trim() : null,
+        Uploaded_By: Uploaded_By, // Hardcoded (change as needed)
+      };
+
+      // ** Fix issue with TOTAL_QTY NaN values **
+      if (!rowData.TOTAL_QTY || isNaN(rowData.TOTAL_QTY)) {
+        console.warn(`Skipping row ${rowNumber}: Invalid value`, rowData);
+        return; // Skip row if TOTAL_QTY is invalid
+      }
+
+      // ** Fix issue where GRN_NO and GRN_DATE were swapped **
+      if (!isNaN(rowData.GRN_NO) && isNaN(rowData.GRN_DATE)) {
+        // If GRN_NO is numeric but GRN_DATE is not, swap them
+        let temp = rowData.GRN_NO;
+        rowData.GRN_NO = rowData.GRN_DATE;
+        rowData.GRN_DATE = temp;
+      }
+
+      importedData.push(rowData);
+    });
+
+    if (importedData.length === 0) {
+      return res.status(400).json({ error: "No valid data found in the file" });
+    }
+
+    const  Uploaded_DateTime = formatDateTime(new Date()); // Store timestamp in IST format 
+
+    // Insert Data into SQL Server
+    const pool = await poolPromise;
+    for (const data of importedData) {
+      await pool
+        .request()
+        .input("ITEM_CODE", sql.Float, data.ITEM_CODE)
+        .input("ITEM_NAME", sql.NVarChar(255), data.ITEM_NAME)
+        .input("SIZE", sql.NVarChar(100), data.SIZE)
+        .input("LOT_NUMBER", sql.NVarChar(255), data.LOT_NUMBER)
+        .input("LOT_CODE", sql.Float, data.LOT_CODE)
+        .input("TOTAL_QTY", sql.Float, data.TOTAL_QTY) // Ensure this is a float
+        .input("GRN_NO", sql.VarChar(20), data.GRN_NO)
+        .input("GRN_DATE", sql.VarChar(20), data.GRN_DATE)
+        .input("Uploaded_By", sql.VarChar(100), data.Uploaded_By)
+        .input("Uploaded_Date", sql.NVarChar, Uploaded_DateTime)
+        .query(`
+          INSERT INTO [dbo].[StockAudit] 
+          ([ITEM CODE], [ITEM NAME], [SIZE], [LOT NUMBER], [LOT CODE], [TOTAL QTY], [GRN NO], [GRN DATE], [Uploaded_By], [Uploaded_Date])
+          VALUES (@ITEM_CODE, @ITEM_NAME, @SIZE, @LOT_NUMBER, @LOT_CODE, @TOTAL_QTY, @GRN_NO, @GRN_DATE, @Uploaded_By, @Uploaded_Date)
+        `);
+    }
+
+    res.status(200).json({ message: "Excel file imported successfully", count: importedData.length });
+
+  } catch (error) {
+    console.error("Error importing Excel:", error);
+    res.status(500).json({ error: "Failed to import data from Excel" });
+  }
+});
+
+// DELETE API: Delete StockAudit records by ITEM_NAME
+router.delete("/delete-stock", async (req, res) => {
+  try {
+    const { ITEM_NAME } = req.body; // Get ITEM_NAME from the request body
+
+    if (!ITEM_NAME) {
+      return res.status(400).json({ error: "ITEM_NAME field is required." });
+    }
+
+    const pool = await poolPromise;
+
+    // Count how many records match the condition before deletion
+    const countResult = await pool
+      .request()
+      .input("ITEM_NAME", sql.NVarChar, ITEM_NAME)
+      .query(`SELECT COUNT(*) AS count FROM [dbo].[StockAudit] WHERE [ITEM NAME] = @ITEM_NAME`);
+
+    const deletedCount = countResult.recordset[0].count;
+
+    if (deletedCount === 0) {
+      return res.status(404).json({ message: "No records found to delete." });
+    }
+
+    // Delete the matching records
+    await pool
+      .request()
+      .input("ITEM_NAME", sql.NVarChar, ITEM_NAME)
+      .query(`DELETE FROM [dbo].[StockAudit] WHERE [ITEM NAME] = @ITEM_NAME`);
+
+    res.status(200).json({
+      message: `${deletedCount} record(s) deleted successfully.`,
+      deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    res.status(500).json({ error: "Failed to delete records from StockAudit." });
+  }
+});
+
+router.get("/get-unique-item-names", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Fetch distinct ITEM NAME values
+    const result = await pool
+      .request()
+      .query(`SELECT DISTINCT [ITEM NAME] FROM [dbo].[StockAudit] WHERE [ITEM NAME] IS NOT NULL ORDER BY [ITEM NAME] ASC`);
+
+    const uniqueItemNames = result.recordset.map((row) => row["ITEM NAME"]);
+
+    if (uniqueItemNames.length === 0) {
+      return res.status(404).json({ message: "No item names found." });
+    }
+
+    res.status(200).json({ itemNames: uniqueItemNames });
+  } catch (error) {
+    console.error("Error fetching unique ITEM NAMEs:", error);
+    res.status(500).json({ error: "Failed to retrieve unique ITEM NAMEs." });
+  }
+});
+
+
+
 module.exports = router;

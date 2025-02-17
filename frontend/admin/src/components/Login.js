@@ -24,7 +24,7 @@ function Login() {
       if (userData.Auth === "User") {
         navigate("/User-dashboard");
       } else if (userData.Auth === "Admin") {
-        navigate("/Admin-dashboard");
+        navigate("/Main-dashboard");
       }
     }
   }, [navigate]);
@@ -87,16 +87,16 @@ function Login() {
       //   if (userData.Auth === "User") {
       //     navigate("/User-dashboard");
       //   } else {
-      //     navigate("/Admin-dashboard");
+      //     navigate("/Main-dashboard");
       //   }
       // }, 2000);
       setTimeout(() => {
         if (userData.Auth === "User") {
             navigate("/User-dashboard");
         } else if (userData.Auth === "Admin") {
-            navigate("/Admin-dashboard");
+            navigate("/Main-dashboard");
         } else if (userData.Auth === "Supervisor") {
-            navigate("/Admin-dashboard"); // Redirect Supervisor to TicketHome
+            navigate("/Main-dashboard"); // Redirect Supervisor to TicketHome
         }else if (userData.Auth === "SuperAdmin") {
           navigate("/Admin-dashboard"); // Redirect Supervisor to TicketHome
       }

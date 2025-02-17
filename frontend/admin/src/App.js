@@ -26,6 +26,7 @@ import LoopiCheckingView from './pages/LoopiCheckingView';
 import SalesFlow from './pages/SalesFlow';
 import SalesFlowNotify from './pages/SalesFlowNotify';
 import SalesFlowScan from './pages/SalesFlowScan';
+import ExcelImport from './pages/Excel_Import';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -39,7 +40,7 @@ function App() {
                     <Route path="/" element={<Login />} />
                     {/* <Route path="/signup" element={<Signup />} /> */}
                     <Route
-                        path="/Admin-dashboard"
+                        path="/Main-dashboard"
                         element={
                             <ProtectedRoute>
                                 <Dashboard />
@@ -172,7 +173,14 @@ function App() {
                             <SalesFlowScan/>
                         </ProtectedRoute>
                     }
-                    />                  
+                    />  
+                    <Route path='excel-import'
+                    element={
+                        <ProtectedRoute>
+                            <ExcelImport/>
+                        </ProtectedRoute>
+                    }
+                    />                
                 </Routes>
             </div>
         </BrowserRouter>

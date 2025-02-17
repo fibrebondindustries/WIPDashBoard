@@ -144,7 +144,7 @@ const fetchScanCount = async () => {
       <ul className="nav flex-column NavlinkCss">
         <li className="nav-item">
           <NavLink
-            to="/Admin-dashboard"
+            to="/Main-dashboard"
             // className="nav-link"
             className={({ isActive }) =>
               isActive ? "nav-link active" : "nav-link"
@@ -322,6 +322,24 @@ const fetchScanCount = async () => {
           </li>
         )}
         {/* end */}
+
+        {/* New module created 17 Feb 25 for Excel Import */}
+        {( 
+          (user?.Auth === "Supervisor" || user?.Auth === "Admin") && 
+          ["2", "1017", "2918"].includes(user?.EmployeeID)
+        ) && (
+          <li className="nav-item">
+            <NavLink
+              to="/excel-import"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> Excel Import{" "}
+            </NavLink>
+          </li>
+        )}
+
 
      {/* New Module create Loopi checking on 11 Feb 25 */}
       {user?.Auth === "Supervisor" &&

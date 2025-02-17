@@ -18,7 +18,7 @@ app.use(dbCheckMiddleware);
 
 // Routes
 app.use('/api', authRoutes);
-
+app.use(express.urlencoded({ extended: true }));
 
 // Add Cron Job Logic
 cron.schedule("0 * * * *", async () => { // This runs the job every minute
