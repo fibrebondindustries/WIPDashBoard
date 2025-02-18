@@ -56,20 +56,20 @@ const StockDetails = () => {
   //     ? "Invalid Date"
   //     : parsedDate.toLocaleDateString("en-GB");
   // };
-  const formatDate = (dateString) => {
-    if (!dateString) return "Invalid Date";
+  // const formatDate = (dateString) => {
+  //   if (!dateString) return "Invalid Date";
   
-    // Split the date string into day, month, and year
-    const [day, month, year] = dateString.split("-").map(Number);
+  //   // Split the date string into day, month, and year
+  //   const [day, month, year] = dateString.split("-").map(Number);
   
-    // Create a new Date object
-    const parsedDate = new Date(year, month - 1, day);
+  //   // Create a new Date object
+  //   const parsedDate = new Date(year, month - 1, day);
   
-    // Check if the date is valid
-    return isNaN(parsedDate)
-      ? "Invalid Date"
-      : parsedDate.toLocaleDateString("en-GB"); // Format as DD/MM/YYYY
-  };
+  //   // Check if the date is valid
+  //   return isNaN(parsedDate)
+  //     ? "Invalid Date"
+  //     : parsedDate.toLocaleDateString("en-GB"); // Format as DD/MM/YYYY
+  // };
   
 
   const renderRows = () => {
@@ -88,7 +88,7 @@ const StockDetails = () => {
         <tr key={index} className={rowClass}>
           <td>{index + 1}</td>
           <td>{row["JO NO"]}</td>
-          <td>{formatDate(row["JO DATE"])}</td>
+          <td>{row["JO DATE"]}</td>
           <td>{row["PROCESS NAME"]}</td>
           <td>{row["PRODUCT"]}</td>
           <td>{row["CLR"]}</td>

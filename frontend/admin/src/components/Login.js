@@ -98,7 +98,7 @@ function Login() {
         } else if (userData.Auth === "Supervisor") {
             navigate("/Main-dashboard"); // Redirect Supervisor to TicketHome
         }else if (userData.Auth === "SuperAdmin") {
-          navigate("/Admin-dashboard"); // Redirect Supervisor to TicketHome
+          navigate("/Main-dashboard"); // Redirect Supervisor to TicketHome
       }
     }, 2000);
     } catch (err) {

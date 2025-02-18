@@ -8,6 +8,8 @@ import WIPHeader from "../components/WIP-Herder";
 const Stock = () => {
   const [stockData, setStockData] = useState([]);
   const navigate = useNavigate();
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusData, setStatusData] = useState({}); // Store Status by JO NO
 
   const fetchStockData = useCallback(async () => {
     try {
@@ -15,6 +17,16 @@ const Stock = () => {
       processStockData(response.data);
     } catch (error) {
       console.error("Error fetching stock data:", error);
+    }
+  }, []);
+
+  // ** Fetch Status Data by JO NO **
+  const fetchStatusData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/api/get-status-by-jo");
+      setStatusData(response.data);
+    } catch (error) {
+      console.error("Error fetching status data:", error);
     }
   }, []);
 
@@ -45,7 +57,8 @@ const checkAuth = useCallback(() => {
 
   useEffect(() => {
     fetchStockData();
-  }, [fetchStockData]);
+    fetchStatusData();
+  }, [fetchStockData, fetchStatusData]);
 
   const processStockData = (data) => {
     const aggregatedData = {};
@@ -74,13 +87,36 @@ const checkAuth = useCallback(() => {
     setStockData(Object.values(aggregatedData));
   };
 
-  const handleRowClick = (joNo) => {
-    navigate(`/stock-details?joNo=${encodeURIComponent(joNo)}`);
-  };
+  // const handleRowClick = (joNo) => {
+  //   navigate(`/stock-details?joNo=${encodeURIComponent(joNo)}`);
+  // };
 
   const handleRedirect = (path) => {
     navigate(path);
   };
+
+
+ // ** Handle Status Change 18 fab 25 **
+ // Handle Status Update
+ const updateStockStatus = async (joNo, newStatus) => {
+  if (!joNo) return;
+
+  setUpdatingStatus(true);
+  try {
+    await axiosInstance.patch("/api/update-stock-status", {
+      joNo,
+      status: newStatus,
+    });
+
+    alert(`Status updated to '${newStatus}' for JO NO: ${joNo}`);
+   window.location.reload();
+  } catch (error) {
+    console.error("Error updating status:", error);
+    alert("Failed to update stock status.");
+  } finally {
+    setUpdatingStatus(false);
+  }
+};
 
   return (
     <div className="">
@@ -161,6 +197,7 @@ const checkAuth = useCallback(() => {
               <th>Job Order Date</th>
               <th>Quantity Shortage</th>
               <th>Quantity Status</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -181,20 +218,52 @@ const checkAuth = useCallback(() => {
               }
 
               return (
-                <tr key={index} onClick={() => handleRowClick(row.joNo)}>
+                <tr key={index} >
                   <td>{index + 1}</td>
-                  <td>
+                  {/* <td>
                     <a href={`/stock-details?joNo=${encodeURIComponent(row.joNo)}`}>
+                      {row.joNo}
+                    </a>
+                  </td> */}
+                   {/* 🔹 Job Order No Clickable Only */}
+                  <td>
+                    <a
+                      href={`/stock-details?joNo=${encodeURIComponent(row.joNo)}`}
+                      onClick={(e) => e.stopPropagation()} // Prevents row click when clicking the link
+                    >
                       {row.joNo}
                     </a>
                   </td>
                   <td>
-                    {row.joDate
-                      ? new Date(row.joDate).toLocaleDateString()
-                      : "Invalid Date"}
+                    {row.joDate}
                   </td>
                   <td>{quantityShortage.toFixed(2)}</td>
                   <td className={statusClass}>{statusText}</td>
+                  <td>
+                    {/* Dropdown to Change Status */}
+                    <select
+                        className="form-select form-select-sm "
+                        value={statusData[row.joNo] || "Pending"}
+                        onChange={(e) => updateStockStatus(row.joNo, e.target.value)}
+                        disabled={statusData[row.joNo] === "Purchase Made" || updatingStatus}
+                        style={{
+                          backgroundColor:
+                            statusData[row.joNo] === "Purchase Made"
+                              ? "#28a745" // ✅ Green
+                              : statusData[row.joNo] === "Purchase Not Made"
+                              ? "#dc3545" // ✅ Red
+                              : "white", // 
+                          // color: statusData[row.joNo] === "Pending" ? "black" : "white",
+                          // fontWeight: "bold",
+                          // border: "1px solid #ccc",
+                        }}
+                      >
+                      <option value="Pending">Pending</option>                      
+                     <option value="Purchase Not Made">Purchase Not Made</option>  
+                     <option value="Purchase Made">Purchase Made</option>
+                     
+                    </select>
+                  </td>
                 </tr>
               );
             })}

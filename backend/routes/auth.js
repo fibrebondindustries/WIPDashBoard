@@ -114,6 +114,76 @@ router.get("/stockData", async (req, res) => {
   }
 });
 
+//New Patch api for update the status of stock 18 fab 25
+router.patch("/update-stock-status", async (req, res) => {
+  try {
+    const { joNo, status } = req.body; // Retrieve JO NO and new Status from request body
+
+    if (!joNo || !status) {
+      return res.status(400).json({ error: "joNo and status fields are required." });
+    }
+
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    // Update query for changing the Status field
+    const query = `
+      UPDATE [dbo].[stk_cls]
+      SET [Status] = @status
+      WHERE [JO NO] = @joNo
+    `;
+
+    request.input("status", sql.NVarChar, status);
+    request.input("joNo", sql.NVarChar, joNo);
+
+    const result = await request.query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "No matching Job Order found." });
+    }
+
+    res.status(200).json({
+      message: `Stock status updated successfully for JO NO: ${joNo}`,
+      updatedRows: result.rowsAffected[0],
+    });
+
+  } catch (error) {
+    console.error("Error updating stock status:", error);
+    res.status(500).json({ error: "Failed to update stock status." });
+  }
+});
+
+//end
+//
+router.get("/get-status-by-jo", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Query to fetch distinct JO NO with their corresponding status
+    const result = await pool.request().query(`
+      SELECT DISTINCT [JO NO], Status
+      FROM [dbo].[stk_cls]
+    `);
+
+    if (!result.recordset || result.recordset.length === 0) {
+      return res.status(404).json({ message: "No status records found." });
+    }
+
+    // Create a mapping of JO NO → Status
+    const statusMap = {};
+    result.recordset.forEach((row) => {
+      statusMap[row["JO NO"]] = row.Status;
+    });
+
+    res.status(200).json(statusMap);
+  } catch (error) {
+    console.error("Error fetching status by JO NO:", error);
+    res.status(500).json({ error: "Failed to fetch status data" });
+  }
+});
+
+//end
+
 router.get("/RMshortage", async (req, res) => {
   try {
     const pool = await poolPromise;
