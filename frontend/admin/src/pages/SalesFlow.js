@@ -35,7 +35,7 @@ function SalesFlow() {
       setFilteredRecords(response.data);
     } catch (error) {
       console.error("Error fetching records:", error);
-      alert("Failed to fetch records.");
+      // alert("Failed to fetch records.");
     }
   }, []);
 
