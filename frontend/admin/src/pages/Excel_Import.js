@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
 import loaderGif from "../assets/Img/loading1.gif"; // Ensure correct path
+import DataTable from "react-data-table-component"; // Import DataTable
 
 function ExcelImport() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -12,7 +13,9 @@ function ExcelImport() {
   const [uniqueItemNames, setUniqueItemNames] = useState([]);
   const [deleting, setDeleting] = useState(false);
   const [loadingItems, setLoadingItems] = useState(false);
-  
+  const [excelRecords, setExcelRecords] = useState([]); // State for DataTable records
+  const [loadingRecords, setLoadingRecords] = useState(false); // Loader for table
+
   const fileInputRef = useRef(null); // Reference to file input
 
   const user = JSON.parse(localStorage.getItem("user")) || {}; // Ensure we always get an object
@@ -36,7 +39,22 @@ function ExcelImport() {
 
   useEffect(() => {
     fetchUniqueItemNames();
+    fetchExcelRecords();
   }, []);
+
+ // ** Fetch Excel Records for DataTable **
+ const fetchExcelRecords = async () => {
+  setLoadingRecords(true); // Show loader while fetching
+  try {
+    const response = await axiosInstance.get("/api/get-excel-records");
+    setExcelRecords(response.data.records);
+  } catch (error) {
+    console.error("Error fetching Excel records:", error);
+  } finally {
+    setLoadingRecords(false); // Hide loader after fetching
+  }
+};
+
 
   // ** Handle File Selection **
   const handleFileChange = (e) => {
@@ -105,6 +123,7 @@ function ExcelImport() {
 
       alert(response.data.message);
       fetchUniqueItemNames(); // Refresh list after deletion
+      fetchExcelRecords(); // Refresh DataTable
       setSelectedItem(""); // Reset selection
     } catch (error) {
       console.error("Error deleting records:", error);
@@ -124,7 +143,13 @@ function ExcelImport() {
     alertPlaceholder.innerHTML = alertHTML;
     setTimeout(() => (alertPlaceholder.innerHTML = ""), 2000);
   };
-
+  // ** Define DataTable Columns **
+  const columns = [
+    { name: "Item Name", selector: (row) => row["ITEM NAME"], sortable: true },
+    { name: "GRN No", selector: (row) => row["GRN NO"], sortable: true },
+    { name: "GRN Date", selector: (row) => row["GRN DATE"], sortable: true },
+    { name: "Uploaded By", selector: (row) => row["Uploaded_By"], sortable: true },
+  ];
   return (
     <div className="d-flex dashboard">
       {/* Internal CSS for Loader & Overlay */}
@@ -169,7 +194,7 @@ function ExcelImport() {
 
       <div className="container d-flex" >
           {/* Upload Section */}
-          <div className="mt-5" style={{marginRight:"70px"}}>
+          <div className="mt-2" style={{marginRight:"70px"}}>
             <label className="form-label">Upload Excel File:</label>
             <input
               type="file"
@@ -185,7 +210,7 @@ function ExcelImport() {
           </div>
 
           {/* Select & Delete Section */}
-          <div className="mt-5">
+          <div className="mt-2">
             <label className="form-label">Select Item to Delete:</label>
             <select className="form-select ml-5" value={selectedItem} onChange={handleItemSelect} disabled={loadingItems} style={{ width: "auto" }}>
               <option value="">Select an Item Name</option>
@@ -206,6 +231,14 @@ function ExcelImport() {
             </button>
           </div>
           </div>
+         {/* Show loader while fetching records */}
+          {loadingRecords ? (
+            <div className="text-center my-3">
+              <span className="spinner-border text-primary"></span> Loading data...
+            </div>
+          ) : (
+            <DataTable columns={columns} data={excelRecords} pagination highlightOnHover />
+          )}
         </main>
       </div>
     </div>

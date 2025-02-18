@@ -3504,7 +3504,6 @@ router.get("/sales-flow-Scan", async (req, res) => {
 
 
 // ** Import Excel Data into StockAudit Table **
-// ** Import Excel Data into StockAudit Table **
 router.post("/import-excel", upload.single("file"), async (req, res) => {
   try {
     console.log("Received Request: ", req.body); // ✅ Debugging log
@@ -3654,6 +3653,28 @@ router.get("/get-unique-item-names", async (req, res) => {
   }
 });
 
+router.get("/get-excel-records", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .query(`
+        SELECT 
+          [ITEM NAME],
+          MIN([GRN NO]) AS [GRN NO],
+          MIN([GRN DATE]) AS [GRN DATE],
+          MIN([Uploaded_By]) AS [Uploaded_By]
+        FROM [dbo].[StockAudit]
+        GROUP BY [ITEM NAME]
+        ORDER BY [ITEM NAME] ASC
+      `);
+
+    res.status(200).json({ records: result.recordset });
+  } catch (error) {
+    console.error("Error fetching Excel records:", error);
+    res.status(500).json({ error: "Failed to retrieve Excel records." });
+  }
+});
 
 
 module.exports = router;
