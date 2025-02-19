@@ -93,6 +93,7 @@ function ExcelImport() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      fetchExcelRecords(); // Refresh DataTable
     } catch (error) {
       console.error("Error uploading file:", error);
       showAlert("Failed to upload file.", "error");

@@ -10,6 +10,7 @@ const Stock = () => {
   const navigate = useNavigate();
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusData, setStatusData] = useState({}); // Store Status by JO NO
+  const [poData, setPoData] = useState({}); // Store PO by JO NO
 
   const fetchStockData = useCallback(async () => {
     try {
@@ -30,6 +31,15 @@ const Stock = () => {
     }
   }, []);
 
+   // ** Fetch Status Data by JO NO **
+   const fetchPOData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/api/get-PONumber");
+      setPoData(response.data);
+    } catch (error) {
+      console.error("Error fetching status data:", error);
+    }
+  }, []);
 // Function to check session on page load
 const checkAuth = useCallback(() => {
     const authData = sessionStorage.getItem("auth");
@@ -58,7 +68,8 @@ const checkAuth = useCallback(() => {
   useEffect(() => {
     fetchStockData();
     fetchStatusData();
-  }, [fetchStockData, fetchStatusData]);
+    fetchPOData();
+  }, [fetchStockData, fetchStatusData, fetchPOData]);
 
   const processStockData = (data) => {
     const aggregatedData = {};
@@ -112,11 +123,30 @@ const checkAuth = useCallback(() => {
    window.location.reload();
   } catch (error) {
     console.error("Error updating status:", error);
-    alert("Failed to update stock status.");
+    // alert("Failed to update stock status.");
   } finally {
     setUpdatingStatus(false);
   }
 };
+
+  // Handle PO Number Update (Triggers on Blur)
+  const updatePoNumber = async (joNo, newPoNumber) => {
+    try {
+      await axiosInstance.patch("/api/update-stock-PO_Number", {
+        joNo,
+        PO_Number: newPoNumber || null, // Allow sending NULL
+      });
+
+      // Update UI Immediately
+      setPoData((prev) => ({ ...prev, [joNo]: newPoNumber || "" }));
+     alert(`PO Number updated for JO NO: ${joNo} -> ${newPoNumber || "NULL"}`);
+    //  window.location.reload();
+      console.log(`PO Number updated for JO NO: ${joNo} -> ${newPoNumber || "NULL"}`);
+    } catch (error) {
+      console.error("Error updating PO Number:", error);
+    }
+  };
+
 
   return (
     <div className="">
@@ -198,6 +228,7 @@ const checkAuth = useCallback(() => {
               <th>Quantity Shortage</th>
               <th>Quantity Status</th>
               <th>Status</th>
+              <th>Po Number</th>
             </tr>
           </thead>
           <tbody>
@@ -263,6 +294,16 @@ const checkAuth = useCallback(() => {
                      <option value="Purchase Made">Purchase Made</option>
                      
                     </select>
+                  </td>
+                  <td>              
+                  <input
+                      type="text"
+                      className="form-control"
+                      value={poData[row.joNo]}
+                      placeholder="Enter PO Number"
+                      onBlur={(e) => updatePoNumber(row.joNo, e.target.value)}
+                      onChange={(e) => setPoData({ ...poData, [row.joNo]: e.target.value })}
+                      />           
                   </td>
                 </tr>
               );

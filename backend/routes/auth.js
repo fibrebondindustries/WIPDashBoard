@@ -154,6 +154,46 @@ router.patch("/update-stock-status", async (req, res) => {
 });
 
 //end
+//New Patch api for update the status of stock 18 fab 25
+router.patch("/update-stock-PO_Number", async (req, res) => {
+  try {
+    const { joNo, PO_Number } = req.body; // Retrieve JO NO and new Status from request body
+
+    if (!joNo) {
+      return res.status(400).json({ error: "joNo fields are required." });
+    }
+
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    // Update query for changing the PO_Number field
+    const query = `
+      UPDATE [dbo].[stk_cls]
+      SET [PO_Number] = @PO_Number
+      WHERE [JO NO] = @joNo
+    `;
+
+    request.input("PO_Number", sql.NVarChar, PO_Number);
+    request.input("joNo", sql.NVarChar, joNo);
+
+    const result = await request.query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "No matching Job Order found." });
+    }
+
+    res.status(200).json({
+      message: `Stock PO_Number updated successfully for JO NO: ${joNo}`,
+      updatedRows: result.rowsAffected[0],
+    });
+
+  } catch (error) {
+    console.error("Error updating stock status:", error);
+    res.status(500).json({ error: "Failed to update PO_Number status." });
+  }
+});
+
+//end
 //
 router.get("/get-status-by-jo", async (req, res) => {
   try {
@@ -181,8 +221,36 @@ router.get("/get-status-by-jo", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch status data" });
   }
 });
-
 //end
+//
+router.get("/get-PONumber", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Query to fetch distinct JO NO with their corresponding status
+    const result = await pool.request().query(`
+      SELECT DISTINCT [JO NO], [PO_Number]
+      FROM [dbo].[stk_cls]
+    `);
+
+    if (!result.recordset || result.recordset.length === 0) {
+      return res.status(404).json({ message: "No PO_Number records found." });
+    }
+
+    // Create a mapping of JO NO → Status
+    const poMap = {};
+    result.recordset.forEach((row) => {
+      poMap[row["JO NO"]] = row.PO_Number;
+    });
+
+    res.status(200).json(poMap);
+  } catch (error) {
+    console.error("Error fetching status by JO NO:", error);
+    res.status(500).json({ error: "Failed to fetch status data" });
+  }
+});
+//end
+
 
 router.get("/RMshortage", async (req, res) => {
   try {
@@ -3660,13 +3728,14 @@ router.get("/get-excel-records", async (req, res) => {
       .request()
       .query(`
         SELECT 
-          [ITEM NAME],
-          MIN([GRN NO]) AS [GRN NO],
-          MIN([GRN DATE]) AS [GRN DATE],
-          MIN([Uploaded_By]) AS [Uploaded_By]
-        FROM [dbo].[StockAudit]
-        GROUP BY [ITEM NAME]
-        ORDER BY [ITEM NAME] ASC
+    [ITEM NAME],
+    (SELECT TOP 1 [GRN NO] FROM [dbo].[StockAudit] s2 WHERE s2.[ITEM NAME] = s1.[ITEM NAME] ORDER BY s2.[Uploaded_Date] DESC) AS [GRN NO],
+    (SELECT TOP 1 [GRN DATE] FROM [dbo].[StockAudit] s2 WHERE s2.[ITEM NAME] = s1.[ITEM NAME] ORDER BY s2.[Uploaded_Date] DESC) AS [GRN DATE],
+    (SELECT TOP 1 [Uploaded_By] FROM [dbo].[StockAudit] s2 WHERE s2.[ITEM NAME] = s1.[ITEM NAME] ORDER BY s2.[Uploaded_Date] DESC) AS [Uploaded_By],
+    MAX([Uploaded_Date]) AS [Uploaded_Date] -- Fetch the latest uploaded date
+    FROM [dbo].[StockAudit] s1
+    GROUP BY [ITEM NAME]
+    ORDER BY MAX([Uploaded_Date]) DESC; -- Order by newest data first
       `);
 
     res.status(200).json({ records: result.recordset });
