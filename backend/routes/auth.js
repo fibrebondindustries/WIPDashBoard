@@ -3452,11 +3452,11 @@ router.patch("/sales-flow/scan-status/:id", async (req, res) => {
     let ReadyForScan_Time = null;
     let Scanned_Time = null;
 
-    if (ScanStatus === "Ready for Scan") {
+    if (ScanStatus === "Ready for Sales Order") {
       ReadyForScan_Time = formatDateTime(new Date()); // Store timestamp in IST format
     }
 
-    if (ScanStatus === "Scanned") {
+    if (ScanStatus === "Sales Order Done") {
       Scanned_Time = formatDateTime(new Date()); // Store timestamp in IST format
     }
 
@@ -3524,7 +3524,7 @@ router.get("/sales-flow-Notification", async (req, res) => {
   try {
     const query = `
       SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted], [Remarks]
-     FROM [dbo].[SalesFlow] where [Confirm Time] is null or Invoice_Number is null and isDeleted = 'No'
+     FROM [dbo].[SalesFlow] where [Confirm Time] is null and isDeleted = 'No'
     `;
 
     const pool = await poolPromise;
@@ -3541,7 +3541,7 @@ router.get("/sales-flow-ScanNotification", async (req, res) => {
   try {
     const query = `
        SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted] [Remarks]
-     FROM [dbo].[SalesFlow] where [ScanStatus] = 'Ready for Scan' AND isDeleted = 'No'
+     FROM [dbo].[SalesFlow] where [ScanStatus] = 'Ready for Sales Order' AND isDeleted = 'No'
     `;
 
     const pool = await poolPromise;
@@ -3558,7 +3558,7 @@ router.get("/sales-flow-Scan", async (req, res) => {
   try {
     const query = `
        SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus],[isDeleted], [Remarks]
-     FROM [dbo].[SalesFlow] where ([ScanStatus] = 'Ready for Scan' or [ScanStatus] = 'Scanned' ) AND isDeleted = 'No'
+     FROM [dbo].[SalesFlow] where ([ScanStatus] = 'Ready for Sales Order' OR [ScanStatus] = 'Sales Order Done') AND isDeleted = 'No'
     `;
 
     const pool = await poolPromise;

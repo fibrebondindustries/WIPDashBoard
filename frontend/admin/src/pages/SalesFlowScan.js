@@ -1,3 +1,4 @@
+//this module is visible to Faizan only
 import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/Header";
 import "../assets/CSS/Dashboard.css";
@@ -10,7 +11,7 @@ function SalesFlowScan() {
   const [filteredRecords, setFilteredRecords] = useState([]); // Filtered records
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [filters, setFilters] = useState({ searchQuery: "", fromDate: "", toDate: "" });
-//   const [invoiceUpdates, setInvoiceUpdates] = useState({});
+  const [invoiceUpdates, setInvoiceUpdates] = useState({});
   const [scanStatusUpdates, setScanStatusUpdates] = useState({});
   // const [invoiceStatusUpdates, setInvoiceStatusUpdates] = useState({});
   // const handleInvoiceChange = (e, id) => {
@@ -78,50 +79,7 @@ function SalesFlowScan() {
     setTimeout(() => (alertPlaceholder.innerHTML = ""), 2000);
   };
 
-  // ** Delete a Record **
-//   const ConfirnRecord = async (id) => {
-//     if (!window.confirm("Are you sure you want to Confirm this record?")) return;
-//     try {
-//       await axiosInstance.patch(`/api//sales-flow/confirm/${id}`);
-//       showAlert("Confirm successfully!", "success");
-//       fetchRecords();
-//     } catch (error) {
-//       console.error("Error confirming record:", error);
-//       showAlert("Failed to confirming record.", "danger");
-//     }
-//   };
 
-
-//   const handleInvoiceUpdate = (id, newInvoice) => {
-//     if (!id) return;
-  
-//     // Trim whitespace and ensure null is only sent when user intentionally clears it
-//     const sanitizedInvoice = newInvoice?.trim() || null;
-  
-//     // If the value hasn't changed, do not trigger an update
-//     if (sanitizedInvoice === records.find((record) => record.ID === id)?.Invoice_Number) {
-//       return;
-//     }
-  
-//     // Update local state for immediate UI feedback
-//     setInvoiceUpdates((prev) => ({ ...prev, [id]: sanitizedInvoice }));
-  
-//     clearTimeout(window.invoiceUpdateTimeout);
-//     window.invoiceUpdateTimeout = setTimeout(async () => {
-//       try {
-//         await axiosInstance.patch(`/api/sales-flow/invoice/${id}`, {
-//           Invoice_Number: sanitizedInvoice,
-//         });
-  
-//         showAlert("Invoice Number updated successfully!", "success");
-//         fetchRecords(); // Refresh Data
-//       } catch (error) {
-//         console.error("Error updating Invoice Number:", error);
-//         showAlert("Failed to update Invoice Number.", "danger");
-//       }
-//     }, 800); // 800ms delay to reduce API calls
-//   };
-  
     // ** Update Scan Status **
     const handleScanStatusUpdate = async (id, newStatus) => {
       try {
@@ -138,22 +96,35 @@ function SalesFlowScan() {
         showAlert("Failed to update Scan Status.", "danger");
       }
     };
-
-    // const handleInvoiceStatusUpdate = async (id, newInvoiceStatus) => {
-    //     try {
-    //       if (!id) return;
+    const handleInvoiceUpdate = (id, newInvoice) => {
+      if (!id) return;
     
-    //       setInvoiceStatusUpdates((prev) => ({ ...prev, [id]: newInvoiceStatus }));
+      // Trim whitespace and ensure null is only sent when user intentionally clears it
+      const sanitizedInvoice = newInvoice?.trim() || null;
     
-    //       await axiosInstance.patch(`/api/sales-flow/invoice-status/${id}`, { InvoiceStatus: newInvoiceStatus });
+      // If the value hasn't changed, do not trigger an update
+      if (sanitizedInvoice === records.find((record) => record.ID === id)?.Invoice_Number) {
+        return;
+      }
     
-    //       showAlert("invoice invoice updated successfully!", "success");
-    //       fetchRecords();
-    //     } catch (error) {
-    //       console.error("Error updating invoice Status:", error);
-    //       showAlert("Failed to update invoice Status.", "danger");
-    //     }
-    //   };
+      // Update local state for immediate UI feedback
+      setInvoiceUpdates((prev) => ({ ...prev, [id]: sanitizedInvoice }));
+    
+      clearTimeout(window.invoiceUpdateTimeout);
+      window.invoiceUpdateTimeout = setTimeout(async () => {
+        try {
+          await axiosInstance.patch(`/api/sales-flow/invoice/${id}`, {
+            Invoice_Number: sanitizedInvoice,
+          });
+    
+          showAlert("Invoice Number updated successfully!", "success");
+          fetchRecords(); // Refresh Data
+        } catch (error) {
+          console.error("Error updating Invoice Number:", error);
+          showAlert("Failed to update Invoice Number.", "danger");
+        }
+      }, 800); // 800ms delay to reduce API calls
+    };
 
   const columns = [
     { name: "LOT ID",width:"170px", selector: (row) => (
@@ -176,7 +147,7 @@ function SalesFlowScan() {
       </span>
     ), sortable: true },
     { name: "Quantity", selector: (row) => row["QUANTITY"], sortable: true },
-    { name: "Invoice Number", selector: (row) => row["Invoice_Number"] || "N/A", sortable: true },
+    // { name: "Invoice Number", selector: (row) => row["Invoice_Number"] || "N/A", sortable: true },
     { name: "Remarks", selector: (row) =>(
       <span
       data-bs-toggle="tooltip"
@@ -187,7 +158,27 @@ function SalesFlowScan() {
       </span>
     ), sortable: true },
     {
-      name: "Scan Status",
+      name: "Invoice Number",
+      cell: (row) => (
+        <textarea
+          className="form-control"
+          rows="1"
+          value={
+            invoiceUpdates[row.ID] !== undefined
+              ? invoiceUpdates[row.ID]
+              : row.Invoice_Number || ""
+          }
+          onChange={(e) => setInvoiceUpdates((prev) => ({ ...prev, [row.ID]: e.target.value }))}
+          onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
+          placeholder="EnterInvoice"
+          style={{ fontSize: "12px" }}
+          // disabled={row.ScanStatus !== "Sales Order Done"}  // Disable if Confirm Time is null (not confirmed)
+        />
+      ),
+      sortable: true,
+    },
+    {
+      name: "Scan Status",width:"200px",
       cell: (row) => (
         <select
           className="form-select form-select-sm bg-info text-black"
@@ -195,8 +186,8 @@ function SalesFlowScan() {
           onChange={(e) => handleScanStatusUpdate(row.ID, e.target.value)}
         >
           <option value="" disabled selected>Select</option>
-          <option value="Ready for Scan" style={{display:"none"}}>Ready for Scan</option>
-          <option value="Scanned">Scanned</option>
+          <option value="Ready for Sales Order" style={{display:"none"}}>Ready for Scan</option>
+          <option value="Sales Order Done">Sales Order Done</option>
         </select>
       ),
       sortable: true,

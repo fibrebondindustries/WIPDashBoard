@@ -1,3 +1,4 @@
+///this module is visible to Sudhir only
 import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/Header";
 import "../assets/CSS/Dashboard.css";
@@ -10,7 +11,7 @@ function SalesFlowNotify() {
   const [filteredRecords, setFilteredRecords] = useState([]); // Filtered records
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [filters, setFilters] = useState({ searchQuery: "", fromDate: "", toDate: "" });
-  const [invoiceUpdates, setInvoiceUpdates] = useState({});
+  // const [invoiceUpdates, setInvoiceUpdates] = useState({});
   const [scanStatusUpdates, setScanStatusUpdates] = useState({});
   // const handleInvoiceChange = (e, id) => {
   //   setInvoiceUpdates((prev) => ({ ...prev, [id]: e.target.value }));
@@ -91,35 +92,35 @@ function SalesFlowNotify() {
   };
 
 
-  const handleInvoiceUpdate = (id, newInvoice) => {
-    if (!id) return;
+  // const handleInvoiceUpdate = (id, newInvoice) => {
+  //   if (!id) return;
   
-    // Trim whitespace and ensure null is only sent when user intentionally clears it
-    const sanitizedInvoice = newInvoice?.trim() || null;
+  //   // Trim whitespace and ensure null is only sent when user intentionally clears it
+  //   const sanitizedInvoice = newInvoice?.trim() || null;
   
-    // If the value hasn't changed, do not trigger an update
-    if (sanitizedInvoice === records.find((record) => record.ID === id)?.Invoice_Number) {
-      return;
-    }
+  //   // If the value hasn't changed, do not trigger an update
+  //   if (sanitizedInvoice === records.find((record) => record.ID === id)?.Invoice_Number) {
+  //     return;
+  //   }
   
-    // Update local state for immediate UI feedback
-    setInvoiceUpdates((prev) => ({ ...prev, [id]: sanitizedInvoice }));
+  //   // Update local state for immediate UI feedback
+  //   setInvoiceUpdates((prev) => ({ ...prev, [id]: sanitizedInvoice }));
   
-    clearTimeout(window.invoiceUpdateTimeout);
-    window.invoiceUpdateTimeout = setTimeout(async () => {
-      try {
-        await axiosInstance.patch(`/api/sales-flow/invoice/${id}`, {
-          Invoice_Number: sanitizedInvoice,
-        });
+  //   clearTimeout(window.invoiceUpdateTimeout);
+  //   window.invoiceUpdateTimeout = setTimeout(async () => {
+  //     try {
+  //       await axiosInstance.patch(`/api/sales-flow/invoice/${id}`, {
+  //         Invoice_Number: sanitizedInvoice,
+  //       });
   
-        showAlert("Invoice Number updated successfully!", "success");
-        fetchRecords(); // Refresh Data
-      } catch (error) {
-        console.error("Error updating Invoice Number:", error);
-        showAlert("Failed to update Invoice Number.", "danger");
-      }
-    }, 800); // 800ms delay to reduce API calls
-  };
+  //       showAlert("Invoice Number updated successfully!", "success");
+  //       fetchRecords(); // Refresh Data
+  //     } catch (error) {
+  //       console.error("Error updating Invoice Number:", error);
+  //       showAlert("Failed to update Invoice Number.", "danger");
+  //     }
+  //   }, 800); // 800ms delay to reduce API calls
+  // };
   
     // ** Update Scan Status **
     const handleScanStatusUpdate = async (id, newStatus) => {
@@ -168,28 +169,29 @@ function SalesFlowNotify() {
       {row["Remarks"] || "N/A"}
       </span>
     ), sortable: true },
+    // {
+    //   name: "Invoice Number",
+    //   cell: (row) => (
+    //     <textarea
+    //       className="form-control"
+    //       rows="1"
+    //       value={
+    //         invoiceUpdates[row.ID] !== undefined
+    //           ? invoiceUpdates[row.ID]
+    //           : row.Invoice_Number || ""
+    //       }
+    //       onChange={(e) => setInvoiceUpdates((prev) => ({ ...prev, [row.ID]: e.target.value }))}
+    //       onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
+    //       placeholder="EnterInvoice"
+    //       style={{ fontSize: "12px" }}
+    //       disabled={!row["Confirm Time"] || row.ScanStatus !== "Scanned"}  // Disable if Confirm Time is null (not confirmed)
+    //     />
+    //   ),
+    //   sortable: true,
+    // },
+    { name: "Invoice Number", selector: (row) => row["Invoice_Number"] || "N/A", sortable: true },
     {
-      name: "Invoice Number",
-      cell: (row) => (
-        <textarea
-          className="form-control"
-          rows="1"
-          value={
-            invoiceUpdates[row.ID] !== undefined
-              ? invoiceUpdates[row.ID]
-              : row.Invoice_Number || ""
-          }
-          onChange={(e) => setInvoiceUpdates((prev) => ({ ...prev, [row.ID]: e.target.value }))}
-          onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
-          placeholder="EnterInvoice"
-          style={{ fontSize: "12px" }}
-          disabled={!row["Confirm Time"] || row.ScanStatus !== "Scanned"}  // Disable if Confirm Time is null (not confirmed)
-        />
-      ),
-      sortable: true,
-    },
-    {
-      name: "Scan Status",
+      name: "Scan Status",width:"200px",
       cell: (row) => (
         <select
           className="form-select form-select-sm bg-info text-black"
@@ -198,8 +200,8 @@ function SalesFlowNotify() {
           disabled={!row["Confirm Time"]} // Disable if not confirmed
         >
           <option value="Pending">Pending</option>
-          <option value="Ready for Scan">Ready for Scan</option>
-          <option value="Scanned" style={{display:"none"}}>Scanned</option>
+          <option value="Ready for Sales Order">Ready for Sales Order</option>
+          <option value="Sales Order Done" style={{display:"none"}}>Sales Order Done</option>
         </select>
       ),
       sortable: true,

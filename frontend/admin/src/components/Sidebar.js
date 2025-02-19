@@ -109,12 +109,13 @@ const fetchScanCount = async () => {
   // Fetch  count for superadmin
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
-      fetchSalesFlowCount();
-      // fetchOrderCount();
+      // fetchSalesFlowCount();
+      
     }
     // Fetch  count for admin
     if (user?.Auth === "Admin") {
       fetchSalesFlowCount();
+      fetchScanCount();
     }
     // Fetch  count for supervisor
     //performace data
@@ -123,7 +124,8 @@ const fetchScanCount = async () => {
       fetchInventoryCount();
       fetchNokeCount();
       fetchLoopiCheckingCount();      
-      fetchScanCount();
+      // fetchScanCount();
+      fetchSalesFlowCount();
     }
   }, [user]);
 
@@ -260,22 +262,6 @@ const fetchScanCount = async () => {
          {(user?.Auth === "Admin" && user?.EmployeeID === "1018") && (
           <li className="nav-item">
             <NavLink
-              to="/sales-flowNotify"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
-              <i className="bi bi-calendar-check"></i>Sales Flow{" "}
-              {SalesFlowCount > 0 && (
-                <span className="badge bg-danger">{SalesFlowCount}</span>
-              )}
-            </NavLink>
-          </li>
-        )}
-         {/* Ṇew Module create on 13 fab 25 this will only visible to Ashwini */}
-         {user?.Auth === "Supervisor" && user?.EmployeeID === "12" && (
-          <li className="nav-item">
-            <NavLink
               to="/sales-scan"
               className={({ isActive }) =>
                 isActive ? "nav-link active" : "nav-link"
@@ -284,6 +270,22 @@ const fetchScanCount = async () => {
               <i className="bi bi-calendar-check"></i>Sales Flow{" "}
               {scanCount > 0 && (
                 <span className="badge bg-danger">{scanCount}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
+         {/* Ṇew Module create on 13 fab 25 this will only visible to Ashwini */}
+         {user?.Auth === "Supervisor" && user?.EmployeeID === "12" && (
+          <li className="nav-item">
+            <NavLink
+              to="/sales-flowNotify"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i>Sales Flow{" "}
+              {SalesFlowCount  > 0 && (
+                <span className="badge bg-danger">{SalesFlowCount }</span>
               )}
             </NavLink>
           </li>
