@@ -3816,5 +3816,166 @@ router.get("/get-excel-records", async (req, res) => {
   }
 });
 
+// Function to format DateTime in IST
+const formatISTDateTime = () => {
+  const now = new Date();
+  return new Intl.DateTimeFormat("en-IN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Kolkata",
+  }).format(now);
+};
+
+// ** Import Excel and Store in `RM_Upload` Table **
+router.post("/RM-Upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const { Uploaded_By } = req.body;
+    if (!Uploaded_By || Uploaded_By.trim() === "") {
+      return res.status(400).json({ error: "Uploaded_By field is required." });
+    }
+
+    const fileName = req.file.originalname; // Get uploaded file name
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(req.file.path);
+    const worksheet = workbook.worksheets[0]; // Read first sheet
+
+    const importedData = [];
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header row
+
+      let planQtyCell = row.getCell(3); // 'Plan Qty' column
+      let isHighlighted = 0; // Default = not highlighted
+
+      // ** Check if `Plan_Qty` is highlighted in red **
+      if (planQtyCell.style.fill && planQtyCell.style.fill.fgColor) {
+        let color = planQtyCell.style.fill.fgColor.argb;
+        if (color === "FFFF0000") {
+          isHighlighted = 1; // Mark as highlighted if red
+        }
+      }
+
+      const rowData = {
+        Iteam: row.getCell(1).value ? String(row.getCell(1).value).trim() : null,
+        Unit: row.getCell(2).value ? String(row.getCell(2).value).trim() : null,
+        Plan_Qty: row.getCell(3).value ? parseFloat(row.getCell(3).value) : null,
+        Is_Highlighted: isHighlighted,
+        Uploaded_By: Uploaded_By, // Get from request
+        Uploaded_Date: formatISTDateTime(), // Store timestamp in IST format
+        File_Name: fileName, // Store the file name
+      };
+
+      importedData.push(rowData);
+    });
+
+    if (importedData.length === 0) {
+      return res.status(400).json({ error: "No valid data found in the file" });
+    }
+
+    const pool = await poolPromise;
+    for (const data of importedData) {
+      await pool
+        .request()
+        .input("Iteam", sql.NVarChar(255), data.Iteam)
+        .input("Unit", sql.NVarChar(100), data.Unit)
+        .input("Plan_Qty", sql.Float, data.Plan_Qty)
+        .input("Is_Highlighted", sql.Int, data.Is_Highlighted)
+        .input("Uploaded_By", sql.NVarChar(100), data.Uploaded_By)
+        .input("Uploaded_Date", sql.NVarChar, data.Uploaded_Date)
+        .input("File_Name", sql.NVarChar(255), data.File_Name)
+        .query(`
+          INSERT INTO RM_Upload 
+          (Iteam, Unit, Plan_Qty, Is_Highlighted, Uploaded_By, Uploaded_Date, File_Name) 
+          VALUES (@Iteam, @Unit, @Plan_Qty, @Is_Highlighted, @Uploaded_By, @Uploaded_Date, @File_Name)
+        `);
+    }
+
+    res.status(200).json({ message: "Excel imported successfully", count: importedData.length });
+  } catch (error) {
+    console.error("Error importing Excel:", error);
+    res.status(500).json({ error: "Failed to import data from Excel" });
+  }
+});
+
+
+router.get("/get-RM-data", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .query(`SELECT * FROM RM_Upload ORDER BY Uploaded_Date DESC`);
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching RM_Upload data:", error);
+    res.status(500).json({ error: "Failed to fetch RM_Upload data." });
+  }
+});
+
+router.get("/get-RM-file", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    
+    // Fetch distinct file names
+    const result = await pool
+      .request()
+      .query(`SELECT DISTINCT File_Name FROM RM_Upload ORDER BY File_Name ASC`);
+
+    if (!result.recordset || result.recordset.length === 0) {
+      return res.status(404).json({ message: "No file names found." });
+    }
+
+    // Extract only file names
+    const fileNames = result.recordset.map(row => row.File_Name);
+
+    res.status(200).json({ fileNames });
+  } catch (error) {
+    console.error("Error fetching unique file names:", error);
+    res.status(500).json({ error: "Failed to fetch file names." });
+  }
+});
+
+router.delete("/delete-RM-file", async (req, res) => {
+  try {
+    const { File_Name } = req.body;
+
+    if (!File_Name) {
+      return res.status(400).json({ error: "File_Name field is required." });
+    }
+
+    const pool = await poolPromise;
+    
+    // Check if records exist for the given file name
+    const checkResult = await pool
+      .request()
+      .input("File_Name", sql.NVarChar(255), File_Name)
+      .query(`SELECT COUNT(*) AS count FROM RM_Upload WHERE File_Name = @File_Name`);
+
+    if (checkResult.recordset[0].count === 0) {
+      return res.status(404).json({ message: `No records found for file: ${File_Name}` });
+    }
+
+    // Delete records for the given file name
+    const deleteResult = await pool
+      .request()
+      .input("File_Name", sql.NVarChar(255), File_Name)
+      .query(`DELETE FROM RM_Upload WHERE File_Name = @File_Name`);
+
+    res.status(200).json({ message: `Deleted ${deleteResult.rowsAffected[0]} records for file: ${File_Name}` });
+  } catch (error) {
+    console.error("Error deleting records by file name:", error);
+    res.status(500).json({ error: "Failed to delete records." });
+  }
+});
+
 
 module.exports = router;

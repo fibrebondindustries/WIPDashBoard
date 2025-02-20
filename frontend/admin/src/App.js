@@ -27,6 +27,7 @@ import SalesFlow from './pages/SalesFlow';
 import SalesFlowNotify from './pages/SalesFlowNotify';
 import SalesFlowScan from './pages/SalesFlowScan';
 import ExcelImport from './pages/Excel_Import';
+import RM_Upload from './pages/RM_Upload';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -180,7 +181,14 @@ function App() {
                             <ExcelImport/>
                         </ProtectedRoute>
                     }
-                    />                
+                    />     
+                    <Route path='/RM-Upload' 
+                    element={
+                        <ProtectedRoute>
+                            <RM_Upload/>
+                        </ProtectedRoute>
+                    }
+                    />        
                 </Routes>
             </div>
         </BrowserRouter>

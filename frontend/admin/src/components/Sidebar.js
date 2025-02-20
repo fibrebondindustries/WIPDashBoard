@@ -419,6 +419,21 @@ const fetchScanCount = async () => {
             </NavLink>
           </li>
         )}
+         {(user?.Auth === "SuperAdmin" && !["33", "34", "35", "36"].includes(user?.EmployeeID)) && (
+          <li className="nav-item">
+            <NavLink
+              to="/RM-Upload"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> RM Upload{" "}
+              {/* {orderCount > 0 && (
+                // <span className="badge bg-danger">{orderCount}</span>
+              )} */}
+            </NavLink>
+          </li>
+        )}
        
       </ul>
     </div>
