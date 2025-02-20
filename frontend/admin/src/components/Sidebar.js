@@ -159,7 +159,7 @@ const fetchScanCount = async () => {
 
           {(user?.Auth === "Admin" || 
           // (user?.Auth === "SuperAdmin" && user?.EmployeeID !== "33")) && (
-            (user?.Auth === "SuperAdmin" && !["33", "34", "35"].includes(user?.EmployeeID))) && (
+            (user?.Auth === "SuperAdmin" && !["33", "34", "35","36"].includes(user?.EmployeeID))) && (
           <li className="nav-item">
             <NavLink
               to="/users"
@@ -174,7 +174,7 @@ const fetchScanCount = async () => {
         {/* {(user?.Auth === "Admin" || user?.Auth === "SuperAdmin") && ( */}
         {(user?.Auth === "Admin" || 
         // (user?.Auth === "SuperAdmin" && user?.EmployeeID !== "33")) && (
-          (user?.Auth === "SuperAdmin" && !["33", "34", "35"].includes(user?.EmployeeID))) && (
+          (user?.Auth === "SuperAdmin" && !["33", "34", "35", "36"].includes(user?.EmployeeID))) && (
           <li className="nav-item">
             <NavLink
               to="/department"
@@ -189,7 +189,7 @@ const fetchScanCount = async () => {
          {/* {(user?.Auth === "Admin" || user?.Auth === "SuperAdmin") && ( */}
          {(user?.Auth === "Admin" || 
         //  (user?.Auth === "SuperAdmin" && user?.EmployeeID !== "33")) && (
-          (user?.Auth === "SuperAdmin" && !["33", "34", "35"].includes(user?.EmployeeID))) && (
+          (user?.Auth === "SuperAdmin" && !["33", "34", "35", "36"].includes(user?.EmployeeID))) && (
           <li className="nav-item">
             <NavLink
               to="/workers"
@@ -404,7 +404,7 @@ const fetchScanCount = async () => {
         {/* end */}
         {/* 29 jan 25 order dispatch module*/}  
         {/* {user?.Auth === "SuperAdmin" && user?.Name !== "Sandeep Maintenance"&& ( */}
-        {(user?.Auth === "SuperAdmin" && !["33", "34", "35"].includes(user?.EmployeeID)) && (
+        {(user?.Auth === "SuperAdmin" && !["33", "34", "35", "36"].includes(user?.EmployeeID)) && (
           <li className="nav-item">
             <NavLink
               to="/order-dispatch"

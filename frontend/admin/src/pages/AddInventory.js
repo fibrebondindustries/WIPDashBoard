@@ -341,15 +341,20 @@ const AddInventory = () => {
                       required
                     >
                       <option value="">Select Location</option>
+                      <option value="BKB 7">BKB 7</option>
                       <option value="BKB 8">BKB 8</option>
                       <option value="BKB 9">BKB 9</option>
                       <option value="BKB 10">BKB 10</option>
                       <option value="BKB 11">BKB 11</option>
                       <option value="BKB 12">BKB 12</option>
-                      <option value="BKB C7">BKB C7</option>
-                      <option value="BKB C8">BKB C8</option>
-                      <option value="BKB C9">BKB C9</option>
-                      <option value="BKB C10">BKB C10</option>
+                      <option value="BKB 13">BKB 13</option>
+                      <option value="BKB 14">BKB 14</option>
+                      <option value="BKB 15">BKB 15</option>
+                      <option value="BKB 16">BKB 16</option>
+                      <option value="BKB 17">BKB 17</option>
+                      <option value="BKB 18">BKB 18</option>
+                  
+                     
                     </select>
                   </div>
                    {/* Hide status field when editing */}

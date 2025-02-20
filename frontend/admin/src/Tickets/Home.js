@@ -292,6 +292,8 @@ const confirmTicket = async (id) => {
                       <option value="Sandeep Maintenance">Sandeep</option>
                       <option value="Asif Khan Maintenance">Asif Khan </option>
                       <option value="Imtiyaz husen Maintenance">Imtiyaz husen</option>
+                      <option value="Panchram Varma">Panchram Varma</option>
+                      
                     </select>
                   </div>
                   <div className="mb-3">
