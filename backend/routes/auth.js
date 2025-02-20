@@ -3652,6 +3652,14 @@ router.post("/import-excel", upload.single("file"), async (req, res) => {
         `);
     }
 
+     // 🔥 Insert Notification After Successful Upload
+     await pool
+     .request()
+     .input("Message", sql.NVarChar(500), `Excel file uploaded successfully with ${importedData.length} records by ${Uploaded_By}`)
+     .query(`
+       INSERT INTO Notifications (Message) VALUES (@Message)
+     `);
+
     res.status(200).json({ message: "Excel file imported successfully", count: importedData.length });
 
   } catch (error) {
@@ -3659,6 +3667,69 @@ router.post("/import-excel", upload.single("file"), async (req, res) => {
     res.status(500).json({ error: "Failed to import data from Excel" });
   }
 });
+router.get("/get-notifications", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool
+      .request()
+      .query(`SELECT TOP 10 * FROM Notifications ORDER BY CreatedAt DESC`);
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ error: "Failed to fetch notifications." });
+  }
+});
+
+// PATCH API: Update Notification Status
+router.patch("/update-notification-status", async (req, res) => {
+  try {
+    const { id, status, UserID} = req.body;
+
+    if (!id || !status) {
+      return res.status(400).json({ error: "Both id and status fields are required." });
+    }
+
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    // Get the current timestamp
+    const seenTime = new Date().toISOString().slice(0, 19).replace("T", " "); // Format: YYYY-MM-DD HH:MM:SS
+
+    // Update query for changing the status and Seen_Time
+    const query = `
+      UPDATE [dbo].[Notifications]
+      SET [Status] = @status, [Seen_Time] = @seenTime, [UserID] = @UserID
+      WHERE [ID] = @id
+    `;
+
+    request.input("status", sql.NVarChar(50), status);
+    request.input("seenTime", sql.DateTime, seenTime);
+    request.input("UserID", sql.Int, UserID); // Hardcoded user ID for now
+    request.input("id", sql.Int, id);
+
+    const result = await request.query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "No matching notification found." });
+    }
+
+    res.status(200).json({
+      message: `Notification ID ${id} status updated successfully to ${status}`,
+      seenTime: seenTime,
+      UserID: UserID,
+      updatedRows: result.rowsAffected[0],
+    });
+
+  } catch (error) {
+    console.error("Error updating notification status:", error);
+    res.status(500).json({ error: "Failed to update notification status." });
+  }
+});
+
+
+
 
 // DELETE API: Delete StockAudit records by ITEM_NAME
 router.delete("/delete-stock", async (req, res) => {

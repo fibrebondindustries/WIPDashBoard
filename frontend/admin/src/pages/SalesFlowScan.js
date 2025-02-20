@@ -186,7 +186,7 @@ function SalesFlowScan() {
           onChange={(e) => handleScanStatusUpdate(row.ID, e.target.value)}
         >
           <option value="" disabled selected>Select</option>
-          <option value="Ready for Sales Order" style={{display:"none"}}>Ready for Scan</option>
+          <option value="Ready for Sales Order" style={{display:"none"}}>Ready for SO</option>
           <option value="Sales Order Done">Sales Order Done</option>
         </select>
       ),

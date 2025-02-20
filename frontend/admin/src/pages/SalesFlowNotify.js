@@ -200,7 +200,7 @@ function SalesFlowNotify() {
           disabled={!row["Confirm Time"]} // Disable if not confirmed
         >
           <option value="Pending">Pending</option>
-          <option value="Ready for Sales Order">Ready for Sales Order</option>
+          <option value="Ready for Sales Order">Ready For SO</option>
           <option value="Sales Order Done" style={{display:"none"}}>Sales Order Done</option>
         </select>
       ),
