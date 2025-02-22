@@ -58,7 +58,7 @@ function RMDetailedView() {
 
       <div className="flex-grow-1">
         <Header/>
-        <main className="main-container p-4">
+        <main className="main-container p-4"  style={{ height: "-webkit-fill-available" }}>
           <h3 className="mb-4">Details for File: {decodeURIComponent(fileName)}</h3>
 
           <button 

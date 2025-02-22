@@ -190,7 +190,7 @@ function ExcelImport() {
       </div>
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
-        <main className="main-container p-4">
+        <main className="main-container p-4"  style={{ height: "-webkit-fill-available" }}>
           <h3 className="mb-4">Excel Import</h3>
 
       <div className="container d-flex" >

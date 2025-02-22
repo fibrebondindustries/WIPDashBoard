@@ -62,7 +62,7 @@ function RMView() {
 
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
-        <main className="main-container p-4">
+        <main className="main-container p-4"  style={{ height: "-webkit-fill-available" }}>
           <h3 className="mb-4">RM View - File Names</h3>
 
           {loadingRecords ? (
