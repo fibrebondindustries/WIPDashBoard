@@ -274,6 +274,19 @@ const fetchScanCount = async () => {
             </NavLink>
           </li>
         )}
+        {/* Ṇew Module create on 22 fab 25 this will only visible to Ashwini */}
+        {user?.Auth === "Admin" && user?.EmployeeID === "1017" && (
+          <li className="nav-item">
+            <NavLink
+              to="/RM-View"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i> RM View
+            </NavLink>
+          </li>
+        )}
          {/* Ṇew Module create on 13 fab 25 this will only visible to Ashwini */}
          {user?.Auth === "Supervisor" && user?.EmployeeID === "12" && (
           <li className="nav-item">
@@ -434,6 +447,7 @@ const fetchScanCount = async () => {
             </NavLink>
           </li>
         )}
+
        
       </ul>
     </div>

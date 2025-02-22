@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
-import loaderGif from "../assets/Img/loading1.gif"; // Ensure correct path
+// import loaderGif from "../assets/Img/loading1.gif"; // Ensure correct path
 import DataTable from "react-data-table-component"; // Import DataTable
 
-function RM_View() {
+function RMView() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  // const [selectedFile, setSelectedFile] = useState(null);
+  // const [uploading, setUploading] = useState(false);
   const [loadingRecords, setLoadingRecords] = useState(false); // Loader for table
   const [excelRecords, setExcelRecords] = useState([]); // State for DataTable records
 
-  const fileInputRef = useRef(null); // Reference to file input
-  const user = JSON.parse(localStorage.getItem("user")) || {}; // Get user info
-  const loggedInUser = user.Name || "N/A"; // Default if user.Name is not found
+  // const fileInputRef = useRef(null); // Reference to file input
+  // const user = JSON.parse(localStorage.getItem("user")) || {}; // Get user info
+  // const loggedInUser = user.Name || "N/A"; // Default if user.Name is not found
 
   const toggleSidebar = () => setIsSidebarVisible(!isSidebarVisible);
 
@@ -35,60 +35,74 @@ function RM_View() {
     fetchExcelRecords(); // Load data when component mounts
   }, []);
 
-  // ** Handle File Selection **
-  const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0] || null);
-  };
+  // // ** Handle File Selection **
+  // const handleFileChange = (e) => {
+  //   setSelectedFile(e.target.files[0] || null);
+  // };
 
   // ** Upload Excel File **
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      showAlert("Please select a file before uploading.", "error");
-      return;
-    }
+  // const handleUpload = async () => {
+  //   if (!selectedFile) {
+  //     showAlert("Please select a file before uploading.", "error");
+  //     return;
+  //   }
 
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("Uploaded_By", loggedInUser);
+  //   setUploading(true);
+  //   const formData = new FormData();
+  //   formData.append("file", selectedFile);
+  //   formData.append("Uploaded_By", loggedInUser);
 
-    try {
-      const response = await axiosInstance.post("/api/RM-Upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+  //   try {
+  //     const response = await axiosInstance.post("/api/RM-Upload", formData, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
 
-      if (response.status === 200) {
-        const rowCount = response.data.count || 0;
-        showAlert(`${rowCount} record(s) inserted successfully!`, "success");
+  //     if (response.status === 200) {
+  //       const rowCount = response.data.count || 0;
+  //       showAlert(`${rowCount} record(s) inserted successfully!`, "success");
 
-        fileInputRef.current.value = "";
-        setSelectedFile(null);
-      }
+  //       fileInputRef.current.value = "";
+  //       setSelectedFile(null);
+  //     }
 
-      fetchExcelRecords(); // Refresh DataTable after upload
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      showAlert("Failed to upload file.", "error");
-    } finally {
-      setUploading(false);
-    }
-  };
+  //     fetchExcelRecords(); // Refresh DataTable after upload
+  //   } catch (error) {
+  //     console.error("Error uploading file:", error);
+  //     showAlert("Failed to upload file.", "error");
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
 
-  const showAlert = (message, type) => {
-    const alertPlaceholder = document.getElementById("alertPlaceholder");
-    const alertHTML = `
-      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        <strong>${type === "success" ? "Success!" : "Error!"}</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>`;
-    alertPlaceholder.innerHTML = alertHTML;
-    setTimeout(() => (alertPlaceholder.innerHTML = ""), 2000);
-  };
+  // const showAlert = (message, type) => {
+  //   const alertPlaceholder = document.getElementById("alertPlaceholder");
+  //   const alertHTML = `
+  //     <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+  //       <strong>${type === "success" ? "Success!" : "Error!"}</strong> ${message}
+  //       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  //     </div>`;
+  //   alertPlaceholder.innerHTML = alertHTML;
+  //   setTimeout(() => (alertPlaceholder.innerHTML = ""), 2000);
+  // };
 
   // ** Define DataTable Columns with Conditional Styling **
   const columns = [
-    { name: "Item Name", selector: (row) => row.Iteam, sortable: true },
-    { name: "Unit", selector: (row) => row.Unit, sortable: true },
+    { name: "Item Name", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row.Iteam}>
+        {row.Iteam}
+      </span>
+    ), sortable: true },
+    { name: "Unit", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row.Unit}>
+        {row.Unit}
+      </span>
+    ), sortable: true },
     { 
         name: "Plan Qty", 
         selector: (row) => row.Plan_Qty, 
@@ -104,6 +118,7 @@ function RM_View() {
       },
     { name: "Uploaded By", selector: (row) => row.Uploaded_By, sortable: true },
     { name: "Uploaded Date", selector: (row) => row.Uploaded_Date, sortable: true },
+    { name: "File Name", selector: (row) => row.File_Name, sortable: true },
   ];
 
   return (
@@ -133,11 +148,11 @@ function RM_View() {
         `}
       </style>
 
-      {uploading && selectedFile && (
+      {/* {uploading && selectedFile && (
         <div className="overlay">
           <img src={loaderGif} alt="Uploading..." className="loader" />
         </div>
-      )}
+      )} */}
 
       <div className={isSidebarVisible ? "sidebar-container" : "sidebar-hidden"}>
         <Sidebar />
@@ -146,11 +161,11 @@ function RM_View() {
       <div className="flex-grow-1">
         <Header toggleSidebar={toggleSidebar} isSidebarVisible={isSidebarVisible} />
         <main className="main-container p-4">
-          <h3 className="mb-4">RM Upload</h3>
+          <h3 className="mb-4">RM View</h3>
 
           <div className="container d-flex">
             {/* Upload Section */}
-            <div className="mt-2" style={{ marginRight: "70px" }}>
+            {/* <div className="mt-2" style={{ marginRight: "70px" }}>
               <label className="form-label">Upload Excel File:</label>
               <input
                 type="file"
@@ -167,7 +182,7 @@ function RM_View() {
               >
                 {uploading ? "Uploading..." : "Upload Excel"}
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* Show loader while fetching records */}
@@ -196,4 +211,4 @@ function RM_View() {
   );
 }
 
-export default RM_View;
+export default RMView;

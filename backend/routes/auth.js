@@ -3935,9 +3935,9 @@ router.get("/get-RM-file", async (req, res) => {
     }
 
     // Extract only file names
-    const fileNames = result.recordset.map(row => row.File_Name);
+    const fileNames  = result.recordset.map(row => row.File_Name);
 
-    res.status(200).json({ fileNames });
+    res.status(200).json(fileNames);
   } catch (error) {
     console.error("Error fetching unique file names:", error);
     res.status(500).json({ error: "Failed to fetch file names." });

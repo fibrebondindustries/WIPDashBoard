@@ -5,12 +5,15 @@ import axiosInstance from "../axiosConfig";
 import loaderGif from "../assets/Img/loading1.gif"; // Ensure correct path
 import DataTable from "react-data-table-component"; // Import DataTable
 
-function RM_Upload() {
+function RMUpload() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [loadingRecords, setLoadingRecords] = useState(false); // Loader for table
   const [excelRecords, setExcelRecords] = useState([]); // State for DataTable records
+  const [fileNames, setFileNames] = useState([]); // 🔥 State for unique file names
+  const [selectedFileName, setSelectedFileName] = useState(""); // 🔥 Selected file to delete
+  const [deleting, setDeleting] = useState(false); //  Deleting loader
 
   const fileInputRef = useRef(null); // Reference to file input
   const user = JSON.parse(localStorage.getItem("user")) || {}; // Get user info
@@ -30,9 +33,19 @@ function RM_Upload() {
       setLoadingRecords(false);
     }
   };
+    // ** Fetch Unique File Names ** 🔥
+    const fetchFileNames = async () => {
+      try {
+        const response = await axiosInstance.get("/api/get-RM-file");
+        setFileNames(response.data);
+      } catch (error) {
+        console.error("Error fetching file names:", error);
+      }
+    };
 
   useEffect(() => {
     fetchExcelRecords(); // Load data when component mounts
+    fetchFileNames(); // Fetch file names when component mounts
   }, []);
 
   // ** Handle File Selection **
@@ -66,11 +79,39 @@ function RM_Upload() {
       }
 
       fetchExcelRecords(); // Refresh DataTable after upload
+      fetchFileNames(); // Refresh File Name List
     } catch (error) {
       console.error("Error uploading file:", error);
       showAlert("Failed to upload file.", "error");
     } finally {
       setUploading(false);
+    }
+  };
+
+   // ** Delete File Name Data **
+   const handleDeleteFile = async () => {
+    if (!selectedFileName) {
+      showAlert("Please select a file name to delete.", "error");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete records for "${selectedFileName}"?`)) return;
+
+    setDeleting(true);
+    try {
+      await axiosInstance.delete("/api/delete-RM-file", {
+        data: { File_Name: selectedFileName },
+      });
+
+      showAlert("File records deleted successfully!", "success");
+      fetchExcelRecords();
+      fetchFileNames();
+      setSelectedFileName(""); // Reset selection
+    } catch (error) {
+      console.error("Error deleting file records:", error);
+      showAlert("Failed to delete file records.", "error");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -87,8 +128,22 @@ function RM_Upload() {
 
   // ** Define DataTable Columns with Conditional Styling **
   const columns = [
-    { name: "Item Name", selector: (row) => row.Iteam, sortable: true },
-    { name: "Unit", selector: (row) => row.Unit, sortable: true },
+    { name: "Item Name", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row.Iteam}>
+        {row.Iteam}
+      </span>
+    ), sortable: true },
+    { name: "Unit", selector: (row) => (
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row.Unit}>
+        {row.Unit}
+      </span>
+    ), sortable: true },
     { 
         name: "Plan Qty", 
         selector: (row) => row.Plan_Qty, 
@@ -104,6 +159,7 @@ function RM_Upload() {
       },
     { name: "Uploaded By", selector: (row) => row.Uploaded_By, sortable: true },
     { name: "Uploaded Date", selector: (row) => row.Uploaded_Date, sortable: true },
+    { name: "File Name", selector: (row) => row.File_Name, sortable: true },
   ];
 
   return (
@@ -168,6 +224,28 @@ function RM_Upload() {
                 {uploading ? "Uploading..." : "Upload Excel"}
               </button>
             </div>
+            {/* Delete by file name */}
+            <div className="mt-2">
+            <label className="form-label">Select File to Delete:</label>
+            <select 
+              className="form-select ml-5" 
+              value={selectedFileName} 
+              onChange={(e) => setSelectedFileName(e.target.value)}
+            >
+              <option value="">Select a File Name</option>
+              {fileNames.length > 0 ? (
+                fileNames.map((file, index) => (
+                  <option key={index} value={file}>{file}</option>
+                ))
+              ) : (
+                <option value="" disabled>No files found</option>
+              )}
+            </select>
+
+              <button className="btn btn-danger mt-2" onClick={handleDeleteFile} disabled={deleting || !selectedFileName}>
+                {deleting ? "Deleting..." : "Delete File"}
+              </button>
+          </div>
           </div>
 
           {/* Show loader while fetching records */}
@@ -196,4 +274,4 @@ function RM_Upload() {
   );
 }
 
-export default RM_Upload;
+export default RMUpload;
