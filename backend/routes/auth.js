@@ -3906,7 +3906,7 @@ router.post("/RM-Upload", upload.single("file"), async (req, res) => {
   }
 });
 
-
+// GET API: Fetch all records from RM_Upload
 router.get("/get-RM-data", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -3921,6 +3921,7 @@ router.get("/get-RM-data", async (req, res) => {
   }
 });
 
+// get unique file names of RM_Upload
 router.get("/get-RM-file", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -3944,6 +3945,7 @@ router.get("/get-RM-file", async (req, res) => {
   }
 });
 
+// Delete records by file name
 router.delete("/delete-RM-file", async (req, res) => {
   try {
     const { File_Name } = req.body;
@@ -3974,6 +3976,28 @@ router.delete("/delete-RM-file", async (req, res) => {
   } catch (error) {
     console.error("Error deleting records by file name:", error);
     res.status(500).json({ error: "Failed to delete records." });
+  }
+});
+
+// GET API: Fetch RM_Upload records by File_Name
+router.get("/get-RM-data/:fileName", async (req, res) => {
+  try {
+    const { fileName } = req.params;
+    const pool = await poolPromise;
+
+    const result = await pool
+      .request()
+      .input("FileName", fileName) // Prevent SQL injection
+      .query(`SELECT * FROM RM_Upload WHERE File_Name = @FileName ORDER BY Uploaded_Date DESC`);
+
+    if (!result.recordset || result.recordset.length === 0) {
+      return res.status(404).json({ message: "No records found for this file." });
+    }
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching RM_Upload data by file name:", error);
+    res.status(500).json({ error: "Failed to fetch RM_Upload data." });
   }
 });
 

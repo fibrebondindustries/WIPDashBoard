@@ -29,6 +29,7 @@ import SalesFlowScan from './pages/SalesFlowScan';
 import ExcelImport from './pages/Excel_Import';
 import RMUpload  from './pages/RM_Upload';
 import RMView from './pages/RM-View';
+import RMDetailedView from './pages/RM-Detailed-View';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -196,7 +197,14 @@ function App() {
                             <RMView/>
                         </ProtectedRoute>
                     }
-                    />    
+                    />
+                    <Route path='/RM-detailed-view/:fileName'  
+                    element={
+                        <ProtectedRoute>
+                            <RMDetailedView/>
+                        </ProtectedRoute>
+                    }
+                    />
                 </Routes>
             </div>
         </BrowserRouter>
