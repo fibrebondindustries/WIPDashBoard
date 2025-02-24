@@ -46,6 +46,8 @@ function RMDetailedView() {
         </span>
       )
     },
+    { name: "KD CODE", selector: (row) => row.KD_CODE || "N/A", sortable: true },
+    { name: "RM Item Code", selector: (row) => row.Rm_Item_Code || "N/A", sortable: true },
     { name: "Uploaded By", selector: (row) => row.Uploaded_By, sortable: true },
     { name: "Uploaded Date", selector: (row) => row.Uploaded_Date, sortable: true },
   ];

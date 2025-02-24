@@ -3868,11 +3868,19 @@ router.post("/RM-Upload", upload.single("file"), async (req, res) => {
         Iteam: row.getCell(1).value ? String(row.getCell(1).value).trim() : null,
         Unit: row.getCell(2).value ? String(row.getCell(2).value).trim() : null,
         Plan_Qty: row.getCell(3).value ? parseFloat(row.getCell(3).value) : null,
+        KD_CODE: row.getCell(4).value ? String(row.getCell(4).value).trim() : null, // ✅ Fetch KD Code
+        Rm_Item_Code: row.getCell(5).value ? String(row.getCell(5).value).trim() : null, // ✅ Fetch RM Item Code
         Is_Highlighted: isHighlighted,
         Uploaded_By: Uploaded_By, // Get from request
         Uploaded_Date: formatISTDateTime(), // Store timestamp in IST format
         File_Name: fileName, // Store the file name
       };
+
+       // ** Skip rows where 'Iteam' is NULL or empty **
+        if (!rowData.Iteam || rowData.Iteam.trim() === "") {
+          console.warn(`Skipping row ${rowNumber}: Missing Iteam value`);
+          return;
+        }
 
       importedData.push(rowData);
     });
@@ -3888,14 +3896,16 @@ router.post("/RM-Upload", upload.single("file"), async (req, res) => {
         .input("Iteam", sql.NVarChar(255), data.Iteam)
         .input("Unit", sql.NVarChar(100), data.Unit)
         .input("Plan_Qty", sql.Float, data.Plan_Qty)
+        .input("KD_CODE", sql.NVarChar(100), data.KD_CODE)
+        .input("Rm_Item_Code", sql.NVarChar(100), data.Rm_Item_Code)
         .input("Is_Highlighted", sql.Int, data.Is_Highlighted)
         .input("Uploaded_By", sql.NVarChar(100), data.Uploaded_By)
         .input("Uploaded_Date", sql.NVarChar, data.Uploaded_Date)
         .input("File_Name", sql.NVarChar(255), data.File_Name)
         .query(`
           INSERT INTO RM_Upload 
-          (Iteam, Unit, Plan_Qty, Is_Highlighted, Uploaded_By, Uploaded_Date, File_Name) 
-          VALUES (@Iteam, @Unit, @Plan_Qty, @Is_Highlighted, @Uploaded_By, @Uploaded_Date, @File_Name)
+          (Iteam, Unit, Plan_Qty, KD_CODE, Rm_Item_Code, Is_Highlighted, Uploaded_By, Uploaded_Date, File_Name) 
+          VALUES (@Iteam, @Unit, @Plan_Qty, @KD_CODE, @Rm_Item_Code, @Is_Highlighted, @Uploaded_By, @Uploaded_Date, @File_Name)
         `);
     }
 
@@ -3921,29 +3931,6 @@ router.get("/get-RM-data", async (req, res) => {
   }
 });
 
-// get unique file names of RM_Upload
-router.get("/get-RM-file", async (req, res) => {
-  try {
-    const pool = await poolPromise;
-    
-    // Fetch distinct file names
-    const result = await pool
-      .request()
-      .query(`SELECT DISTINCT File_Name FROM RM_Upload ORDER BY File_Name ASC`);
-
-    if (!result.recordset || result.recordset.length === 0) {
-      return res.status(404).json({ message: "No file names found." });
-    }
-
-    // Extract only file names
-    const fileNames  = result.recordset.map(row => row.File_Name);
-
-    res.status(200).json(fileNames);
-  } catch (error) {
-    console.error("Error fetching unique file names:", error);
-    res.status(500).json({ error: "Failed to fetch file names." });
-  }
-});
 
 // Delete records by file name
 router.delete("/delete-RM-file", async (req, res) => {
@@ -3998,6 +3985,92 @@ router.get("/get-RM-data/:fileName", async (req, res) => {
   } catch (error) {
     console.error("Error fetching RM_Upload data by file name:", error);
     res.status(500).json({ error: "Failed to fetch RM_Upload data." });
+  }
+});
+
+
+// // get unique file names of RM_Upload
+router.get("/get-RM-file", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    
+    // Fetch distinct file names
+    const result = await pool
+      .request()
+      .query(` SELECT DISTINCT File_Name, 
+               CONVERT(NVARCHAR, Uploaded_Date, 120) AS Uploaded_Date,
+               PO_STATUS
+        FROM RM_Upload 
+        ORDER BY Uploaded_Date DESC`);
+
+    if (!result.recordset || result.recordset.length === 0) {
+      return res.status(404).json({ message: "No file names found." });
+    }
+
+    // Extract only file names
+    const fileNames  = result.recordset.map(row => row.File_Name);
+
+    res.status(200).json(fileNames);
+  } catch (error) {
+    console.error("Error fetching unique file names:", error);
+    res.status(500).json({ error: "Failed to fetch file names." });
+  }
+});
+
+// Get unique file names along with Uploaded_Date & PO_STATUS
+router.get("/get-RM-file-Status", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    
+    // Fetch distinct file names with latest Uploaded_Date and PO_STATUS
+    const result = await pool
+      .request()
+      .query(`
+        SELECT DISTINCT File_Name, Uploaded_Date, PO_STATUS
+        FROM RM_Upload 
+        ORDER BY Uploaded_Date DESC
+      `);
+
+    if (!result.recordset || result.recordset.length === 0) {
+      return res.status(404).json({ message: "No file names found." });
+    }
+
+    // Return the full dataset (not just File_Name)
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching unique file names:", error);
+    res.status(500).json({ error: "Failed to fetch file names." });
+  }
+});
+
+// Update PO_STATUS for a specific file
+router.patch("/update-PO-status", async (req, res) => {
+  try {
+    const { fileName, poStatus } = req.body; // Get values from request body
+
+    if (!fileName || !poStatus) {
+      return res.status(400).json({ error: "File name and PO status are required." });
+    }
+
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input("FileName", sql.NVarChar(255), fileName)
+      .input("POStatus", sql.NVarChar(50), poStatus)
+      .query(`
+        UPDATE RM_Upload 
+        SET PO_STATUS = @POStatus 
+        WHERE File_Name = @FileName
+      `);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "No records updated. File not found." });
+    }
+
+    res.status(200).json({ message: `PO_STATUS updated to "${poStatus}" for file "${fileName}"` });
+  } catch (error) {
+    console.error("Error updating PO_STATUS:", error);
+    res.status(500).json({ error: "Failed to update PO_STATUS." });
   }
 });
 

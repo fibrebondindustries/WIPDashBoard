@@ -33,15 +33,16 @@ function RMUpload() {
       setLoadingRecords(false);
     }
   };
-    // ** Fetch Unique File Names ** 🔥
-    const fetchFileNames = async () => {
-      try {
-        const response = await axiosInstance.get("/api/get-RM-file");
-        setFileNames(response.data);
-      } catch (error) {
-        console.error("Error fetching file names:", error);
-      }
-    };
+ // ** Fetch Unique File Names ** 🔥
+const fetchFileNames = async () => {
+  try {
+    const response = await axiosInstance.get("/api/get-RM-file");
+    setFileNames(response.data); // ✅ Store full object instead of just file names
+  } catch (error) {
+    console.error("Error fetching file names:", error);
+  }
+};
+
 
   useEffect(() => {
     fetchExcelRecords(); // Load data when component mounts
@@ -157,8 +158,13 @@ function RMUpload() {
           </span>
         )
       },
-    { name: "Uploaded By", selector: (row) => row.Uploaded_By, sortable: true },
-    { name: "Uploaded Date", selector: (row) => row.Uploaded_Date, sortable: true },
+    { name: "KD CODE", selector: (row) => row.KD_CODE || "N/A", sortable: true },
+    { name: "RM Item Code", selector: (row) => row.Rm_Item_Code || "N/A", sortable: true },
+    { name: "Uploaded Date", selector: (row) => (
+      <span data-bs-toggle="tooltip" data-bs-placement="top" title={row.Uploaded_Date}>
+          {row.Uploaded_Date}
+      </span>
+    ), sortable: true },
     { name: "File Name", selector: (row) => row.File_Name, sortable: true },
   ];
 
