@@ -3932,7 +3932,21 @@ router.post("/RM-Upload", upload.single("file"), async (req, res) => {
           (Iteam, Unit, Plan_Qty, KD_CODE, Rm_Item_Code, Is_Highlighted, Uploaded_By, Uploaded_Date, File_Name) 
           VALUES (@Iteam, @Unit, @Plan_Qty, @KD_CODE, @Rm_Item_Code, @Is_Highlighted, @Uploaded_By, @Uploaded_Date, @File_Name)
         `);
+         
     }
+     // ✅ Important: Ensure this query runs correctly after the insertions
+     const updateQuery = `
+     UPDATE S
+     SET S.[STOCK IN HAND] = D.[CLOSING_STOCK]
+     FROM [RM_Upload] S
+     INNER JOIN [excel_stk_data] D
+     ON S.[Rm_Item_Code] = D.[BARCODE]
+     WHERE S.File_Name = @File_Name;`;
+
+   await pool.request()
+     .input("File_Name", sql.NVarChar(255), fileName)
+     .query(updateQuery);
+     
 
     res.status(200).json({ message: "Excel imported successfully", count: importedData.length });
   } catch (error) {
