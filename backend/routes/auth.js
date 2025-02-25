@@ -3237,7 +3237,7 @@ router.delete("/loopi-checking/:id", async (req, res) => {
 router.get("/sales-flow", async (req, res) => {
   try {
     const query = `
-      SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted], [Remarks]
+      SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [SO_Status], [isDeleted], [Remarks]
       FROM [dbo].[SalesFlow] WHERE isDeleted = 'No'
     `;
 
@@ -3443,28 +3443,34 @@ router.patch("/sales-flow/invoice/:id", async (req, res) => {
 router.patch("/sales-flow/scan-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { ScanStatus } = req.body;
+    const { SO_Status } = req.body;
 
-    if (!id || !ScanStatus) {
-      return res.status(400).json({ error: "ID and ScanStatus are required." });
+    if (!id || !SO_Status) {
+      return res.status(400).json({ error: "ID and SO_Status are required." });
     }
 
-    let ReadyForScan_Time = null;
-    let Scanned_Time = null;
+    let ReadyForSO_Time = null;
+    let ReadyForDispatch_Time = null;
+    let StickerReady_Time = null;
 
-    if (ScanStatus === "Ready for Sales Order") {
-      ReadyForScan_Time = formatDateTime(new Date()); // Store timestamp in IST format
+    if (SO_Status === "Ready For Sales Order") {
+      ReadyForSO_Time = formatDateTime(new Date()); // Store timestamp in IST format
     }
 
-    if (ScanStatus === "Sales Order Done") {
-      Scanned_Time = formatDateTime(new Date()); // Store timestamp in IST format
+    if (SO_Status === "Ready For Dispatch") {
+      ReadyForDispatch_Time = formatDateTime(new Date()); // Store timestamp in IST format
     }
+
+    if (SO_Status === "Ready For Sticker") {
+      StickerReady_Time = formatDateTime(new Date()); // Store timestamp in IST format
+      }
 
     const query = `
       UPDATE [dbo].[SalesFlow]
-      SET ScanStatus = @ScanStatus, 
-          ReadyForScan_Time = COALESCE(@ReadyForScan_Time, ReadyForScan_Time),
-          Scanned_Time = COALESCE(@Scanned_Time, Scanned_Time)
+      SET SO_Status = @SO_Status, 
+          ReadyForSO_Time = COALESCE(@ReadyForSO_Time, ReadyForSO_Time),
+          ReadyForDispatch_Time = COALESCE(@ReadyForDispatch_Time, ReadyForDispatch_Time),
+          StickerReady_Time = COALESCE(@StickerReady_Time, StickerReady_Time)
       WHERE ID = @id
     `;
 
@@ -3472,9 +3478,10 @@ router.patch("/sales-flow/scan-status/:id", async (req, res) => {
     await pool
       .request()
       .input("id", sql.Int, id)
-      .input("ScanStatus", sql.NVarChar, ScanStatus)
-      .input("ReadyForScan_Time", sql.NVarChar, ReadyForScan_Time) // Store as string in DD/MM/YYYY : HH:MM AM/PM
-      .input("Scanned_Time", sql.NVarChar, Scanned_Time) // Store Scanned time
+      .input("SO_Status", sql.NVarChar, SO_Status)
+      .input("ReadyForSO_Time", sql.NVarChar, ReadyForSO_Time) // Store as string in DD/MM/YYYY : HH:MM AM/PM
+      .input("ReadyForDispatch_Time", sql.NVarChar, ReadyForDispatch_Time) // Store Scanned time
+      .input("StickerReady_Time", sql.NVarChar, StickerReady_Time) // Store Sticker Ready time
       .query(query);
 
     res.status(200).json({ message: "Scan Status updated successfully." });
@@ -3523,7 +3530,7 @@ router.patch("/sales-flow/scan-status/:id", async (req, res) => {
 router.get("/sales-flow-Notification", async (req, res) => {
   try {
     const query = `
-      SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted], [Remarks]
+      SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [SO_Status], [isDeleted], [Remarks]
      FROM [dbo].[SalesFlow] where [Confirm Time] is null and isDeleted = 'No'
     `;
 
@@ -3536,12 +3543,30 @@ router.get("/sales-flow-Notification", async (req, res) => {
   }
 });
 
+// // **GET API -scan Nofitication **
+// router.get("/sales-flow-ScanNotification", async (req, res) => {
+//   try {
+//     const query = `
+//        SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [SO_Status], [isDeleted] [Remarks]
+//      FROM [dbo].[SalesFlow] where [SO_Status] = 'Ready For Sales Order' AND isDeleted = 'No'
+//     `;
+
+//     const pool = await poolPromise;
+//     const result = await pool.request().query(query);
+//     res.status(200).json(result.recordset);
+//   } catch (error) {
+//     console.error("Error fetching SalesFlow records:", error);
+//     res.status(500).json({ error: "Failed to fetch SalesFlow records." });
+//   }
+// });
+
+
 // **GET API -scan Nofitication **
-router.get("/sales-flow-ScanNotification", async (req, res) => {
+router.get("/sales-flow-Dispatch", async (req, res) => {
   try {
     const query = `
-       SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus], [isDeleted] [Remarks]
-     FROM [dbo].[SalesFlow] where [ScanStatus] = 'Ready for Sales Order' AND isDeleted = 'No'
+      SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [SO_Status], [isDeleted], [Remarks]
+     FROM [dbo].[SalesFlow] where ([SO_Status] = 'Ready For Sticker' or [SO_Status] = 'Ready For Sales Order' or [SO_Status]='Ready For Dispatch') AND isDeleted = 'No'
     `;
 
     const pool = await poolPromise;
@@ -3557,8 +3582,8 @@ router.get("/sales-flow-ScanNotification", async (req, res) => {
 router.get("/sales-flow-Scan", async (req, res) => {
   try {
     const query = `
-       SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [ScanStatus],[isDeleted], [Remarks]
-     FROM [dbo].[SalesFlow] where ([ScanStatus] = 'Ready for Sales Order' OR [ScanStatus] = 'Sales Order Done') AND isDeleted = 'No'
+     SELECT [LOT ID], [SRP NO], [RECEIVED TIME], [QUANTITY], [ID], [Confirm Time], [Invoice_Number], [SO_Status],[isDeleted], [Remarks]
+     FROM [dbo].[SalesFlow] where ([SO_Status] = 'Ready For Sales Order' OR [SO_Status] = 'Ready For Dispatch') AND isDeleted = 'No'
     `;
 
     const pool = await poolPromise;

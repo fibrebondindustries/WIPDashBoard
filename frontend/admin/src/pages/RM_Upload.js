@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
@@ -21,28 +22,44 @@ function RMUpload() {
 
   const toggleSidebar = () => setIsSidebarVisible(!isSidebarVisible);
 
+  const navigate = useNavigate();
+
   // ** Fetch RM Upload Data **
   const fetchExcelRecords = async () => {
     setLoadingRecords(true);
     try {
-      const response = await axiosInstance.get("/api/get-RM-data"); // ✅ Correct API Endpoint
-      setExcelRecords(response.data); // ✅ Store data in state
+      const response = await axiosInstance.get("/api/get-RM-data");
+  
+      // 🔥 Extract unique File_Name values
+      const uniqueRecords = Array.from(
+        new Map(response.data.map(item => [item.File_Name, item])).values()
+      );
+  
+      setExcelRecords(uniqueRecords); // ✅ Store only unique records
     } catch (error) {
       console.error("Error fetching RM data:", error);
     } finally {
       setLoadingRecords(false);
     }
   };
- // ** Fetch Unique File Names ** 🔥
-const fetchFileNames = async () => {
-  try {
-    const response = await axiosInstance.get("/api/get-RM-file");
-    setFileNames(response.data); // ✅ Store full object instead of just file names
-  } catch (error) {
-    console.error("Error fetching file names:", error);
-  }
-};
+  
 
+ 
+  // ** Fetch Unique File Names (Without Duplicates) **
+  const fetchFileNames = async () => {
+    setLoadingRecords(true);
+    try {
+      const response = await axiosInstance.get("/api/get-RM-file");
+  
+      // ✅ Store full object instead of only File_Name
+      setFileNames(response.data);
+    } catch (error) {
+      console.error("Error fetching file names:", error);
+    } finally {
+      setLoadingRecords(false);
+    }
+  };
+  
 
   useEffect(() => {
     fetchExcelRecords(); // Load data when component mounts
@@ -128,46 +145,73 @@ const fetchFileNames = async () => {
   };
 
   // ** Define DataTable Columns with Conditional Styling **
+  // const columns = [
+  //   // { name: "Item Name", selector: (row) => (
+  //   //   <span
+  //   //   data-bs-toggle="tooltip"
+  //   //   data-bs-placement="top"
+  //   //   title={row.Iteam}>
+  //   //     {row.Iteam}
+  //   //   </span>
+  //   // ), sortable: true },
+  //   // { name: "Unit", selector: (row) => (
+  //   //   <span
+  //   //   data-bs-toggle="tooltip"
+  //   //   data-bs-placement="top"
+  //   //   title={row.Unit}>
+  //   //     {row.Unit}
+  //   //   </span>
+  //   // ), sortable: true },
+  //   // { 
+  //   //     name: "Plan Qty", 
+  //   //     selector: (row) => row.Plan_Qty, 
+  //   //     sortable: true,
+  //   //     cell: (row) => (
+  //   //       <span style={{ 
+  //   //         color: row.Is_Highlighted === 1 ? "red" : "black",
+  //   //         fontWeight: row.Is_Highlighted === 1 ? "bold" : "normal" 
+  //   //       }}>
+  //   //         {row.Plan_Qty || "N/A"}
+  //   //       </span>
+  //   //     )
+  //   //   },
+  //   // { name: "KD CODE", selector: (row) => row.KD_CODE || "N/A", sortable: true },
+  //   // { name: "RM Item Code", selector: (row) => row.Rm_Item_Code || "N/A", sortable: true },
+  //   // { name: "Uploaded Date", selector: (row) => (
+  //   //   <span data-bs-toggle="tooltip" data-bs-placement="top" title={row.Uploaded_Date}>
+  //   //       {row.Uploaded_Date}
+  //   //   </span>
+  //   // ), sortable: true },
+  //   // { name: "File Name", selector: (row) => row.File_Name, sortable: true },
+ 
+  // ];
   const columns = [
-    { name: "Item Name", selector: (row) => (
-      <span
-      data-bs-toggle="tooltip"
-      data-bs-placement="top"
-      title={row.Iteam}>
-        {row.Iteam}
-      </span>
-    ), sortable: true },
-    { name: "Unit", selector: (row) => (
-      <span
-      data-bs-toggle="tooltip"
-      data-bs-placement="top"
-      title={row.Unit}>
-        {row.Unit}
-      </span>
-    ), sortable: true },
-    { 
-        name: "Plan Qty", 
-        selector: (row) => row.Plan_Qty, 
-        sortable: true,
-        cell: (row) => (
-          <span style={{ 
-            color: row.Is_Highlighted === 1 ? "red" : "black",
-            fontWeight: row.Is_Highlighted === 1 ? "bold" : "normal" 
-          }}>
-            {row.Plan_Qty || "N/A"}
-          </span>
-        )
-      },
-    { name: "KD CODE", selector: (row) => row.KD_CODE || "N/A", sortable: true },
-    { name: "RM Item Code", selector: (row) => row.Rm_Item_Code || "N/A", sortable: true },
-    { name: "Uploaded Date", selector: (row) => (
-      <span data-bs-toggle="tooltip" data-bs-placement="top" title={row.Uploaded_Date}>
-          {row.Uploaded_Date}
-      </span>
-    ), sortable: true },
-    { name: "File Name", selector: (row) => row.File_Name, sortable: true },
+    {
+      name: "File Name",
+      selector: (row) => row.File_Name,
+      sortable: true,
+      cell: (row) => (
+        <button
+          onClick={() => navigate(`/RM-detailed-view/${encodeURIComponent(row.File_Name)}`)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "blue",
+            textDecoration: "underline",
+            cursor: "pointer",
+          }}
+        >
+          {row.File_Name}
+        </button>
+      ),
+    },
+    {
+      name: "Uploaded Date",
+      selector: (row) => row.Uploaded_Date, 
+      sortable: true,
+    },
   ];
-
+  
   return (
     <div className="d-flex dashboard">
       {/* Internal CSS for Loader & Overlay */}
@@ -265,13 +309,6 @@ const fetchFileNames = async () => {
               data={excelRecords}
               pagination
               highlightOnHover
-            //   customStyles={{
-            //     rows: {
-            //       style: (row) => ({
-            //         backgroundColor: row.Is_Highlighted === 1 ? "#ffcccc" : "#ffcccc", // 🔥 Highlight rows dynamically
-            //       }),
-            //     },
-            //   }}
             />
           )}
         </main>

@@ -87,7 +87,7 @@ function SalesFlowScan() {
   
         setScanStatusUpdates((prev) => ({ ...prev, [id]: newStatus }));
   
-        await axiosInstance.patch(`/api/sales-flow/scan-status/${id}`, { ScanStatus: newStatus });
+        await axiosInstance.patch(`/api/sales-flow/scan-status/${id}`, { SO_Status: newStatus });
   
         showAlert("Scan Status updated successfully!", "success");
         fetchRecords();
@@ -172,22 +172,23 @@ function SalesFlowScan() {
           onBlur={(e) => handleInvoiceUpdate(row.ID, e.target.value)}
           placeholder="EnterInvoice"
           style={{ fontSize: "12px" }}
-          // disabled={row.ScanStatus !== "Sales Order Done"}  // Disable if Confirm Time is null (not confirmed)
+          // disabled={row.SO_Status !== "Sales Order Done"}  // Disable if Confirm Time is null (not confirmed)
         />
       ),
       sortable: true,
     },
     {
-      name: "Scan Status",width:"200px",
+      name: "Status",width:"200px",
       cell: (row) => (
         <select
           className="form-select form-select-sm bg-info text-black"
-          value={scanStatusUpdates[row.ID] !== undefined ? scanStatusUpdates[row.ID] : row.ScanStatus || "N/A"}
+          value={scanStatusUpdates[row.ID] !== undefined ? scanStatusUpdates[row.ID] : row.SO_Status || "N/A"}
           onChange={(e) => handleScanStatusUpdate(row.ID, e.target.value)}
         >
           <option value="" disabled selected>Select</option>
-          <option value="Ready for Sales Order" style={{display:"none"}}>Ready for SO</option>
-          <option value="Sales Order Done">Sales Order Done</option>
+          <option value="Ready For Sales Order" style={{display:"none"}}>Ready for SO</option>
+          <option value="Ready For Dispatch">Ready For Dispatch</option>
+          <option value="Ready For Sticker" style={{display:"none"}}>Ready For Sticker</option>
         </select>
       ),
       sortable: true,

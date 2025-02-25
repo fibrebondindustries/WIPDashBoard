@@ -15,7 +15,7 @@ const Sidebar = () => {
   const [LoopiCheckingCount, setLoopiCheckingCount] = useState(0); // State for Loopi Checking Count
   const [SalesFlowCount, setSalesFlowCount] = useState(0); // State for Sales Flow Count
   const [scanCount, setScanCount] = useState(0); // State for Sales Flow Count
-  // const [orderCount, setOrderCount] = useState(0); // State for order count
+  const [dispatch, setDispatchCount] = useState(0); // State for order count
   useEffect(() => {
     // Fetch the ticket count when the component mounts
     const fetchTicketCount = async () => {
@@ -99,17 +99,28 @@ const fetchSalesFlowCount = async () => {
 // Fetch Scan Count for the admin// 14 Feb 25
 const fetchScanCount = async () => {
   try {
-    const response = await axiosInstance.get("/api/sales-flow-ScanNotification"); // Use appropriate API for admin tickets
+    const response = await axiosInstance.get("/api/sales-flow-Scan"); // Use appropriate API for admin tickets
     setScanCount(response.data.length); // Set the count based on the number of tickets
   } catch (error) {
     console.error("Error fetching ticket count:", error);
   }
 };
 
+//
+const fetchDispatchCount = async () => {
+  try {
+    const response = await axiosInstance.get("/api/sales-flow-Dispatch"); // Use appropriate API for admin tickets
+    setDispatchCount(response.data.length); // Set the count based on the number of tickets
+  } catch (error) {
+    console.error("Error fetching ticket count:", error);
+  }
+};
+
+
   // Fetch  count for superadmin
     if (user?.Auth === "SuperAdmin") {
       fetchTicketCount();
-      // fetchSalesFlowCount();
+    
       
     }
     // Fetch  count for admin
@@ -124,7 +135,7 @@ const fetchScanCount = async () => {
       fetchInventoryCount();
       fetchNokeCount();
       fetchLoopiCheckingCount();      
-      // fetchScanCount();
+      fetchDispatchCount(); // Notification for sudhir 25 fab 25
       fetchSalesFlowCount();
     }
   }, [user]);
@@ -274,6 +285,23 @@ const fetchScanCount = async () => {
             </NavLink>
           </li>
         )}
+           {/* Ṇew Module create on 25 fab 25 this will only visible to Shudhir */}
+           {user?.Auth === "Supervisor" && user?.EmployeeID === "12" && (
+          <li className="nav-item">
+            <NavLink
+              to="/sales-flow-dispatch"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <i className="bi bi-calendar-check"></i>Sales Flow{" "}
+              {dispatch > 0 && (
+                <span className="badge bg-danger">{dispatch}</span>
+              )}
+            </NavLink>
+          </li>
+        )}
+
         {/* Ṇew Module create on 22 fab 25 this will only visible to Ashwini */}
         {user?.Auth === "Admin" && user?.EmployeeID === "1017" && (
           <li className="nav-item">
@@ -287,8 +315,8 @@ const fetchScanCount = async () => {
             </NavLink>
           </li>
         )}
-         {/* Ṇew Module create on 13 fab 25 this will only visible to Ashwini */}
-         {user?.Auth === "Supervisor" && user?.EmployeeID === "12" && (
+         {/* Ṇew Module create on 13 fab 25 this will only visible to Shoaib */}
+            {(user?.Auth === "Admin" && user?.EmployeeID === "2918") && (
           <li className="nav-item">
             <NavLink
               to="/sales-flowNotify"

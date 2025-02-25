@@ -163,7 +163,7 @@ function SalesFlow() {
 
   // ** DataTable Columns **
   const columns = [
-    { name: "LOT ID",width:"170px", selector: (row) => (
+    { name: "LOT ID", selector: (row) => (
       <span
       data-bs-toggle="tooltip"
       data-bs-placement="top"
@@ -172,7 +172,7 @@ function SalesFlow() {
       {row["LOT ID"]}
       </span>
     ), sortable: true },
-    { name: "SRP NO",width:"95px", selector: (row) => row["SRP NO"], sortable: true },
+    { name: "SRP NO", selector: (row) => row["SRP NO"], sortable: true },
     { name: "Issued Time", width:"170px", selector: (row) =>(
       <span
       data-bs-toggle="tooltip"
@@ -193,6 +193,16 @@ function SalesFlow() {
       >
       {row["Remarks"] || "N/A"}
       </span>
+    ), sortable: true },
+    { name: "Status", selector: (row) =>(
+      <span
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title={row["SO_Status"]}
+      >
+      { row["SO_Status"] || "N/A"}
+      </span>
+
     ), sortable: true },
     {
       name: "Actions",

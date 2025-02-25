@@ -1,4 +1,4 @@
-///this module is visible to Shoaib only
+///this module is visible to Sudhir only
 import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/Header";
 import "../assets/CSS/Dashboard.css";
@@ -6,16 +6,14 @@ import axiosInstance from "../axiosConfig";
 import Sidebar from "../components/Sidebar";
 import DataTable from "react-data-table-component";
 
-function SalesFlowNotify() {
+function SalesFlowDispatch() {
   const [records, setRecords] = useState([]); // SalesFlow records
   const [filteredRecords, setFilteredRecords] = useState([]); // Filtered records
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [filters, setFilters] = useState({ searchQuery: "", fromDate: "", toDate: "" });
   // const [invoiceUpdates, setInvoiceUpdates] = useState({});
   const [scanStatusUpdates, setScanStatusUpdates] = useState({});
-  // const handleInvoiceChange = (e, id) => {
-  //   setInvoiceUpdates((prev) => ({ ...prev, [id]: e.target.value }));
-  // };
+  
   
 
   const toggleSidebar = () => setIsSidebarVisible(!isSidebarVisible);
@@ -23,7 +21,7 @@ function SalesFlowNotify() {
   // ** Fetch all SalesFlow records **
   const fetchRecords = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/api/sales-flow");
+      const response = await axiosInstance.get("/api/sales-flow-Dispatch");
       setRecords(response.data);
       setFilteredRecords(response.data);
     } catch (error) {
@@ -78,49 +76,23 @@ function SalesFlowNotify() {
     setTimeout(() => (alertPlaceholder.innerHTML = ""), 2000);
   };
 
-  // ** Delete a Record **
-  const ConfirnRecord = async (id) => {
-    if (!window.confirm("Are you sure you want to Confirm this record?")) return;
-    try {
-      await axiosInstance.patch(`/api/sales-flow/confirm/${id}`);
-      showAlert("Confirm successfully!", "success");
-      fetchRecords();
-    } catch (error) {
-      console.error("Error confirming record:", error);
-      showAlert("Failed to confirming record.", "danger");
-    }
-  };
+//   // ** Delete a Record **
+// Corrected Delete Handler
+const handleDeleteRecord = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this record?")) return;
+  try {
+    await axiosInstance.delete(`/api/sales-flow/${id}`);
+    showAlert("Record deleted successfully!", "success");
+    fetchRecords(); // Refresh records after deletion
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    showAlert("Failed to delete record.", "error");
+  }
+};
 
 
-  // const handleInvoiceUpdate = (id, newInvoice) => {
-  //   if (!id) return;
-  
-  //   // Trim whitespace and ensure null is only sent when user intentionally clears it
-  //   const sanitizedInvoice = newInvoice?.trim() || null;
-  
-  //   // If the value hasn't changed, do not trigger an update
-  //   if (sanitizedInvoice === records.find((record) => record.ID === id)?.Invoice_Number) {
-  //     return;
-  //   }
-  
-  //   // Update local state for immediate UI feedback
-  //   setInvoiceUpdates((prev) => ({ ...prev, [id]: sanitizedInvoice }));
-  
-  //   clearTimeout(window.invoiceUpdateTimeout);
-  //   window.invoiceUpdateTimeout = setTimeout(async () => {
-  //     try {
-  //       await axiosInstance.patch(`/api/sales-flow/invoice/${id}`, {
-  //         Invoice_Number: sanitizedInvoice,
-  //       });
-  
-  //       showAlert("Invoice Number updated successfully!", "success");
-  //       fetchRecords(); // Refresh Data
-  //     } catch (error) {
-  //       console.error("Error updating Invoice Number:", error);
-  //       showAlert("Failed to update Invoice Number.", "danger");
-  //     }
-  //   }, 800); // 800ms delay to reduce API calls
-  // };
+
+
   
     // ** Update Scan Status **
     const handleScanStatusUpdate = async (id, newStatus) => {
@@ -199,24 +171,25 @@ function SalesFlowNotify() {
           onChange={(e) => handleScanStatusUpdate(row.ID, e.target.value)}
           disabled={!row["Confirm Time"]} // Disable if not confirmed
         >
-          <option value="Pending">Pending</option>
-          <option value="Ready For Sticker">Ready For Sticker</option>
-          <option value="Ready For Sales Order" style={{display:"none"}}>Ready For SO</option>
+          <option value="" disabled selected>Select</option>
+          <option value="Ready For Sales Order">Ready For SO</option>
           <option value="Ready For Dispatch" style={{display:"none"}}>Ready For Dispatch</option>
+          <option value="Ready For Sticker" style={{display:"none"}}>Ready For Sticker</option>
         </select>
       ),
       sortable: true,
     },
-     {
+    {
       name: "Actions",
-      cell: (row) =>
-        row["Confirm Time"] === null ? ( // Check if "Confirm Time" is NULL
-          <button className="btn btn-success btn-sm" onClick={() => ConfirnRecord(row.ID)}>
-            Confirm
-          </button>
-        ) : (
-          <span className="text-muted">Confirmed</span> // Hide button if already confirmed
-        ),
+      cell: (row) => (
+        <button
+          className="btn btn-success btn-sm"
+          onClick={() => handleDeleteRecord(row.ID)}
+          disabled={!(row.Invoice_Number && row.Invoice_Number !== "N/A" && row.SO_Status === "Ready For Dispatch")}
+        >
+          Done
+        </button>
+      ),
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
@@ -234,7 +207,7 @@ function SalesFlowNotify() {
           <div id="alertPlaceholder"></div>
           <div className="">
           <div className="d-flex justify-content-between align-items-center"> 
-            <h3 className="mb-5">Notification</h3>
+            <h3 className="mb-5">Sales Flow Dispatch</h3>
             <div className="d-flex gap-2">
               {/* add record btn */}
             
@@ -270,4 +243,4 @@ function SalesFlowNotify() {
   );
 }
 
-export default SalesFlowNotify;
+export default SalesFlowDispatch;

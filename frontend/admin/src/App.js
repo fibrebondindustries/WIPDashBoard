@@ -30,6 +30,7 @@ import ExcelImport from './pages/Excel_Import';
 import RMUpload  from './pages/RM_Upload';
 import RMView from './pages/RM-View';
 import RMDetailedView from './pages/RM-Detailed-View';
+import SalesFlowDispatch from './pages/SalesFlowDispatch';
 
 // import WIPProtectedRoute from './WIP/WIP-AuthChecker';
 
@@ -202,6 +203,13 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <RMDetailedView/>
+                        </ProtectedRoute>
+                    }
+                    />
+                    <Route path='/sales-flow-dispatch'
+                    element={
+                        <ProtectedRoute>
+                            <SalesFlowDispatch/>
                         </ProtectedRoute>
                     }
                     />
