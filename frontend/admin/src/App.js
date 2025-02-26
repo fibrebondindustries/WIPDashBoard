@@ -88,7 +88,8 @@ function App() {
                       <Route path="/wip-login" element={<WIPLogin />} />
                       <Route path="/wip-dashboard" element={<WIPDashboard />} />
                       <Route path="/Stock" element={<Stock/>}/>
-                      <Route path="/stock-details" element={<StockDetails/>}/>
+                      {/* <Route path="/stock-details" element={<StockDetails/>}/> */}
+                      <Route path="/stock-details/:fileName" element={<StockDetails />} />
                       <Route path="/rm-shortage" element={<RMShortage />} />
                       <Route path="/box-rm-shortage" element={<BoxRMShortage />} />
 

@@ -82,116 +82,117 @@ router.get("/health", async (req, res) => {
   }
 });
 
+
 /// New API endpoint to retrieve data from the RawMReq table based on an optional job order number (JO NO)
-router.get("/stockData", async (req, res) => {
-  try {
-    const joNo = req.query.joNo; // Retrieve the 'joNo' parameter from the query string
+// router.get("/stockData", async (req, res) => {
+//   try {
+//     const joNo = req.query.joNo; // Retrieve the 'joNo' parameter from the query string
 
-    const pool = await poolPromise;
-    const request = pool.request();
+//     const pool = await poolPromise;
+//     const request = pool.request();
 
-    let query = "SELECT * FROM [dbo].[stk_cls]";
-    if (joNo) {
-      // If a specific `joNo` is provided, add it to the query
-      query += " WHERE [JO NO] = @joNo";
-      request.input("joNo", sql.NVarChar, joNo);
-    }
+//     let query = "SELECT * FROM [dbo].[stk_cls]";
+//     if (joNo) {
+//       // If a specific `joNo` is provided, add it to the query
+//       query += " WHERE [JO NO] = @joNo";
+//       request.input("joNo", sql.NVarChar, joNo);
+//     }
 
-    const result = await request.query(query);
-    const data = result.recordset; // Retrieve data from the query result
+//     const result = await request.query(query);
+//     const data = result.recordset; // Retrieve data from the query result
 
-    // Process each row to add the `isShortage` flag
-    const processedData = data.map((row) => ({
-      ...row,
-      isShortage:
-        row["Quantity_Shortage"] !== null && row["Quantity_Shortage"] > 0, // Check if `Quantity_Shortage` is not null and greater than 0
-    }));
+//     // Process each row to add the `isShortage` flag
+//     const processedData = data.map((row) => ({
+//       ...row,
+//       isShortage:
+//         row["Quantity_Shortage"] !== null && row["Quantity_Shortage"] > 0, // Check if `Quantity_Shortage` is not null and greater than 0
+//     }));
 
-    res.json(processedData); // Send the processed data as JSON
-  } catch (err) {
-    console.error("Query failed:", err);
-    res.status(500).json({ error: "Error fetching raw material stock data" });
-  }
-});
+//     res.json(processedData); // Send the processed data as JSON
+//   } catch (err) {
+//     console.error("Query failed:", err);
+//     res.status(500).json({ error: "Error fetching raw material stock data" });
+//   }
+// });
 
-//New Patch api for update the status of stock 18 fab 25
-router.patch("/update-stock-status", async (req, res) => {
-  try {
-    const { joNo, status } = req.body; // Retrieve JO NO and new Status from request body
+// //New Patch api for update the status of stock 18 fab 25
+// router.patch("/update-stock-status", async (req, res) => {
+//   try {
+//     const { joNo, status } = req.body; // Retrieve JO NO and new Status from request body
 
-    if (!joNo || !status) {
-      return res.status(400).json({ error: "joNo and status fields are required." });
-    }
+//     if (!joNo || !status) {
+//       return res.status(400).json({ error: "joNo and status fields are required." });
+//     }
 
-    const pool = await poolPromise;
-    const request = pool.request();
+//     const pool = await poolPromise;
+//     const request = pool.request();
 
-    // Update query for changing the Status field
-    const query = `
-      UPDATE [dbo].[stk_cls]
-      SET [Status] = @status
-      WHERE [JO NO] = @joNo
-    `;
+//     // Update query for changing the Status field
+//     const query = `
+//       UPDATE [dbo].[stk_cls]
+//       SET [Status] = @status
+//       WHERE [JO NO] = @joNo
+//     `;
 
-    request.input("status", sql.NVarChar, status);
-    request.input("joNo", sql.NVarChar, joNo);
+//     request.input("status", sql.NVarChar, status);
+//     request.input("joNo", sql.NVarChar, joNo);
 
-    const result = await request.query(query);
+//     const result = await request.query(query);
 
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ message: "No matching Job Order found." });
-    }
+//     if (result.rowsAffected[0] === 0) {
+//       return res.status(404).json({ message: "No matching Job Order found." });
+//     }
 
-    res.status(200).json({
-      message: `Stock status updated successfully for JO NO: ${joNo}`,
-      updatedRows: result.rowsAffected[0],
-    });
+//     res.status(200).json({
+//       message: `Stock status updated successfully for JO NO: ${joNo}`,
+//       updatedRows: result.rowsAffected[0],
+//     });
 
-  } catch (error) {
-    console.error("Error updating stock status:", error);
-    res.status(500).json({ error: "Failed to update stock status." });
-  }
-});
+//   } catch (error) {
+//     console.error("Error updating stock status:", error);
+//     res.status(500).json({ error: "Failed to update stock status." });
+//   }
+// });
 
 //end
-//New Patch api for update the status of stock 18 fab 25
-router.patch("/update-stock-PO_Number", async (req, res) => {
-  try {
-    const { joNo, PO_Number } = req.body; // Retrieve JO NO and new Status from request body
+// //New Patch api for update the status of stock 18 fab 25
+// router.patch("/update-stock-PO_Number", async (req, res) => {
+//   try {
+//     const { joNo, PO_Number } = req.body; // Retrieve JO NO and new Status from request body
 
-    if (!joNo) {
-      return res.status(400).json({ error: "joNo fields are required." });
-    }
+//     if (!joNo) {
+//       return res.status(400).json({ error: "joNo fields are required." });
+//     }
 
-    const pool = await poolPromise;
-    const request = pool.request();
+//     const pool = await poolPromise;
+//     const request = pool.request();
 
-    // Update query for changing the PO_Number field
-    const query = `
-      UPDATE [dbo].[stk_cls]
-      SET [PO_Number] = @PO_Number
-      WHERE [JO NO] = @joNo
-    `;
+//     // Update query for changing the PO_Number field
+//     const query = `
+//       UPDATE [dbo].[stk_cls]
+//       SET [PO_Number] = @PO_Number
+//       WHERE [JO NO] = @joNo
+//     `;
 
-    request.input("PO_Number", sql.NVarChar, PO_Number);
-    request.input("joNo", sql.NVarChar, joNo);
+//     request.input("PO_Number", sql.NVarChar, PO_Number);
+//     request.input("joNo", sql.NVarChar, joNo);
 
-    const result = await request.query(query);
+//     const result = await request.query(query);
 
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ message: "No matching Job Order found." });
-    }
+//     if (result.rowsAffected[0] === 0) {
+//       return res.status(404).json({ message: "No matching Job Order found." });
+//     }
 
-    res.status(200).json({
-      message: `Stock PO_Number updated successfully for JO NO: ${joNo}`,
-      updatedRows: result.rowsAffected[0],
-    });
+//     res.status(200).json({
+//       message: `Stock PO_Number updated successfully for JO NO: ${joNo}`,
+//       updatedRows: result.rowsAffected[0],
+//     });
 
-  } catch (error) {
-    console.error("Error updating stock status:", error);
-    res.status(500).json({ error: "Failed to update PO_Number status." });
-  }
-});
+//   } catch (error) {
+//     console.error("Error updating stock status:", error);
+//     res.status(500).json({ error: "Failed to update PO_Number status." });
+//   }
+// });
 
 //end
 //
@@ -252,21 +253,7 @@ router.get("/get-PONumber", async (req, res) => {
 //end
 
 
-router.get("/RMshortage", async (req, res) => {
-  try {
-    const pool = await poolPromise;
-    const request = pool.request();
 
-    let query = "SELECT * FROM [dbo].[Shortage_Stock]";
-
-    const result = await request.query(query);
-
-    res.json(result.recordset);
-  } catch (err) {
-    console.error("Query failed:", err);
-    res.status(500).json({ error: "Error fetching raw material stock data" });
-  }
-});
 
 router.get("/BOXRMshortage", async (req, res) => {
   try {
@@ -4065,7 +4052,7 @@ router.get("/get-RM-file-Status", async (req, res) => {
     const result = await pool
       .request()
       .query(`
-        SELECT DISTINCT File_Name, Uploaded_Date, PO_STATUS
+        SELECT DISTINCT File_Name, Uploaded_Date, PO_STATUS, PO_Number
         FROM RM_Upload 
         ORDER BY Uploaded_Date DESC
       `);
@@ -4110,6 +4097,100 @@ router.patch("/update-PO-status", async (req, res) => {
   } catch (error) {
     console.error("Error updating PO_STATUS:", error);
     res.status(500).json({ error: "Failed to update PO_STATUS." });
+  }
+});
+
+router.get("/get-aggregated-stock", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool.request().query(`
+      SELECT 
+        File_Name,
+        SUM(Plan_Qty) AS Total_Plan_Qty,
+        SUM([STOCK IN HAND]) AS Total_Stock_In_Hand,
+        SUM(CASE WHEN Is_Highlighted = 1 THEN Plan_Qty ELSE 0 END) AS Total_Shortage
+      FROM RM_Upload 
+      GROUP BY File_Name
+    `);
+
+    if (!result.recordset || result.recordset.length === 0) {
+      return res.status(404).json({ message: "No aggregated stock data found." });
+    }
+
+    // Return aggregated data
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching aggregated stock data:", error);
+    res.status(500).json({ error: "Failed to fetch aggregated stock data." });
+  }
+});
+
+// New Patch API for updating PO_Number against File_Name
+router.patch("/update-po-number", async (req, res) => {
+  try {
+    const { fileName, PO_Number } = req.body; // Get File Name and PO_Number from request
+
+    if (!fileName) {
+      return res.status(400).json({ error: "File name is required." });
+    }
+
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    // Update PO_Number where File_Name matches
+    const query = `
+      UPDATE [dbo].[RM_Upload]
+      SET [PO_Number] = @PO_Number
+      WHERE [File_Name] = @FileName
+    `;
+
+    request.input("PO_Number", sql.NVarChar, PO_Number);
+    request.input("FileName", sql.NVarChar, fileName);
+
+    const result = await request.query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "No matching file found." });
+    }
+
+    res.status(200).json({
+      message: `PO_Number updated successfully for File: ${fileName}`,
+      updatedRows: result.rowsAffected[0],
+    });
+
+  } catch (error) {
+    console.error("Error updating PO_Number:", error);
+    res.status(500).json({ error: "Failed to update PO_Number." });
+  }
+});
+
+router.get("/RMshortage", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    let query = `	SELECT 
+                  [Unit],
+                [Iteam],
+                SUM([Plan_Qty]) AS Total_Plan_Qty,  -- Aggregate Plan_Qty
+                SUM([STOCK IN HAND]) AS Total_Stock_In_Hand,  -- Aggregate STOCK IN HAND
+                [Is_Highlighted],
+                MAX([Uploaded_Date]) AS Latest_Uploaded_Date,  -- Get latest uploaded date
+                STRING_AGG([File_Name], ', ') AS File_Names, -- Combine multiple file names
+                [KD_CODE],
+                [Rm_Item_Code]   
+                FROM [dbo].[RM_Upload]
+                WHERE [Is_Highlighted] = 1
+                GROUP BY [Iteam], [KD_CODE], [Rm_Item_Code], [Is_Highlighted], [Unit]
+                ORDER BY Latest_Uploaded_Date DESC;`;
+
+    const result = await request.query(query);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Query failed:", err);
+    res.status(500).json({ error: "Error fetching raw material stock data" });
   }
 });
 
