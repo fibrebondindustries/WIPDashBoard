@@ -461,6 +461,23 @@ const Stock = () => {
   const [poNumbers, setPoNumbers] = useState({});
   const navigate = useNavigate();
 
+
+    // ** Check Session & Redirect if Not Authenticated **
+    const checkAuth = useCallback(() => {
+      const authData = sessionStorage.getItem("auth");
+      if (!authData) {
+        window.location.href = "/wip-login"; // Redirect to login
+        return;
+      }
+  
+      const { loggedIn, expiryTime } = JSON.parse(authData);
+      if (!loggedIn || Date.now() > expiryTime) {
+        sessionStorage.removeItem("auth"); // Clear session
+        window.location.href = "/wip-login"; // Redirect to login
+      }
+    }, []);
+  
+
   // ** Fetch Stock File Data **
   const fetchStockData = useCallback(async () => {
     try {
@@ -525,6 +542,16 @@ const Stock = () => {
       console.error("Error updating PO Number:", error);
     }
   };
+
+      // ** Run Session Check & Fetch Data **
+      useEffect(() => {
+        checkAuth(); // Initial session check
+        fetchStockData(); // Fetch data
+    
+        const interval = setInterval(checkAuth, 1000); // Check session every second
+        return () => clearInterval(interval); // Cleanup on component unmount
+      }, [checkAuth, fetchStockData]);
+
   // ** Table Columns **
   const columns = [
     { name: "Sr", selector: (_, index) => index + 1, sortable: true, width: "70px" },

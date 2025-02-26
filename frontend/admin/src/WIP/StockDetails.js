@@ -193,6 +193,22 @@ function StockDetails() {
 
   const navigate = useNavigate(); // For back button
 
+  
+      // ** Check Session & Redirect if Not Authenticated **
+      const checkAuth = useCallback(() => {
+        const authData = sessionStorage.getItem("auth");
+        if (!authData) {
+          window.location.href = "/wip-login"; // Redirect to login
+          return;
+        }
+    
+        const { loggedIn, expiryTime } = JSON.parse(authData);
+        if (!loggedIn || Date.now() > expiryTime) {
+          sessionStorage.removeItem("auth"); // Clear session
+          window.location.href = "/wip-login"; // Redirect to login
+        }
+      }, []);
+
   const fetchFileData = useCallback(async () => {
     setLoading(true);
     try {
@@ -208,6 +224,15 @@ function StockDetails() {
   useEffect(() => {
     fetchFileData();
   }, [fetchFileData]);
+
+      // ** Run Session Check & Fetch Data **
+        useEffect(() => {
+          checkAuth(); // Initial session check
+          fetchFileData(); // Fetch data
+      
+          const interval = setInterval(checkAuth, 1000); // Check session every second
+          return () => clearInterval(interval); // Cleanup on component unmount
+        }, [checkAuth, fetchFileData]);
 
   const columns = [
     { name: "Item Discription", selector: (row) => (

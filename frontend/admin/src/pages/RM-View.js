@@ -121,10 +121,11 @@ const handleDeleteFile = async (fileName) => {
           value={row.PO_STATUS}
           onChange={(e) => handleStatusUpdate(row.File_Name, e.target.value)}
           disabled={updating}
+          
           style={{
             backgroundColor: row.PO_STATUS === "PO Raised" ? "green" : "red", // ✅ Dynamic color
             color: "white",
-            // fontWeight: "bold",
+            cursor: row.PO_STATUS === "PO Raised" ? "not-allowed" : "pointer",
           }}
         >
           <option value="PO Not Raised">PO Not Raised</option>

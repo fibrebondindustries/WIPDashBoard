@@ -177,6 +177,23 @@ const RMShortage = () => {
   const [shortageData, setShortageData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+
+    // ** Check Session & Redirect if Not Authenticated **
+    const checkAuth = useCallback(() => {
+      const authData = sessionStorage.getItem("auth");
+      if (!authData) {
+        window.location.href = "/wip-login"; // Redirect to login
+        return;
+      }
+  
+      const { loggedIn, expiryTime } = JSON.parse(authData);
+      if (!loggedIn || Date.now() > expiryTime) {
+        sessionStorage.removeItem("auth"); // Clear session
+        window.location.href = "/wip-login"; // Redirect to login
+      }
+    }, []);
+  
+
   // ** Fetch RM Shortage Data **
   const fetchShortageData = useCallback(async () => {
     try {
@@ -193,9 +210,17 @@ const RMShortage = () => {
 
   // ** Function to filter table data **
   const filteredData = shortageData.filter((row) =>
-    row["KD_CODE"].toLowerCase().includes(searchTerm.toLowerCase())
+    row["KD_CODE"].toLowerCase().includes(searchTerm)
   );
 
+    // ** Run Session Check & Fetch Data **
+    useEffect(() => {
+      checkAuth(); // Initial session check
+      fetchShortageData(); // Fetch data
+  
+      const interval = setInterval(checkAuth, 1000); // Check session every second
+      return () => clearInterval(interval); // Cleanup on component unmount
+    }, [checkAuth, fetchShortageData]);
   // ** Define Table Columns **
   const columns = [
     { name: "Sr No", selector: (_, index) => index + 1, sortable: true, width: "80px" },

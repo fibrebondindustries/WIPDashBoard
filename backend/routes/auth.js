@@ -254,27 +254,6 @@ router.get("/get-PONumber", async (req, res) => {
 
 
 
-
-router.get("/BOXRMshortage", async (req, res) => {
-  try {
-    const pool = await poolPromise;
-    const request = pool.request();
-
-    let query = `SELECT [ITEM NAME],[RM ITEM DESCRIPTION],SUM([QUANTITY REQ-1]) AS req,AVG([STOCK IN HAND]) AS avail,
-    (CASE WHEN SUM([QUANTITY REQ-1]) > AVG([STOCK IN HAND]) THEN SUM([QUANTITY REQ-1]) - AVG([STOCK IN HAND])ELSE 0
-    END) AS shortage FROM [dbo].[stk_cls] WHERE [PROCESS NAME] LIKE '%BOX%' GROUP BY [ITEM NAME],[RM ITEM DESCRIPTION]
-HAVING 
-    SUM([QUANTITY REQ-1]) > AVG([STOCK IN HAND])`;
-
-    const result = await request.query(query);
-
-    res.json(result.recordset);
-  } catch (err) {
-    console.error("Query failed:", err);
-    res.status(500).json({ error: "Error fetching raw material stock data" });
-  }
-});
-
 ////Admin Dashboard 23 nov // yogesh
 router.post("/signup", async (req, res) => {
   const { Name, Password, Auth, EmployeeID, Department } = req.body;
@@ -4194,5 +4173,26 @@ router.get("/RMshortage", async (req, res) => {
   }
 });
 
+router.get("/BOXRMshortage", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    let query = `SELECT  [ITEM_ID]
+                ,[ITEM_NAME]
+                ,[BARCODE]
+                ,[ITEM_DESCRIPTION]
+                ,[SIZE]
+                ,[CLOSING_STOCK]
+           FROM [dbo].[excel_stk_data]`;
+
+    const result = await request.query(query);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Query failed:", err);
+    res.status(500).json({ error: "Error fetching raw material stock data" });
+  }
+});
 
 module.exports = router;
