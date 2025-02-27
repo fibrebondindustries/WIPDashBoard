@@ -238,7 +238,7 @@ const BoxRMShortage = () => {
     <>
       <WIPHeader />
       <div className="p-4 mt-4">
-        <h1 className="">Box RM Shortage</h1>
+        <h1 className="">Inventory</h1>
 
         <div className="d-flex justify-content-between align-items-center mt-4">
           <button className="btn btn-secondary btn-sm" onClick={() => window.history.back()}>

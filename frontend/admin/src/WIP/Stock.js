@@ -633,7 +633,7 @@ const Stock = () => {
           RM Shortage →
         </button>
         <button className="btn btn-secondary" onClick={() => navigate("/box-rm-shortage")}>
-          BOX RM Shortage →
+          Inventory →
         </button>
       </div>
 
