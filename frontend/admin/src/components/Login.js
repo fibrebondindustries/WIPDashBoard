@@ -121,19 +121,19 @@ function Login() {
       }, 2000);
   };
 
-  // const handleRedirect = () => {
-  //   navigate("/wip-login");  // Redirects to the other login page
-  // };
+  const handleRedirect = () => {
+    navigate("/wip-login");  // Redirects to the other login page
+  };
 
   return (   
     <div className="">
-       {/* <button 
-          className="btn btn-primary btn-sm"
+       <button 
+          className="btn btn-secondary btn-sm"
           style={{ position: "absolute", top: "10px", right: "10px" }} 
           onClick={handleRedirect}
         >
-          RM
-        </button> */}
+         RM  →
+        </button>
     <div className="login-container">
       <div id="alertPlaceholder"></div> {/* Placeholder for alerts */}
       <div className="login-card">
