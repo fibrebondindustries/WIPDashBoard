@@ -789,7 +789,7 @@ const Header = ({ toggleSidebar, isSidebarVisible }) => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center">
+                        <td colSpan="8" className="text-center">
                           No orders ready for dispatch.
                         </td>
                       </tr>
