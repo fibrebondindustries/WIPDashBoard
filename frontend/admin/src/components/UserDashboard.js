@@ -4,12 +4,71 @@ import axiosInstance from "../axiosConfig";
 import { AuthContext } from "../AuthContext";
 import Logo from "../assets/Img/Logo-1.png";
 import User from "../assets/Img/User.gif";
+import DataTable from "react-data-table-component";
 
 function UserDashboard() {
   const { user, logout } = useContext(AuthContext);
   const [department, setDepartment] = useState("Not Assigned");
   const [temporaryDepartment, setTemporaryDepartment] = useState("Not Assigned");
-  // const navigate = useNavigate();
+  const [workerData, setWorkerData] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Number of items per page for mobile view
+  const [totalAmount, setTotalAmount] = useState(0);
+
+  useEffect(() => {
+    const fetchTotalAmount = async () => {
+      if (!user?.EmployeeID) return;
+  
+      try {
+        const response = await axiosInstance.get(`/api/worker-total-amount/${user.EmployeeID}`);
+        setTotalAmount(response.data.TotalAmount || 0); // Store total amount
+      } catch (error) {
+        console.error("Error fetching total amount:", error);
+      }
+    };
+  
+    fetchTotalAmount();
+  }, [user?.EmployeeID]);
+
+  ////new code for worker data
+  useEffect(() => {
+    const fetchWorkerData = async () => {
+      try {
+        const response = await axiosInstance.get("api/worker-wages");
+        const filteredData = response.data.filter(
+          (item) => item.EmployeeID === user?.EmployeeID
+        );
+        setWorkerData(filteredData);
+      } catch (error) {
+        console.error("Error fetching worker wages data:", error);
+      }
+    };
+    
+    fetchWorkerData();
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [user?.EmployeeID]);
+
+  const totalPages = Math.ceil(workerData.length / itemsPerPage);
+  const paginatedData = workerData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const nextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+//end
 
   const getISTTime = () => {
     const now = new Date();
@@ -161,10 +220,18 @@ const handleMarkOut = async () => {
       alertPlaceholder.innerHTML = "";
     }, 3000);
   };
+
+  const columns = [
+    { name: "LOT NUMBER", selector: (row) => row["LOT NUMBER"], sortable: true },
+    { name: "PROCESS NAME", selector: (row) => row["PROCESS NAME"], sortable: true },
+    { name: "WORKER NAME", selector: (row) => row.Name, sortable: true },
+    { name: "AMOUNT", selector: (row) => row.AMOUNT, sortable: true },
+    { name: "QTY", selector: (row) => row.QTY, sortable: true },
+  ];
   return (
     <div className=" ">
             <div id="alertPlaceholder"></div>
-      <nav className="navbar navbar-expand-lg bg-body-tertiary" style={{boxShadow:"0 1px 5px rgba(0, 0, 0, 0.2) "}}>
+      <nav className="navbar navbar-expand-lg bg-body-white" style={{boxShadow:"0 1px 5px rgba(0, 0, 0, 0.2) "}}>
         <div className="container-fluid">
           <a className="navbar-brand">
             {" "}
@@ -251,7 +318,7 @@ const handleMarkOut = async () => {
           <p>Assigned Department: {temporaryDepartment}</p>
         </div>
       </main> */}
-       <div className="dashboard-container" style={{ background: "#f7f9fc", height: "100vh" }}>
+       <div className="dashboard-container" style={{ background: "#f7f9fc", height: "-webkit-fill-available" }}>
       <main style={{ padding: "20px" }}>
         <div className="dashboard-content" style={{ maxWidth: "800px", margin: "0 auto" }}>
           <div
@@ -276,6 +343,10 @@ const handleMarkOut = async () => {
             <p style={{ fontSize: "18px", color: "#555", marginBottom: "8px" }}>
               <strong>Assigned Department:</strong> {temporaryDepartment || "Not Assigned"}
             </p>
+            <p style={{ fontSize: "18px", color: "#555", marginBottom: "8px" }}>
+              <strong>Total Amount:</strong> ₹{totalAmount}
+            </p>
+
             {/* Buttons for IN and OUT */}
              <div style={{ display: "flex", justifyContent: "end", gap: "20px" }}>
               <button
@@ -294,6 +365,60 @@ const handleMarkOut = async () => {
           </div>
 
           
+        </div>
+
+        {/* <div className="container mt-4" style={{boxShadow:"0 1px 5px rgba(0, 0, 0, 0.51) "}}>
+        {!isMobile ? (
+          <DataTable columns={columns} data={workerData} pagination highlightOnHover
+          />
+        ) : (
+          <div className="row">
+            {workerData.map((item, index) => (
+              <div className="col-12 mb-3 mt-2" key={index}>
+                <div className="card p-3 shadow-sm">
+                  <h5 className="card-title">{item["LOT NUMBER"]}</h5>
+                  <p className="card-text"><strong>Process:</strong> {item["PROCESS NAME"]}</p>
+                  <p className="card-text"><strong>Worker:</strong> {item.Name}</p>
+                  <p className="card-text"><strong>Amount:</strong> {item.AMOUNT}</p>
+                  <p className="card-text"><strong>Quantity:</strong> {item.QTY}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div> */}
+        <div className="container mt-4" style={{ boxShadow: "0 1px 5px rgba(0, 0, 0, 0.51)", borderRadius: "5px", padding: "6px" }}>
+          {!isMobile ? (
+            <DataTable columns={columns} data={workerData} pagination highlightOnHover />
+          ) : (
+            <>
+              <div className="row">
+                {paginatedData.map((item, index) => (
+                  <div className="col-12 mb-3 mt-2" key={index}>
+                    <div className="card p-3 shadow-sm">
+                      <h5 className="card-title">{item["LOT NUMBER"]}</h5>
+                      <p className="card-text"><strong>Process:</strong> {item["PROCESS NAME"]}</p>
+                      <p className="card-text"><strong>Worker:</strong> {item.Name}</p>
+                      <p className="card-text"><strong>Amount:</strong> {item.AMOUNT}</p>
+                      <p className="card-text"><strong>Quantity:</strong> {item.QTY}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-between mt-3">
+                  <button className="btn btn-primary mb-3" onClick={prevPage} disabled={currentPage === 1}>
+                    Previous
+                  </button>
+                  <span>Page {currentPage} of {totalPages}</span>
+                  <button className="btn btn-primary mb-3" onClick={nextPage} disabled={currentPage === totalPages}>
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
       

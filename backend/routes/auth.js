@@ -4144,6 +4144,7 @@ router.patch("/update-po-number", async (req, res) => {
   }
 });
 
+// GET API: Fetch RM_Upload records by PO_Number and show aggregated shortage data
 router.get("/RMshortage", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -4173,6 +4174,7 @@ router.get("/RMshortage", async (req, res) => {
   }
 });
 
+/// **GET API - RM shortage data for excel_stk_data **
 router.get("/BOXRMshortage", async (req, res) => {
   try {
     const pool = await poolPromise;
@@ -4194,5 +4196,71 @@ router.get("/BOXRMshortage", async (req, res) => {
     res.status(500).json({ error: "Error fetching raw material stock data" });
   }
 });
+
+// GET API: Worker Wages Data from WorkerWages Table according to Worker code 
+router.get("/worker-wages", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    let query = `
+      SELECT 
+          WW.[LOT NUMBER], 
+          WW.[PROCESS NAME], 
+          EM.[Name], 
+          EM.[EmployeeID], 
+          EM.[Employee Code Logic], 
+          WW.[WORKER CODE], 
+          WW.[AMOUNT], 
+          WW.[QTY]
+      FROM [dbo].[WorkerWages] WW
+      JOIN [dbo].[Emp_Master] EM 
+      ON WW.[WORKER CODE] = EM.[Employee Code Logic];
+    `;
+
+    const result = await request.query(query);
+    res.json(result.recordset); // Send data as JSON
+  } catch (err) {
+    console.error("Query failed:", err);
+    res.status(500).json({ error: "Error fetching worker wages data" });
+  }
+});
+
+
+// GET API: Get total amount of a particular user
+router.get("/worker-total-amount/:employeeID", async (req, res) => {
+  try {
+    const { employeeID } = req.params; // Get EmployeeID from URL parameter
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    let query = `
+      SELECT 
+          EM.[EmployeeID], 
+          EM.[Name], 
+          ROUND(SUM(WW.[AMOUNT]),2) AS TotalAmount
+      FROM [dbo].[WorkerWages] WW
+      JOIN [dbo].[Emp_Master] EM 
+          ON WW.[WORKER CODE] = EM.[Employee Code Logic]
+      WHERE EM.[EmployeeID] = @employeeID
+      GROUP BY EM.[EmployeeID], EM.[Name];
+    `;
+
+    request.input("employeeID", employeeID); // Parameterized query to prevent SQL injection
+
+    const result = await request.query(query);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "No records found for this employee." });
+    }
+
+    res.json(result.recordset[0]); // Send total amount data as JSON
+  } catch (err) {
+    console.error("Error fetching total amount:", err);
+    res.status(500).json({ error: "Error fetching total amount data" });
+  }
+});
+
+
 
 module.exports = router;
